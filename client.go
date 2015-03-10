@@ -1,21 +1,12 @@
 package pusher
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	// "fmt"
 )
 
 type Client struct {
 	AppId, Key, Secret string
-}
-
-type Body struct {
-	Name     string   `json:"name"`
-	Channels []string `json:"channels"`
-	Data     string   `json:"data"`
 }
 
 func (c *Client) Trigger(channels []string, event string, _data map[string]string) {
@@ -26,9 +17,14 @@ func (c *Client) Trigger(channels []string, event string, _data map[string]strin
 		Channels: channels,
 		Data:     string(data)})
 
-	q := Query{"POST", c.event_path(), c.Key, c.Secret, payload}
+	q := Query{"POST", c.path("events"), c.Key, c.Secret, payload}
 
 	c.post(q.generate(), payload)
+}
+
+func (c *Client) Channels() string {
+	q := Query{"GET", c.path("channels"), c.Key, c.Secret, nil}
+	return c.get(q.generate(), nil)
 }
 
 func (c *Client) jsonize(body *Body) []byte {
@@ -36,27 +32,16 @@ func (c *Client) jsonize(body *Body) []byte {
 	return json
 }
 
-func (c *Client) event_path() string {
-	return "/apps/" + c.AppId + "/events"
+func (c *Client) path(resource string) string {
+	return "/apps/" + c.AppId + "/" + resource
 }
 
-func (c *Client) post(url string, body []byte) {
+func (c *Client) post(url string, body []byte) string {
+	request := &Request{"POST", url, body}
+	return request.send()
+}
 
-	fmt.Println(url)
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	resp_body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(resp_body))
+func (c *Client) get(url string, body []byte) string {
+	request := &Request{"GET", url, body}
+	return request.send()
 }

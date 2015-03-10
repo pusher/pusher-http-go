@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -44,8 +43,6 @@ func (q *Query) sign() (string, string) {
 		q.path +
 		"\n" +
 		pre_signature_string
-
-	fmt.Println(to_sign)
 
 	_auth_signature := hmac.New(sha256.New, []byte(q.secret))
 	_auth_signature.Write([]byte(to_sign))
