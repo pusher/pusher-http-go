@@ -12,7 +12,7 @@ type Request struct {
 	body   []byte
 }
 
-func (r *Request) send() string {
+func (r *Request) send() (error, string) {
 	req, err := http.NewRequest(r.method, r.url, bytes.NewBuffer(r.body))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -20,9 +20,9 @@ func (r *Request) send() string {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		panic(err)
+		return err, "Error"
 	}
 	defer resp.Body.Close()
 	resp_body, _ := ioutil.ReadAll(resp.Body)
-	return string(resp_body)
+	return nil, string(resp_body)
 }
