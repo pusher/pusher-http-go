@@ -1,1 +1,3 @@
 *.rb
+base_functionality/
+test/
