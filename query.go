@@ -5,22 +5,22 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 )
 
 const auth_version = "1.0"
+const domain = "http://api.pusherapp.com"
 
 type Query struct {
-	request_method, base_url, key, secret string
-	body                                  []byte
+	request_method, path, key, secret string
+	body                              []byte
 }
 
 func (q *Query) body_md5() string {
-	body, _ := json.Marshal(q.body)
 	_body_md5 := md5.New()
-	_body_md5.Write([]byte(body))
+	_body_md5.Write([]byte(q.body))
 	return hex.EncodeToString(_body_md5.Sum(nil))
 }
 
@@ -41,9 +41,11 @@ func (q *Query) sign() (string, string) {
 
 	to_sign := q.request_method +
 		"\n" +
-		q.base_url +
+		q.path +
 		"\n" +
 		pre_signature_string
+
+	fmt.Println(to_sign)
 
 	_auth_signature := hmac.New(sha256.New, []byte(q.secret))
 	_auth_signature.Write([]byte(to_sign))
@@ -52,5 +54,5 @@ func (q *Query) sign() (string, string) {
 
 func (q *Query) generate() string {
 	pre_signature, auth_signature := q.sign()
-	return q.base_url + "?" + pre_signature + "&auth_signature=" + auth_signature
+	return domain + q.path + "?" + pre_signature + "&auth_signature=" + auth_signature
 }

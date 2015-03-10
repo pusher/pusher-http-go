@@ -26,7 +26,7 @@ func (c *Client) Trigger(channels []string, event string, _data map[string]strin
 		Channels: channels,
 		Data:     string(data)})
 
-	q := Query{"POST", c.base_url(), c.Key, c.Secret, payload}
+	q := Query{"POST", c.event_path(), c.Key, c.Secret, payload}
 
 	c.post(q.generate(), payload)
 }
@@ -36,8 +36,8 @@ func (c *Client) jsonize(body *Body) []byte {
 	return json
 }
 
-func (c *Client) base_url() string {
-	return "http://api.pusherapp.com/apps/" + c.AppId + "/events"
+func (c *Client) event_path() string {
+	return "/apps/" + c.AppId + "/events"
 }
 
 func (c *Client) post(url string, body []byte) {
