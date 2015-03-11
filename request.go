@@ -13,6 +13,7 @@ type Request struct {
 }
 
 func (r *Request) send() (error, string) {
+
 	req, err := http.NewRequest(r.method, r.url, bytes.NewBuffer(r.body))
 	req.Header.Set("Content-Type", "application/json")
 

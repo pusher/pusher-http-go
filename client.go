@@ -9,27 +9,22 @@ type Client struct {
 	AppId, Key, Secret string
 }
 
-func (c *Client) Trigger(channels []string, event string, _data map[string]string) {
+func (c *Client) Trigger(channels []string, event string, _data map[string]string) (error, string) {
 	data, _ := json.Marshal(_data)
 
-	payload := c.jsonize(&Body{
+	payload, _ := json.Marshal(&EventBody{
 		Name:     event,
 		Channels: channels,
 		Data:     string(data)})
 
 	q := Query{"POST", c.path("events"), c.Key, c.Secret, payload}
 
-	c.post(q.generate(), payload)
+	return c.post(q.generate(), payload)
 }
 
 func (c *Client) Channels() (error, string) {
 	q := Query{"GET", c.path("channels"), c.Key, c.Secret, nil}
 	return c.get(q.generate(), nil)
-}
-
-func (c *Client) jsonize(body *Body) []byte {
-	json, _ := json.Marshal(body)
-	return json
 }
 
 func (c *Client) path(resource string) string {
