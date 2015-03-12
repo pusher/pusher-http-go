@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	// "fmt"
+	"fmt"
 	"net/url"
 	"strconv"
 	"time"
@@ -17,6 +17,7 @@ const domain = "http://api.pusherapp.com"
 type Query struct {
 	request_method, path, key, secret string
 	body                              []byte
+	additional_queries                map[string]string
 }
 
 func (q *Query) body_md5() string {
@@ -36,6 +37,12 @@ func (q *Query) unsigned_params() url.Values {
 	params.Add("auth_timestamp", q.auth_timestamp())
 	params.Add("auth_version", auth_version)
 	params.Add("body_md5", q.body_md5())
+
+	if q.additional_queries != nil {
+		for key, value := range q.additional_queries {
+			params.Add(key, value)
+		}
+	}
 
 	return params
 }
@@ -61,5 +68,8 @@ func (q *Query) generate() string {
 
 	endpoint, _ := url.Parse(domain + q.path)
 	endpoint.RawQuery = params.Encode()
+
+	fmt.Print(endpoint.String())
+
 	return endpoint.String()
 }

@@ -12,3 +12,22 @@ data := map[string]string{"message": "hello world"}
 
 client.Trigger([]string{"test_channel"}, "my_event", data)
 ```
+
+##Info From All Channels
+
+```go
+channelParams := map[string]string{
+    "filter_by_prefix": "presence-",
+    "info":             "user_count"}
+
+err, channels := newClient.Channels(channelParams)
+
+fmt.Println(channels)
+
+// => { "channels":
+//        { "presence-chatroom":
+//            { "user_count": 1 }
+//        }
+//    }
+
+```

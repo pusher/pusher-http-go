@@ -17,13 +17,13 @@ func (c *Client) Trigger(channels []string, event string, _data map[string]strin
 		Channels: channels,
 		Data:     string(data)})
 
-	q := Query{"POST", c.path("events"), c.Key, c.Secret, payload}
+	q := Query{"POST", c.path("events"), c.Key, c.Secret, payload, nil}
 
 	return c.post(q.generate(), payload)
 }
 
-func (c *Client) Channels() (error, string) {
-	q := Query{"GET", c.path("channels"), c.Key, c.Secret, nil}
+func (c *Client) Channels(additional_queries map[string]string) (error, string) {
+	q := Query{"GET", c.path("channels"), c.Key, c.Secret, nil, additional_queries}
 	return c.get(q.generate(), nil)
 }
 
