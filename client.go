@@ -17,18 +17,27 @@ func (c *Client) Trigger(channels []string, event string, _data map[string]strin
 		Channels: channels,
 		Data:     string(data)})
 
-	q := Query{"POST", c.path("events"), c.Key, c.Secret, payload, nil}
+	path := "/apps/" + c.AppId + "/" + "events"
+
+	q := Query{"POST", path, c.Key, c.Secret, payload, nil}
 
 	return c.post(q.generate(), payload)
 }
 
 func (c *Client) Channels(additional_queries map[string]string) (error, string) {
-	q := Query{"GET", c.path("channels"), c.Key, c.Secret, nil, additional_queries}
+
+	path := "/apps/" + c.AppId + "/channels"
+	q := Query{"GET", path, c.Key, c.Secret, nil, additional_queries}
 	return c.get(q.generate(), nil)
 }
 
-func (c *Client) path(resource string) string {
-	return "/apps/" + c.AppId + "/" + resource
+func (c *Client) Channel(name string, additional_queries map[string]string) (error, string) {
+
+	path := "/apps/" + c.AppId + "/channels/" + name
+
+	q := Query{"GET", path, c.Key, c.Secret, nil, additional_queries}
+
+	return c.get(q.generate(), nil)
 }
 
 func (c *Client) post(url string, body []byte) (error, string) {

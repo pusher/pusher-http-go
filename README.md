@@ -20,7 +20,7 @@ channelParams := map[string]string{
     "filter_by_prefix": "presence-",
     "info":             "user_count"}
 
-err, channels := newClient.Channels(channelParams)
+err, channels := client.Channels(channelParams)
 
 fmt.Println(channels)
 
@@ -30,4 +30,21 @@ fmt.Println(channels)
 //        }
 //    }
 
+```
+
+##Info From One Channel
+
+```go
+channelParams := map[string]string{
+    "info": "user_count"}
+
+err, channel := client.Channel("presence-chatroom", channelParams)
+
+fmt.Println(channel)
+
+//{
+//  occupied: true,
+//  user_count: 42,
+//  subscription_count: 42
+// }
 ```
