@@ -5,6 +5,8 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
+	// "fmt"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -27,29 +29,37 @@ func (q *Query) auth_timestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
-func (q *Query) pre_signature_string() string {
-	return "auth_key=" + q.key + "&" +
-		"auth_timestamp=" + q.auth_timestamp() + "&" +
-		"auth_version=" + auth_version + "&" +
-		"body_md5=" + q.body_md5()
+func (q *Query) unsigned_params() url.Values {
+
+	params := url.Values{}
+	params.Add("auth_key", q.key)
+	params.Add("auth_timestamp", q.auth_timestamp())
+	params.Add("auth_version", auth_version)
+	params.Add("body_md5", q.body_md5())
+
+	return params
 }
 
-func (q *Query) sign() (string, string) {
+func (q *Query) sign() (url.Values, string) {
 
-	pre_signature_string := q.pre_signature_string()
+	unsigned_params := q.unsigned_params()
 
 	to_sign := q.request_method +
 		"\n" +
 		q.path +
 		"\n" +
-		pre_signature_string
+		unsigned_params.Encode()
 
 	_auth_signature := hmac.New(sha256.New, []byte(q.secret))
 	_auth_signature.Write([]byte(to_sign))
-	return pre_signature_string, hex.EncodeToString(_auth_signature.Sum(nil))
+	return unsigned_params, hex.EncodeToString(_auth_signature.Sum(nil))
 }
 
 func (q *Query) generate() string {
-	pre_signature, auth_signature := q.sign()
-	return domain + q.path + "?" + pre_signature + "&auth_signature=" + auth_signature
+	params, auth_signature := q.sign()
+	params.Add("auth_signature", auth_signature)
+
+	endpoint, _ := url.Parse(domain + q.path)
+	endpoint.RawQuery = params.Encode()
+	return endpoint.String()
 }
