@@ -39,12 +39,11 @@ channelParams := map[string]string{
     "info": "user_count"}
 
 err, channel := client.Channel("presence-chatroom", channelParams)
-
-fmt.Println(channel)
-
-//{
-//  occupied: true,
-//  user_count: 42,
-//  subscription_count: 42
-// }
 ```
+
+###Gettings Users From Presence Channel
+
+```go
+err, users := channel.GetUsers()
+```
+

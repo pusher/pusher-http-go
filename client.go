@@ -21,31 +21,38 @@ func (c *Client) Trigger(channels []string, event string, _data map[string]strin
 
 	q := Query{"POST", path, c.Key, c.Secret, payload, nil}
 
-	return c.post(q.generate(), payload)
+	err, response := c.post(q.generate(), payload)
+	return err, string(response)
 }
 
 func (c *Client) Channels(additional_queries map[string]string) (error, string) {
 
 	path := "/apps/" + c.AppId + "/channels"
 	q := Query{"GET", path, c.Key, c.Secret, nil, additional_queries}
-	return c.get(q.generate(), nil)
+	err, response := c.get(q.generate(), nil)
+	return err, string(response)
 }
 
-func (c *Client) Channel(name string, additional_queries map[string]string) (error, string) {
+func (c *Client) Channel(name string, additional_queries map[string]string) (error, *Channel) {
 
 	path := "/apps/" + c.AppId + "/channels/" + name
 
 	q := Query{"GET", path, c.Key, c.Secret, nil, additional_queries}
 
-	return c.get(q.generate(), nil)
+	err, raw_channel_data := c.get(q.generate(), nil)
+
+	channel := &Channel{Name: name, Client: *c}
+	json.Unmarshal(raw_channel_data, &channel)
+	return err, channel
+
 }
 
-func (c *Client) post(url string, body []byte) (error, string) {
+func (c *Client) post(url string, body []byte) (error, []byte) {
 	request := &Request{"POST", url, body}
 	return request.send()
 }
 
-func (c *Client) get(url string, body []byte) (error, string) {
+func (c *Client) get(url string, body []byte) (error, []byte) {
 	request := &Request{"GET", url, body}
 	return request.send()
 }
