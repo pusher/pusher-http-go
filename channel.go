@@ -15,7 +15,7 @@ type Channel struct {
 
 func (c *Channel) GetUsers() (error, *Users) {
 	path := "/apps/" + c.Client.AppId + "/channels/" + c.Name + "/users"
-	q := Query{"GET", path, c.Client.Key, c.Client.Secret, nil, nil}
+	q := Url{"GET", path, c.Client.Key, c.Client.Secret, nil, nil}
 	err, raw_users := c.Client.get(q.generate(), nil)
 
 	fmt.Println(string(raw_users))

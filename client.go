@@ -19,7 +19,7 @@ func (c *Client) Trigger(channels []string, event string, _data map[string]strin
 
 	path := "/apps/" + c.AppId + "/" + "events"
 
-	q := Query{"POST", path, c.Key, c.Secret, payload, nil}
+	q := Url{"POST", path, c.Key, c.Secret, payload, nil}
 
 	err, response := c.post(q.generate(), payload)
 	return err, string(response)
@@ -28,7 +28,7 @@ func (c *Client) Trigger(channels []string, event string, _data map[string]strin
 func (c *Client) Channels(additional_queries map[string]string) (error, string) {
 
 	path := "/apps/" + c.AppId + "/channels"
-	q := Query{"GET", path, c.Key, c.Secret, nil, additional_queries}
+	q := Url{"GET", path, c.Key, c.Secret, nil, additional_queries}
 	err, response := c.get(q.generate(), nil)
 	return err, string(response)
 }
@@ -37,7 +37,7 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 
 	path := "/apps/" + c.AppId + "/channels/" + name
 
-	q := Query{"GET", path, c.Key, c.Secret, nil, additional_queries}
+	q := Url{"GET", path, c.Key, c.Secret, nil, additional_queries}
 
 	err, raw_channel_data := c.get(q.generate(), nil)
 
