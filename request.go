@@ -6,15 +6,8 @@ import (
 	"net/http"
 )
 
-type Request struct {
-	method string
-	url    string
-	body   []byte
-}
-
-func (r *Request) send() (error, []byte) {
-
-	req, err := http.NewRequest(r.method, r.url, bytes.NewBuffer(r.body))
+func Request(method, url string, body []byte) (error, []byte) {
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

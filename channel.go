@@ -2,7 +2,6 @@ package pusher
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type Channel struct {
@@ -15,10 +14,8 @@ type Channel struct {
 
 func (c *Channel) GetUsers() (error, *Users) {
 	path := "/apps/" + c.Client.AppId + "/channels/" + c.Name + "/users"
-	q := Url{"GET", path, c.Client.Key, c.Client.Secret, nil, nil}
-	err, raw_users := c.Client.get(q.generate(), nil)
-
-	fmt.Println(string(raw_users))
+	u := Url{"GET", path, c.Client.Key, c.Client.Secret, nil, nil}
+	err, raw_users := Request("GET", u.generate(), nil)
 
 	users := &Users{}
 	json.Unmarshal(raw_users, &users)
