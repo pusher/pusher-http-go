@@ -47,3 +47,23 @@ err, channel := client.Channel("presence-chatroom", channelParams)
 err, users := channel.GetUsers()
 ```
 
+## Authenticating Private Channels
+
+```go
+func pusher_auth(res http.ResponseWriter, req *http.Request) {
+
+    params, _ := ioutil.ReadAll(req.Body)
+    response := client.AuthenticateChannel(params)
+    fmt.Fprintf(res, response)
+
+}
+
+func main() {
+    http.HandleFunc("/", root)
+    http.HandleFunc("/pusher/auth", pusher_auth)
+
+    http.ListenAndServe(":5000", nil)
+}
+
+```
+

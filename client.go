@@ -2,7 +2,7 @@ package pusher
 
 import (
 	"encoding/json"
-	// "fmt"
+	"net/url"
 )
 
 type Client struct {
@@ -46,4 +46,21 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 	json.Unmarshal(raw_channel_data, &channel)
 	return err, channel
 
+}
+
+func (c *Client) AuthenticateChannel(_params []byte) string {
+	params, _ := url.ParseQuery(string(_params))
+
+	channel_name := params["channel_name"][0]
+	socket_id := params["socket_id"][0]
+
+	string_to_sign := socket_id + ":" + channel_name
+
+	auth_signature := HMACSignature(string_to_sign, c.Secret)
+
+	_response := map[string]string{"auth": c.Key + ":" + auth_signature}
+
+	response, _ := json.Marshal(_response)
+
+	return string(response)
 }

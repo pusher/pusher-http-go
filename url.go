@@ -1,11 +1,10 @@
 package pusher
 
 import (
-	"crypto/hmac"
 	"crypto/md5"
-	"crypto/sha256"
 	"encoding/hex"
 	"net/url"
+
 	"strconv"
 	"time"
 )
@@ -50,12 +49,6 @@ func (u *Url) unsigned_params() url.Values {
 	return params
 }
 
-func (u *Url) sign(to_sign, secret string) string {
-	_auth_signature := hmac.New(sha256.New, []byte(secret))
-	_auth_signature.Write([]byte(to_sign))
-	return hex.EncodeToString(_auth_signature.Sum(nil))
-}
-
 func (u *Url) unescape_url(Url url.Values) string {
 	unesc, _ := url.QueryUnescape(Url.Encode())
 	return unesc
@@ -67,7 +60,7 @@ func (u *Url) generate() string {
 
 	string_to_sign := u.request_method + "\n" + u.path + "\n" + u.unescape_url(params)
 
-	auth_signature := u.sign(string_to_sign, u.secret)
+	auth_signature := HMACSignature(string_to_sign, u.secret)
 	params.Add("auth_signature", auth_signature)
 
 	endpoint, _ := url.Parse(domain + u.path)
