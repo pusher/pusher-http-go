@@ -10,7 +10,7 @@ type Client struct {
 	AppId, Key, Secret string
 }
 
-func (c *Client) Trigger(channels []string, event string, _data map[string]string) (error, string) {
+func (c *Client) Trigger(channels []string, event string, _data interface{}) (error, string) {
 	data, _ := json.Marshal(_data)
 
 	payload, _ := json.Marshal(&EventBody{
@@ -60,21 +60,19 @@ func (c *Client) AuthenticateChannel(_params []byte, presence_data map[string]st
 	is_presence_channel := strings.HasPrefix(channel_name, "presence-")
 
 	var json_user_data string
+	_response := make(map[string]string)
 
 	if is_presence_channel && presence_data != nil {
 		_json_user_data, _ := json.Marshal(presence_data)
 		json_user_data = string(_json_user_data)
 		string_to_sign += ":" + json_user_data
+
+		_response["channel_data"] = json_user_data
 	}
 
 	auth_signature := HMACSignature(string_to_sign, c.Secret)
 
-	_response := make(map[string]string)
 	_response["auth"] = c.Key + ":" + auth_signature
-
-	if is_presence_channel {
-		_response["channel_data"] = json_user_data
-	}
 
 	response, _ := json.Marshal(_response)
 
