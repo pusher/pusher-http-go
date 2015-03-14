@@ -28,7 +28,6 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}) (er
 }
 
 func (c *Client) Channels(additional_queries map[string]string) (error, string) {
-
 	path := "/apps/" + c.AppId + "/channels"
 	u := Url{"GET", path, c.Key, c.Secret, nil, additional_queries}
 	err, response := Request("GET", u.generate(), nil)
@@ -60,7 +59,6 @@ func (c *Client) GetChannelUsers(name string) (error, *Users) {
 
 func (c *Client) AuthenticateChannel(_params []byte, presence_data MemberData) string {
 	params, _ := url.ParseQuery(string(_params))
-
 	channel_name := params["channel_name"][0]
 	socket_id := params["socket_id"][0]
 
