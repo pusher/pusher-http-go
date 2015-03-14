@@ -43,10 +43,19 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 
 	err, raw_channel_data := Request("GET", u.generate(), nil)
 
-	channel := &Channel{Name: name, Client: *c}
+	channel := &Channel{Name: name}
 	json.Unmarshal(raw_channel_data, &channel)
 	return err, channel
 
+}
+
+func (c *Client) GetChannelUsers(name string) (error, *Users) {
+	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
+	u := Url{"GET", path, c.Key, c.Secret, nil, nil}
+	err, raw_users := Request("GET", u.generate(), nil)
+	users := &Users{}
+	json.Unmarshal(raw_users, &users)
+	return err, users
 }
 
 func (c *Client) AuthenticateChannel(_params []byte, presence_data map[string]string) string {

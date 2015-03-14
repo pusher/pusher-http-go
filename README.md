@@ -44,7 +44,7 @@ err, channel := client.Channel("presence-chatroom", channelParams)
 ###Gettings Users From Presence Channel
 
 ```go
-err, users := channel.GetUsers()
+err, users := client.GetChannelUsers("presence-chatroom")
 ```
 
 ## Channel Authentication
