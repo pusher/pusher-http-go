@@ -13,7 +13,7 @@ type Client struct {
 func (c *Client) Trigger(channels []string, event string, _data interface{}) (error, string) {
 	data, _ := json.Marshal(_data)
 
-	payload, _ := json.Marshal(&EventBody{
+	payload, _ := json.Marshal(&Event{
 		Name:     event,
 		Channels: channels,
 		Data:     string(data)})
@@ -87,4 +87,8 @@ func (c *Client) AuthenticateChannel(_params []byte, presence_data MemberData) s
 	response, _ := json.Marshal(_response)
 
 	return string(response)
+}
+
+func (c *Client) Webhook() {
+
 }
