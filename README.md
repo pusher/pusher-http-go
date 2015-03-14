@@ -47,14 +47,16 @@ err, channel := client.Channel("presence-chatroom", channelParams)
 err, users := channel.GetUsers()
 ```
 
-## Authenticating Private Channels
+## Channel Authentication
+
+### Private Channels
 
 ```go
 func pusher_auth(res http.ResponseWriter, req *http.Request) {
 
     params, _ := ioutil.ReadAll(req.Body)
-    response := client.AuthenticateChannel(params)
-    fmt.Fprintf(res, response)
+    auth := client.AuthenticateChannel(params)
+    fmt.Fprintf(res, auth)
 
 }
 
@@ -66,4 +68,19 @@ func main() {
 }
 
 ```
+### Presence Channels
+
+Like private channels, but one passes in user data to be associated with the member.
+
+```go
+params, _ := ioutil.ReadAll(req.Body)
+
+presence_data := map[string]string{"user_id": "1"}
+auth := client.AuthenticateChannel(params, presence_data)
+
+fmt.Fprintf(res, auth)
+
+```
+
+
 
