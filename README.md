@@ -22,14 +22,9 @@ channelParams := map[string]string{
 
 err, channels := client.Channels(channelParams)
 
-fmt.Println(channels)
+fmt.Printf(channels)
 
-// => { "channels":
-//        { "presence-chatroom":
-//            { "user_count": 1 }
-//        }
-//    }
-
+// => &{Channels:map[presence-chatroom:{UserCount:4} private-notifications:{UserCount:31}  ]}
 ```
 
 ##Info From One Channel

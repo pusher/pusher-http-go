@@ -27,11 +27,14 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}) (er
 	return err, string(response)
 }
 
-func (c *Client) Channels(additional_queries map[string]string) (error, string) {
+func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
 	path := "/apps/" + c.AppId + "/channels"
 	u := Url{"GET", path, c.Key, c.Secret, nil, additional_queries}
 	err, response := Request("GET", u.generate(), nil)
-	return err, string(response)
+
+	channels := &ChannelsList{}
+	json.Unmarshal(response, &channels)
+	return err, channels
 }
 
 func (c *Client) Channel(name string, additional_queries map[string]string) (error, *Channel) {
