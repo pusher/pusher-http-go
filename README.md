@@ -75,7 +75,10 @@ Like private channels, but one passes in user data to be associated with the mem
 ```go
 params, _ := ioutil.ReadAll(req.Body)
 
-presence_data := map[string]string{"user_id": "1"}
+presence_data := pusher.MemberData{
+    UserId: "1", 
+    UserInfo: map[string]string{"twitter": "jamiepatel"}}
+
 auth := client.AuthenticateChannel(params, presence_data)
 
 fmt.Fprintf(res, auth)

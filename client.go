@@ -58,7 +58,7 @@ func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	return err, users
 }
 
-func (c *Client) AuthenticateChannel(_params []byte, presence_data map[string]string) string {
+func (c *Client) AuthenticateChannel(_params []byte, presence_data MemberData) string {
 	params, _ := url.ParseQuery(string(_params))
 
 	channel_name := params["channel_name"][0]
@@ -71,7 +71,7 @@ func (c *Client) AuthenticateChannel(_params []byte, presence_data map[string]st
 	var json_user_data string
 	_response := make(map[string]string)
 
-	if is_presence_channel && presence_data != nil {
+	if is_presence_channel {
 		_json_user_data, _ := json.Marshal(presence_data)
 		json_user_data = string(_json_user_data)
 		string_to_sign += ":" + json_user_data

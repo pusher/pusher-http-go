@@ -14,3 +14,8 @@ type Users struct {
 type User struct {
 	Id string `json:"id"`
 }
+
+type MemberData struct {
+	UserId   string            `json:"user_id"`
+	UserInfo map[string]string `json:"user_info",omitempty`
+}
