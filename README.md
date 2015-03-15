@@ -10,7 +10,15 @@ client := pusher.Client{
 
 data := map[string]string{"message": "hello world"}
 
-client.Trigger([]string{"test_channel"}, "my_event", data)
+client.Trigger([]string{"test_channel"}, "my_event", data, "")
+```
+
+### Excluding Recipients
+
+In place of the `""` in the last example, we enter the socket_id of the connection we wish to exclude from receiving the event:
+
+```go
+client.Trigger([]string{"test_channel"}, "my_event", data, "1234.5678")
 ```
 
 ##Info From All Channels
@@ -100,7 +108,7 @@ Feature                                    | Supported
 -------------------------------------------| :-------:
 Trigger event on single channel            | *&#10004;*
 Trigger event on multiple channels         | *&#10004;*
-Excluding recipients from events           | *&#10008;*
+Excluding recipients from events           | *&#10004;*
 Authenticating private channels            | *&#10004;*
 Authenticating presence channels           | *&#10004;*
 Get the list of channels in an application | *&#10004;*

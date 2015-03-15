@@ -2,7 +2,7 @@ package pusher
 
 import (
 	"encoding/json"
-	"fmt"
+	// "fmt"
 	// "io"
 	// "io/ioutil"
 	"net/http"
@@ -15,13 +15,14 @@ type Client struct {
 	AppId, Key, Secret string
 }
 
-func (c *Client) Trigger(channels []string, event string, _data interface{}) (error, string) {
+func (c *Client) Trigger(channels []string, event string, _data interface{}, socket_id string) (error, string) {
 	data, _ := json.Marshal(_data)
 
 	payload, _ := json.Marshal(&Event{
 		Name:     event,
 		Channels: channels,
-		Data:     string(data)})
+		Data:     string(data),
+		SocketId: socket_id})
 
 	path := "/apps/" + c.AppId + "/" + "events"
 
@@ -93,10 +94,6 @@ func (c *Client) AuthenticateChannel(_params []byte, presence_data MemberData) s
 }
 
 func (c *Client) Webhook(header http.Header, body []byte) *Webhook {
-
-	fmt.Println(header)
-	fmt.Println(string(body))
-
 	webhook := &Webhook{Key: c.Key, Secret: c.Secret, Header: header, RawBody: string(body)}
 	json.Unmarshal(body, &webhook)
 	return webhook
