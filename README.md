@@ -85,7 +85,7 @@ fmt.Fprintf(res, auth)
 ```go
 body, _ := ioutil.ReadAll(req.Body)
 
-webhook := client.Webhook(req.Header, _params)
+webhook := client.Webhook(req.Header, body)
 
 if webhook.IsValid() {
     fmt.Printf("%+v\n", webhook.Events)
