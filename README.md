@@ -80,6 +80,20 @@ fmt.Fprintf(res, auth)
 
 ```
 
+## Webhooks
+
+```go
+body, _ := ioutil.ReadAll(req.Body)
+
+webhook := client.Webhook(req.Header, _params)
+
+if webhook.IsValid() {
+    fmt.Printf("%+v\n", webhook.Events)
+} else {
+    fmt.Println("boo!")
+}
+```
+
 ## Feature Support
 
 Feature                                    | Supported
@@ -92,7 +106,7 @@ Authenticating presence channels           | *&#10004;*
 Get the list of channels in an application | *&#10004;*
 Get the state of a single channel          | *&#10004;*
 Get a list of users in a presence channel  | *&#10004;*
-WebHook validation                         | *&#10008;*
+WebHook validation                         | *&#10004;*
 Debugging & Logging                        | *&#10008;*
 HTTPS                                      | *&#10008;*
 HTTP Proxy configuration                   | *&#10008;*

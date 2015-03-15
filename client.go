@@ -2,6 +2,11 @@ package pusher
 
 import (
 	"encoding/json"
+	"fmt"
+	// "io"
+	// "io/ioutil"
+	"net/http"
+	// "net/http/httputil"
 	"net/url"
 	"strings"
 )
@@ -81,14 +86,18 @@ func (c *Client) AuthenticateChannel(_params []byte, presence_data MemberData) s
 	}
 
 	auth_signature := HMACSignature(string_to_sign, c.Secret)
-
 	_response["auth"] = c.Key + ":" + auth_signature
-
 	response, _ := json.Marshal(_response)
 
 	return string(response)
 }
 
-func (c *Client) Webhook() {
+func (c *Client) Webhook(header http.Header, body []byte) *Webhook {
 
+	fmt.Println(header)
+	fmt.Println(string(body))
+
+	webhook := &Webhook{Key: c.Key, Secret: c.Secret, Header: header, RawBody: string(body)}
+	json.Unmarshal(body, &webhook)
+	return webhook
 }
