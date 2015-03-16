@@ -10,7 +10,7 @@ client := pusher.Client{
 
 data := map[string]string{"message": "hello world"}
 
-client.Trigger([]string{"test_channel"}, "my_event", data, "")
+client.Trigger([]string{"test_channel"}, "my_event", data)
 ```
 
 ### Excluding Recipients
@@ -18,7 +18,7 @@ client.Trigger([]string{"test_channel"}, "my_event", data, "")
 In place of the `""` in the last example, we enter the socket_id of the connection we wish to exclude from receiving the event:
 
 ```go
-client.Trigger([]string{"test_channel"}, "my_event", data, "1234.5678")
+client.TriggerExclusive([]string{"test_channel"}, "my_event", data, "1234.5678")
 ```
 
 ##Info From All Channels

@@ -15,7 +15,7 @@ type Client struct {
 	AppId, Key, Secret string
 }
 
-func (c *Client) Trigger(channels []string, event string, _data interface{}, socket_id string) (error, string) {
+func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (error, string) {
 	data, _ := json.Marshal(_data)
 
 	payload, _ := json.Marshal(&Event{
@@ -31,6 +31,14 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}, soc
 	err, response := Request("POST", u.generate(), payload)
 
 	return err, string(response)
+}
+
+func (c *Client) Trigger(channels []string, event string, _data interface{}) (error, string) {
+	return c.trigger(channels, event, _data, "")
+}
+
+func (c *Client) TriggerExclusive(channels []string, event string, _data interface{}, socket_id string) (error, string) {
+	return c.trigger(channels, event, _data, socket_id)
 }
 
 func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
