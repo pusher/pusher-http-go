@@ -24,6 +24,6 @@ type User struct {
 }
 
 type MemberData struct {
-	UserId   string            `json:"user_id"`
+	UserId   int               `json:"user_id"`
 	UserInfo map[string]string `json:"user_info",omitempty`
 }

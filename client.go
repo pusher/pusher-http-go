@@ -3,18 +3,11 @@ package pusher
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
-	"time"
 )
 
 type Client struct {
 	AppId, Key, Secret string
-}
-
-func auth_timestamp() string {
-	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
 func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (error, string) {
@@ -64,12 +57,28 @@ func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	return err, unmarshalledChannelUsers(response)
 }
 
-func (c *Client) AuthenticateChannel(_params []byte, presence_data MemberData) string {
-	params, _ := url.ParseQuery(string(_params))
-	channel_name := params["channel_name"][0]
-	socket_id := params["socket_id"][0]
+func (c *Client) AuthenticatePrivateChannel(_params []byte) string {
 
-	string_to_sign := socket_id + ":" + channel_name
+	channel_name, socket_id := parseAuthRequestParams(_params)
+
+	string_to_sign := strings.Join([]string{socket_id, channel_name}, ":")
+
+	auth_signature := HMACSignature(string_to_sign, c.Secret)
+
+	auth_string := strings.Join([]string{c.Key, auth_signature}, ":")
+
+	_response := map[string]string{"auth": auth_string}
+
+	response, _ := json.Marshal(_response)
+
+	return string(response)
+}
+
+func (c *Client) AuthenticatePresenceChannel(_params []byte, presence_data interface{}) string {
+
+	channel_name, socket_id := parseAuthRequestParams(_params)
+
+	string_to_sign := strings.Join([]string{socket_id, channel_name}, ":")
 
 	is_presence_channel := strings.HasPrefix(channel_name, "presence-")
 
