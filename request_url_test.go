@@ -20,9 +20,7 @@ func TestGetAllChannels(t *testing.T) {
 
 	expected := "http://api.pusherapp.com/apps/102015/channels?auth_key=d41a439c438a100756f5&auth_signature=4d8a02edcc8a758b0162cd6da690a9a45fb8ae326a276dca1e06a0bc42796c11&auth_timestamp=1427034994&auth_version=1.0&filter_by_prefix=presence-&info=user_count"
 
-	additional_queries := map[string]string{
-		"filter_by_prefix": "presence-",
-		"info":             "user_count"}
+	additional_queries := map[string]string{"filter_by_prefix": "presence-", "info": "user_count"}
 
 	result := CreateRequestUrl("GET", "/apps/102015/channels", "d41a439c438a100756f5", "4bf35003e819bb138249", "1427034994", nil, additional_queries)
 
@@ -36,11 +34,22 @@ func TestGetAllChannelsWithOneAdditionalParam(t *testing.T) {
 
 	expected := "http://api.pusherapp.com/apps/102015/channels?auth_key=d41a439c438a100756f5&auth_signature=b540383af4582af5fbb5df7be5472d54bd0838c9c2021c7743062568839e6f97&auth_timestamp=1427036577&auth_version=1.0&filter_by_prefix=presence-"
 
-	additional_queries := map[string]string{
-		"filter_by_prefix": "presence-",
-	}
+	additional_queries := map[string]string{"filter_by_prefix": "presence-"}
 
 	result := CreateRequestUrl("GET", "/apps/102015/channels", "d41a439c438a100756f5", "4bf35003e819bb138249", "1427036577", nil, additional_queries)
+
+	if result != expected {
+		t.Error("Expected "+expected+", got", result)
+	}
+}
+
+func TestGetAllChannelsWithNoParams(t *testing.T) {
+
+	expected := "http://api.pusherapp.com/apps/102015/channels?auth_key=d41a439c438a100756f5&auth_signature=df89248f87f6e6d028925e0b04d60f316527a865992ace6936afa91281d8bef0&auth_timestamp=1427036787&auth_version=1.0"
+
+	additional_queries := map[string]string{}
+
+	result := CreateRequestUrl("GET", "/apps/102015/channels", "d41a439c438a100756f5", "4bf35003e819bb138249", "1427036787", nil, additional_queries)
 
 	if result != expected {
 		t.Error("Expected "+expected+", got", result)
