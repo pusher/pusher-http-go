@@ -31,3 +31,19 @@ func TestGetAllChannels(t *testing.T) {
 	}
 
 }
+
+func TestGetAllChannelsWithOneAdditionalParam(t *testing.T) {
+
+	expected := "http://api.pusherapp.com/apps/102015/channels?auth_key=d41a439c438a100756f5&auth_signature=b540383af4582af5fbb5df7be5472d54bd0838c9c2021c7743062568839e6f97&auth_timestamp=1427036577&auth_version=1.0&filter_by_prefix=presence-"
+
+	additional_queries := map[string]string{
+		"filter_by_prefix": "presence-",
+	}
+
+	result := CreateRequestUrl("GET", "/apps/102015/channels", "d41a439c438a100756f5", "4bf35003e819bb138249", "1427036577", nil, additional_queries)
+
+	if result != expected {
+		t.Error("Expected "+expected+", got", result)
+	}
+
+}
