@@ -42,7 +42,7 @@ func unescape_url(_url url.Values) string {
 	return unesc
 }
 
-func CreateRequestUrl(method, path, key, secret, timestamp string, body []byte, additional_queries map[string]string) string {
+func createRequestUrl(method, path, key, secret, timestamp string, body []byte, additional_queries map[string]string) string {
 	params := unsigned_params(key, timestamp, body, additional_queries)
 
 	string_to_sign := strings.Join([]string{method, path, unescape_url(params)}, "\n")
