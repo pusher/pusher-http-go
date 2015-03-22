@@ -45,37 +45,23 @@ func (c *Client) TriggerExclusive(channels []string, event string, _data interfa
 
 func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
 	path := "/apps/" + c.AppId + "/channels"
-
 	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
-
 	err, response := Request("GET", u, nil)
-
-	channels := &ChannelsList{}
-	json.Unmarshal(response, &channels)
-	return err, channels
+	return err, unmarshalledChannelsList(response)
 }
 
 func (c *Client) Channel(name string, additional_queries map[string]string) (error, *Channel) {
-
 	path := "/apps/" + c.AppId + "/channels/" + name
-
 	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
-
-	err, raw_channel_data := Request("GET", u, nil)
-
-	channel := &Channel{Name: name}
-	json.Unmarshal(raw_channel_data, &channel)
-	return err, channel
-
+	err, response := Request("GET", u, nil)
+	return err, unmarshalledChannel(response, name)
 }
 
 func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
 	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, nil)
-	err, raw_users := Request("GET", u, nil)
-	users := &Users{}
-	json.Unmarshal(raw_users, &users)
-	return err, users
+	err, response := Request("GET", u, nil)
+	return err, unmarshalledChannelUsers(response)
 }
 
 func (c *Client) AuthenticateChannel(_params []byte, presence_data MemberData) string {
