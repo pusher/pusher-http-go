@@ -2,16 +2,12 @@ package pusher
 
 import (
 	"encoding/json"
-	// "fmt"
-	"strconv"
-	"time"
-
-	// "io"
-	// "io/ioutil"
+	"fmt"
 	"net/http"
-	// "net/http/httputil"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -51,7 +47,11 @@ func (c *Client) TriggerExclusive(channels []string, event string, _data interfa
 func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
 	path := "/apps/" + c.AppId + "/channels"
 
+	fmt.Println("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+
 	u := CreateRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+
+	fmt.Println(u)
 
 	err, response := Request("GET", u, nil)
 
