@@ -26,9 +26,9 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 
 	path := "/apps/" + c.AppId + "/" + "events"
 
-	u := Url{"POST", path, c.Key, c.Secret, payload, nil}
+	u := CreateRequestUrl("POST", path, c.Key, c.Secret, payload, nil)
 
-	err, response := Request("POST", u.generate(), payload)
+	err, response := Request("POST", u, payload)
 
 	return err, string(response)
 }
@@ -43,8 +43,10 @@ func (c *Client) TriggerExclusive(channels []string, event string, _data interfa
 
 func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
 	path := "/apps/" + c.AppId + "/channels"
-	u := Url{"GET", path, c.Key, c.Secret, nil, additional_queries}
-	err, response := Request("GET", u.generate(), nil)
+
+	u := CreateRequestUrl("GET", path, c.Key, c.Secret, nil, additional_queries)
+
+	err, response := Request("GET", u, nil)
 
 	channels := &ChannelsList{}
 	json.Unmarshal(response, &channels)
@@ -55,9 +57,9 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 
 	path := "/apps/" + c.AppId + "/channels/" + name
 
-	u := Url{"GET", path, c.Key, c.Secret, nil, additional_queries}
+	u := CreateRequestUrl("GET", path, c.Key, c.Secret, nil, additional_queries)
 
-	err, raw_channel_data := Request("GET", u.generate(), nil)
+	err, raw_channel_data := Request("GET", u, nil)
 
 	channel := &Channel{Name: name}
 	json.Unmarshal(raw_channel_data, &channel)
@@ -67,8 +69,8 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 
 func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
-	u := Url{"GET", path, c.Key, c.Secret, nil, nil}
-	err, raw_users := Request("GET", u.generate(), nil)
+	u := CreateRequestUrl("GET", path, c.Key, c.Secret, nil, nil)
+	err, raw_users := Request("GET", u, nil)
 	users := &Users{}
 	json.Unmarshal(raw_users, &users)
 	return err, users

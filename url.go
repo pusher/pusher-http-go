@@ -4,67 +4,62 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"net/url"
-
 	"strconv"
+	"strings"
 	"time"
 )
 
 const auth_version = "1.0"
 const domain = "http://api.pusherapp.com"
 
-type Url struct {
-	request_method, path, key, secret string
-	body                              []byte
-	additional_queries                map[string]string
-}
-
-func (u *Url) body_md5() string {
-	_body_md5 := md5.New()
-	_body_md5.Write([]byte(u.body))
-	return hex.EncodeToString(_body_md5.Sum(nil))
-}
-
-func (u *Url) auth_timestamp() string {
+func auth_timestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
-func (u *Url) unsigned_params() url.Values {
+func createBodyMD5(body []byte) string {
+	_body_md5 := md5.New()
+	_body_md5.Write([]byte(body))
+	return hex.EncodeToString(_body_md5.Sum(nil))
+}
 
+func unsigned_params(key string, body []byte, additional_queries map[string]string) url.Values {
 	params := url.Values{
-		"auth_key":       {u.key},
-		"auth_timestamp": {u.auth_timestamp()},
+		"auth_key":       {key},
+		"auth_timestamp": {auth_timestamp()},
 		"auth_version":   {auth_version},
 	}
 
-	if u.body != nil {
-		params.Add("body_md5", u.body_md5())
+	if body != nil {
+		params.Add("body_md5", createBodyMD5(body))
 	}
 
-	if u.additional_queries != nil {
-		for key, values := range u.additional_queries {
+	if additional_queries != nil {
+		for key, values := range additional_queries {
 			params.Add(key, values)
 		}
 	}
 
 	return params
+
 }
 
-func (u *Url) unescape_url(Url url.Values) string {
-	unesc, _ := url.QueryUnescape(Url.Encode())
+func unescape_url(_url url.Values) string {
+	unesc, _ := url.QueryUnescape(_url.Encode())
 	return unesc
 }
 
-func (u *Url) generate() string {
+func CreateRequestUrl(method, path, key, secret string, body []byte, additional_queries map[string]string) string {
+	params := unsigned_params(key, body, additional_queries)
 
-	params := u.unsigned_params()
+	string_to_sign := strings.Join([]string{method, path, unescape_url(params)}, "\n")
 
-	string_to_sign := u.request_method + "\n" + u.path + "\n" + u.unescape_url(params)
+	auth_signature := HMACSignature(string_to_sign, secret)
 
-	auth_signature := HMACSignature(string_to_sign, u.secret)
 	params.Add("auth_signature", auth_signature)
 
-	endpoint, _ := url.Parse(domain + u.path)
-	endpoint.RawQuery = u.unescape_url(params)
+	endpoint, _ := url.Parse(domain + path)
+
+	endpoint.RawQuery = unescape_url(params)
 
 	return endpoint.String()
 }
