@@ -47,11 +47,11 @@ func (c *Client) TriggerExclusive(channels []string, event string, _data interfa
 func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
 	path := "/apps/" + c.AppId + "/channels"
 
-	fmt.Println("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+	// fmt.Println("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
 
 	u := CreateRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
 
-	fmt.Println(u)
+	// fmt.Println(u)
 
 	err, response := Request("GET", u, nil)
 
@@ -64,7 +64,11 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 
 	path := "/apps/" + c.AppId + "/channels/" + name
 
+	// fmt.Println("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+
 	u := CreateRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+
+	// fmt.Println(u)
 
 	err, raw_channel_data := Request("GET", u, nil)
 
@@ -76,7 +80,13 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 
 func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
+
+	fmt.Println("GET", path, c.Key, c.Secret, auth_timestamp(), nil, nil)
+
 	u := CreateRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, nil)
+
+	fmt.Println(u)
+
 	err, raw_users := Request("GET", u, nil)
 	users := &Users{}
 	json.Unmarshal(raw_users, &users)
