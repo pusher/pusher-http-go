@@ -21,16 +21,21 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 		return errors.New("At least one of your channels' names are invalid"), ""
 	}
 
-	payload := createTriggerPayload(channels, event, _data, socket_id)
-	path := "/apps/" + c.AppId + "/" + "events"
-	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
+	payload, size_err := createTriggerPayload(channels, event, _data, socket_id)
 
-	err, response := request("POST", u, payload)
-	if err != nil {
-		return err, ""
+	if size_err != nil {
+		return size_err, ""
 	}
 
-	return err, string(response)
+	path := "/apps/" + c.AppId + "/" + "events"
+	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
+	response_err, response := request("POST", u, payload)
+
+	if response_err != nil {
+		return response_err, ""
+	}
+
+	return nil, string(response)
 }
 
 func (c *Client) Trigger(channels []string, event string, _data interface{}) (error, string) {

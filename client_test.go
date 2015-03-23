@@ -63,7 +63,11 @@ func TestChannelLengthValidation(t *testing.T) {
 func TestChannelFormatValidation(t *testing.T) {
 	channel1 := "w000^$$£@@@"
 
-	channel2 := "lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll"
+	var channel2 string
+
+	for i := 0; i <= 202; i++ {
+		channel2 += "a"
+	}
 
 	client := Client{AppId: "id", Key: "key", Secret: "secret"}
 	err1, res1 := client.Trigger([]string{channel1}, "yolo", "w00t")
@@ -75,5 +79,20 @@ func TestChannelFormatValidation(t *testing.T) {
 
 	assert.EqualError(t, err2, "At least one of your channels' names are invalid")
 	assert.Equal(t, "", res2)
+
+}
+
+func TestDataSizeValidation(t *testing.T) {
+	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+
+	var data string
+
+	for i := 0; i <= 10242; i++ {
+		data += "a"
+	}
+	err, res := client.Trigger([]string{"channel"}, "event", data)
+
+	assert.EqualError(t, err, "Data must be smaller than 10kb")
+	assert.Equal(t, "", res)
 
 }
