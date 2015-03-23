@@ -49,12 +49,6 @@ func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	return err, unmarshalledChannelUsers(response)
 }
 
-func (c *Client) authenticatePrivateChannel(_params []byte, string_to_sign string) string {
-	_response := createAuthMap(c.Key, c.Secret, string_to_sign)
-	response, _ := json.Marshal(_response)
-	return string(response)
-}
-
 func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) string {
 
 	channel_name, socket_id := parseAuthRequestParams(_params)
@@ -68,6 +62,12 @@ func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) strin
 		return c.authenticatePrivateChannel(_params, string_to_sign)
 	}
 
+}
+
+func (c *Client) authenticatePrivateChannel(_params []byte, string_to_sign string) string {
+	_response := createAuthMap(c.Key, c.Secret, string_to_sign)
+	response, _ := json.Marshal(_response)
+	return string(response)
 }
 
 func (c *Client) authenticatePresenceChannel(_params []byte, string_to_sign string, presence_data MemberData) string {
