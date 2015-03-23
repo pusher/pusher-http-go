@@ -20,6 +20,9 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 	fmt.Println(u)
 
 	err, response := request("POST", u, payload)
+	if err != nil {
+		return err, ""
+	}
 
 	return err, string(response)
 }
@@ -36,6 +39,9 @@ func (c *Client) Channels(additional_queries map[string]string) (error, *Channel
 	path := "/apps/" + c.AppId + "/channels"
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
 	err, response := request("GET", u, nil)
+	if err != nil {
+		return err, nil
+	}
 	return err, unmarshalledChannelsList(response)
 }
 
@@ -43,6 +49,9 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 	path := "/apps/" + c.AppId + "/channels/" + name
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
 	err, response := request("GET", u, nil)
+	if err != nil {
+		return err, nil
+	}
 	return err, unmarshalledChannel(response, name)
 }
 
@@ -50,6 +59,9 @@ func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, nil)
 	err, response := request("GET", u, nil)
+	if err != nil {
+		return err, nil
+	}
 	return err, unmarshalledChannelUsers(response)
 }
 
