@@ -59,3 +59,21 @@ func TestChannelLengthValidation(t *testing.T) {
 	assert.EqualError(t, err, "You cannot trigger on more than 10 channels at once")
 	assert.Equal(t, "", res)
 }
+
+func TestChannelFormatValidation(t *testing.T) {
+	channel1 := "w000^$$£@@@"
+
+	channel2 := "lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll"
+
+	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	err1, res1 := client.Trigger([]string{channel1}, "yolo", "w00t")
+
+	err2, res2 := client.Trigger([]string{channel2}, "yolo", "not 19 forever")
+
+	assert.EqualError(t, err1, "At least one of your channels' names are invalid")
+	assert.Equal(t, "", res1)
+
+	assert.EqualError(t, err2, "At least one of your channels' names are invalid")
+	assert.Equal(t, "", res2)
+
+}

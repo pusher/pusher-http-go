@@ -17,6 +17,10 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 		return errors.New("You cannot trigger on more than 10 channels at once"), ""
 	}
 
+	if !channelsAreValid(channels) {
+		return errors.New("At least one of your channels' names are invalid"), ""
+	}
+
 	payload := createTriggerPayload(channels, event, _data, socket_id)
 	path := "/apps/" + c.AppId + "/" + "events"
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
