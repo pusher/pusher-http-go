@@ -11,18 +11,10 @@ type Client struct {
 }
 
 func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (error, string) {
-	data, _ := json.Marshal(_data)
 
-	payload, _ := json.Marshal(&Event{
-		Name:     event,
-		Channels: channels,
-		Data:     string(data),
-		SocketId: socket_id})
-
+	payload := createTriggerPayload(channels, event, _data, socket_id)
 	path := "/apps/" + c.AppId + "/" + "events"
-
 	u := createRequestUrl("POST", path, c.Key, c.Secret, auth_timestamp(), payload, nil)
-
 	err, response := request("POST", u, payload)
 
 	return err, string(response)
