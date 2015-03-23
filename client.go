@@ -2,7 +2,7 @@ package pusher
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -13,11 +13,13 @@ type Client struct {
 
 func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (error, string) {
 
+	if len(channels) > 10 {
+		return errors.New("You cannot trigger on more than 10 channels at once"), ""
+	}
+
 	payload := createTriggerPayload(channels, event, _data, socket_id)
 	path := "/apps/" + c.AppId + "/" + "events"
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
-
-	fmt.Println(u)
 
 	err, response := request("POST", u, payload)
 	if err != nil {

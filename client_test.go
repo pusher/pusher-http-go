@@ -15,9 +15,11 @@ func TestTriggerSuccessCase(t *testing.T) {
 		res.WriteHeader(200)
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
+
 		expected_body := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"\\\"yolo\\\"\",\"socket_id\":\"\"}"
 		actual_body, err := ioutil.ReadAll(req.Body)
 		assert.Equal(t, expected_body, string(actual_body))
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.NoError(t, err)
 
 	}))
@@ -46,4 +48,14 @@ func TestErrorResponseHandler(t *testing.T) {
 	assert.Error(t, err)
 	assert.EqualError(t, err, "Status Code: 400 - Cannot retrieve the user count unless the channel is a presence channel")
 	assert.Nil(t, channel)
+}
+
+func TestChannelLengthValidation(t *testing.T) {
+	channels := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"}
+
+	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	err, res := client.Trigger(channels, "yolo", "woot")
+
+	assert.EqualError(t, err, "You cannot trigger on more than 10 channels at once")
+	assert.Equal(t, "", res)
 }
