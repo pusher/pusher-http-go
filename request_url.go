@@ -43,10 +43,12 @@ func createRequestUrl(method, host, path, key, secret, timestamp string, body []
 	params.Add("auth_signature", auth_signature)
 
 	if host == "" {
-		host = "http://api.pusherapp.com"
+		host = "api.pusherapp.com"
 	}
 
-	endpoint, _ := url.Parse(host + path)
+	base := "http://" + host
+
+	endpoint, _ := url.Parse(base + path)
 
 	endpoint.RawQuery = unescape_url(params)
 
