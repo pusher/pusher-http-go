@@ -2,6 +2,7 @@ package pusher
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -15,6 +16,9 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 	payload := createTriggerPayload(channels, event, _data, socket_id)
 	path := "/apps/" + c.AppId + "/" + "events"
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
+
+	fmt.Println(u)
+
 	err, response := request("POST", u, payload)
 
 	return err, string(response)
