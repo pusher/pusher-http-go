@@ -1,20 +1,12 @@
 package pusher
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"net/url"
 	"strings"
 )
 
 const auth_version = "1.0"
 const domain = "http://api.pusherapp.com"
-
-func createBodyMD5(body []byte) string {
-	_body_md5 := md5.New()
-	_body_md5.Write([]byte(body))
-	return hex.EncodeToString(_body_md5.Sum(nil))
-}
 
 func unsigned_params(key, timestamp string, body []byte, additional_queries map[string]string) url.Values {
 	params := url.Values{
@@ -24,7 +16,7 @@ func unsigned_params(key, timestamp string, body []byte, additional_queries map[
 	}
 
 	if body != nil {
-		params.Add("body_md5", createBodyMD5(body))
+		params.Add("body_md5", md5Signature(body))
 	}
 
 	if additional_queries != nil {
