@@ -47,7 +47,7 @@ func createRequestUrl(method, path, key, secret, timestamp string, body []byte, 
 
 	string_to_sign := strings.Join([]string{method, path, unescape_url(params)}, "\n")
 
-	auth_signature := HMACSignature(string_to_sign, secret)
+	auth_signature := hmacSignature(string_to_sign, secret)
 
 	params.Add("auth_signature", auth_signature)
 

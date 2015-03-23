@@ -16,7 +16,7 @@ func (w *Webhook) IsValid() bool {
 
 	for _, token := range w.Header["X-Pusher-Key"] {
 		if token == w.Key {
-			return CheckSignature(w.Header["X-Pusher-Signature"][0], w.RawBody, w.Secret)
+			return checkSignature(w.Header["X-Pusher-Signature"][0], w.RawBody, w.Secret)
 		}
 	}
 	return false

@@ -23,7 +23,7 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 
 	u := createRequestUrl("POST", path, c.Key, c.Secret, auth_timestamp(), payload, nil)
 
-	err, response := Request("POST", u, payload)
+	err, response := request("POST", u, payload)
 
 	return err, string(response)
 }
@@ -39,34 +39,27 @@ func (c *Client) TriggerExclusive(channels []string, event string, _data interfa
 func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
 	path := "/apps/" + c.AppId + "/channels"
 	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
-	err, response := Request("GET", u, nil)
+	err, response := request("GET", u, nil)
 	return err, unmarshalledChannelsList(response)
 }
 
 func (c *Client) Channel(name string, additional_queries map[string]string) (error, *Channel) {
 	path := "/apps/" + c.AppId + "/channels/" + name
 	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
-	err, response := Request("GET", u, nil)
+	err, response := request("GET", u, nil)
 	return err, unmarshalledChannel(response, name)
 }
 
 func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
 	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, nil)
-	err, response := Request("GET", u, nil)
+	err, response := request("GET", u, nil)
 	return err, unmarshalledChannelUsers(response)
 }
 
-func (c *Client) AuthenticatePrivateChannel(_params []byte, string_to_sign string) string {
-
-	auth_signature := HMACSignature(string_to_sign, c.Secret)
-
-	auth_string := strings.Join([]string{c.Key, auth_signature}, ":")
-
-	_response := map[string]string{"auth": auth_string}
-
+func (c *Client) authenticatePrivateChannel(_params []byte, string_to_sign string) string {
+	_response := createAuthMap(c.Key, c.Secret, string_to_sign)
 	response, _ := json.Marshal(_response)
-
 	return string(response)
 }
 
@@ -78,28 +71,23 @@ func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) strin
 
 	if is_presence_channel {
 		presence_data := member[0]
-		return c.AuthenticatePresenceChannel(_params, string_to_sign, presence_data)
+		return c.authenticatePresenceChannel(_params, string_to_sign, presence_data)
 	} else {
-		return c.AuthenticatePrivateChannel(_params, string_to_sign)
+		return c.authenticatePrivateChannel(_params, string_to_sign)
 	}
 
 }
 
-func (c *Client) AuthenticatePresenceChannel(_params []byte, string_to_sign string, presence_data MemberData) string {
+func (c *Client) authenticatePresenceChannel(_params []byte, string_to_sign string, presence_data MemberData) string {
 
 	_json_user_data, _ := json.Marshal(presence_data)
 	json_user_data := string(_json_user_data)
 
 	string_to_sign = strings.Join([]string{string_to_sign, json_user_data}, ":")
 
-	auth_signature := HMACSignature(string_to_sign, c.Secret)
-
-	auth_string := strings.Join([]string{c.Key, auth_signature}, ":")
-
-	_response := map[string]string{"auth": auth_string, "channel_data": json_user_data}
-
+	_response := createAuthMap(c.Key, c.Secret, string_to_sign)
+	_response["channel_data"] = json_user_data
 	response, _ := json.Marshal(_response)
-
 	return string(response)
 }
 

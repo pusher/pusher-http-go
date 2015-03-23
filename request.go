@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func Request(method, url string, body []byte) (error, []byte) {
+func request(method, url string, body []byte) (error, []byte) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
