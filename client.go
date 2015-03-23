@@ -57,11 +57,7 @@ func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	return err, unmarshalledChannelUsers(response)
 }
 
-func (c *Client) AuthenticatePrivateChannel(_params []byte) string {
-
-	channel_name, socket_id := parseAuthRequestParams(_params)
-
-	string_to_sign := strings.Join([]string{socket_id, channel_name}, ":")
+func (c *Client) AuthenticatePrivateChannel(_params []byte, string_to_sign string) string {
 
 	auth_signature := HMACSignature(string_to_sign, c.Secret)
 
@@ -74,27 +70,34 @@ func (c *Client) AuthenticatePrivateChannel(_params []byte) string {
 	return string(response)
 }
 
-func (c *Client) AuthenticatePresenceChannel(_params []byte, presence_data interface{}) string {
+func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) string {
 
 	channel_name, socket_id := parseAuthRequestParams(_params)
-
 	string_to_sign := strings.Join([]string{socket_id, channel_name}, ":")
-
 	is_presence_channel := strings.HasPrefix(channel_name, "presence-")
 
-	var json_user_data string
-	_response := make(map[string]string)
-
 	if is_presence_channel {
-		_json_user_data, _ := json.Marshal(presence_data)
-		json_user_data = string(_json_user_data)
-		string_to_sign += ":" + json_user_data
-
-		_response["channel_data"] = json_user_data
+		presence_data := member[0]
+		return c.AuthenticatePresenceChannel(_params, string_to_sign, presence_data)
+	} else {
+		return c.AuthenticatePrivateChannel(_params, string_to_sign)
 	}
 
+}
+
+func (c *Client) AuthenticatePresenceChannel(_params []byte, string_to_sign string, presence_data MemberData) string {
+
+	_json_user_data, _ := json.Marshal(presence_data)
+	json_user_data := string(_json_user_data)
+
+	string_to_sign = strings.Join([]string{string_to_sign, json_user_data}, ":")
+
 	auth_signature := HMACSignature(string_to_sign, c.Secret)
-	_response["auth"] = c.Key + ":" + auth_signature
+
+	auth_string := strings.Join([]string{c.Key, auth_signature}, ":")
+
+	_response := map[string]string{"auth": auth_string, "channel_data": json_user_data}
+
 	response, _ := json.Marshal(_response)
 
 	return string(response)

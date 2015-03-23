@@ -16,7 +16,7 @@ func TestPrivateChannelAuthentication(t *testing.T) {
 
 	expected := "{\"auth\":\"278d425bdf160c739803:58df8b0c36d6982b82c3ecf6b4662e34fe8c25bba48f5369f135bf843651c3a4\"}"
 
-	result := client.AuthenticatePrivateChannel(post_params)
+	result := client.AuthenticateChannel(post_params)
 
 	assert.Equal(t, expected, result)
 
@@ -34,7 +34,7 @@ func TestPresenceChannelAuthentication(t *testing.T) {
 
 	expected := "{\"auth\":\"278d425bdf160c739803:afaed3695da2ffd16931f457e338e6c9f2921fa133ce7dac49f529792be6304c\",\"channel_data\":\"{\\\"user_id\\\":10,\\\"user_info\\\":{\\\"name\\\":\\\"Mr. Pusher\\\"}}\"}"
 
-	result := client.AuthenticatePresenceChannel(post_params, presence_data)
+	result := client.AuthenticateChannel(post_params, presence_data)
 
 	assert.Equal(t, expected, result)
 
