@@ -6,7 +6,6 @@ import (
 )
 
 const auth_version = "1.0"
-const domain = "http://api.pusherapp.com"
 
 func unsigned_params(key, timestamp string, body []byte, additional_queries map[string]string) url.Values {
 	params := url.Values{
@@ -34,7 +33,7 @@ func unescape_url(_url url.Values) string {
 	return unesc
 }
 
-func createRequestUrl(method, path, key, secret, timestamp string, body []byte, additional_queries map[string]string) string {
+func createRequestUrl(method, host, path, key, secret, timestamp string, body []byte, additional_queries map[string]string) string {
 	params := unsigned_params(key, timestamp, body, additional_queries)
 
 	string_to_sign := strings.Join([]string{method, path, unescape_url(params)}, "\n")
@@ -43,7 +42,11 @@ func createRequestUrl(method, path, key, secret, timestamp string, body []byte, 
 
 	params.Add("auth_signature", auth_signature)
 
-	endpoint, _ := url.Parse(domain + path)
+	if host == "" {
+		host = "http://api.pusherapp.com"
+	}
+
+	endpoint, _ := url.Parse(host + path)
 
 	endpoint.RawQuery = unescape_url(params)
 

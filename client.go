@@ -7,14 +7,14 @@ import (
 )
 
 type Client struct {
-	AppId, Key, Secret string
+	AppId, Key, Secret, Host string
 }
 
 func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (error, string) {
 
 	payload := createTriggerPayload(channels, event, _data, socket_id)
 	path := "/apps/" + c.AppId + "/" + "events"
-	u := createRequestUrl("POST", path, c.Key, c.Secret, auth_timestamp(), payload, nil)
+	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
 	err, response := request("POST", u, payload)
 
 	return err, string(response)
@@ -30,21 +30,21 @@ func (c *Client) TriggerExclusive(channels []string, event string, _data interfa
 
 func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
 	path := "/apps/" + c.AppId + "/channels"
-	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
 	err, response := request("GET", u, nil)
 	return err, unmarshalledChannelsList(response)
 }
 
 func (c *Client) Channel(name string, additional_queries map[string]string) (error, *Channel) {
 	path := "/apps/" + c.AppId + "/channels/" + name
-	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
 	err, response := request("GET", u, nil)
 	return err, unmarshalledChannel(response, name)
 }
 
 func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
-	u := createRequestUrl("GET", path, c.Key, c.Secret, auth_timestamp(), nil, nil)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, nil)
 	err, response := request("GET", u, nil)
 	return err, unmarshalledChannelUsers(response)
 }
