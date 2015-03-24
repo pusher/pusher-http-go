@@ -77,38 +77,23 @@ func (c *Client) GetChannelUsers(name string) (*Users, error) {
 }
 
 func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) string {
-
 	channelName, socketId := parseAuthRequestParams(_params)
 	stringToSign := strings.Join([]string{socketId, channelName}, ":")
-	isPresenceChannel := strings.HasPrefix(channelName, "presence-")
 
-	if isPresenceChannel {
-		var presenceData MemberData
-		if member != nil {
-			presenceData = member[0]
-		}
-		return c.authenticatePresenceChannel(_params, stringToSign, presenceData)
-	} else {
-		return c.authenticatePrivateChannel(_params, stringToSign)
+	var jsonUserData string
+
+	if member != nil {
+		_jsonUserData, _ := json.Marshal(member[0])
+		jsonUserData = string(_jsonUserData)
+		stringToSign = strings.Join([]string{stringToSign, jsonUserData}, ":")
 	}
 
-}
-
-func (c *Client) authenticatePrivateChannel(_params []byte, stringToSign string) string {
 	_response := createAuthMap(c.Key, c.Secret, stringToSign)
-	response, _ := json.Marshal(_response)
-	return string(response)
-}
 
-func (c *Client) authenticatePresenceChannel(_params []byte, stringToSign string, presenceData MemberData) string {
+	if member != nil {
+		_response["channel_data"] = jsonUserData
+	}
 
-	_jsonUserData, _ := json.Marshal(presenceData)
-	jsonUserData := string(_jsonUserData)
-
-	stringToSign = strings.Join([]string{stringToSign, jsonUserData}, ":")
-
-	_response := createAuthMap(c.Key, c.Secret, stringToSign)
-	_response["channel_data"] = jsonUserData
 	response, _ := json.Marshal(_response)
 	return string(response)
 }
