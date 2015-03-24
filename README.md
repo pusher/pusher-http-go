@@ -127,3 +127,7 @@ Cluster configuration                      | *&#10004;*
 * Asynchronous requests(?)
 * General refactoring
 
+##Running The Tests
+
+    $ go test
+
