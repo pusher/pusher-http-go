@@ -16,8 +16,9 @@ func TestClientWebhookValidation(t *testing.T) {
 	header["X-Pusher-Key"] = []string{"key"}
 	header["X-Pusher-Signature"] = []string{"2677ad3e7c090b2fa2c0fb13020d66d5420879b8316eb356a2d60fb9073bc778"}
 	body := []byte("{\"hello\":\"world\"}")
-	webhook := client.Webhook(header, body)
+	webhook, err := client.Webhook(header, body)
 	assert.NotNil(t, webhook)
+	assert.Nil(t, err)
 }
 
 func TestWebhookImproperKeyCase(t *testing.T) {
@@ -27,8 +28,9 @@ func TestWebhookImproperKeyCase(t *testing.T) {
 	bad_header["X-Pusher-Signature"] = []string{"2677ad3e7c090b2fa2c0fb13020d66d5420879b8316eb356a2d60fb9073bc778"}
 	bad_body := []byte("{\"hello\":\"world\"}")
 
-	bad_webhook := client.Webhook(bad_header, bad_body)
+	bad_webhook, err := client.Webhook(bad_header, bad_body)
 	assert.Nil(t, bad_webhook)
+	assert.Error(t, err)
 }
 
 func TestWebhookImproperSignatureCase(t *testing.T) {
@@ -38,8 +40,9 @@ func TestWebhookImproperSignatureCase(t *testing.T) {
 	bad_header["X-Pusher-Signature"] = []string{"2677ad3e7c090i'mgonnagetyaeb356a2d60fb9073bc778"}
 	bad_body := []byte("{\"hello\":\"world\"}")
 
-	bad_webhook := client.Webhook(bad_header, bad_body)
+	bad_webhook, err := client.Webhook(bad_header, bad_body)
 	assert.Nil(t, bad_webhook)
+	assert.Error(t, err)
 }
 
 func TestWebhookUnmarshalling(t *testing.T) {

@@ -113,11 +113,11 @@ func (c *Client) authenticatePresenceChannel(_params []byte, string_to_sign stri
 	return string(response)
 }
 
-func (c *Client) Webhook(header http.Header, body []byte) *Webhook {
+func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 	for _, token := range header["X-Pusher-Key"] {
 		if token == c.Key && checkSignature(header["X-Pusher-Signature"][0], string(body), c.Secret) {
-			return unmarshalledWebhook(body)
+			return unmarshalledWebhook(body), nil
 		}
 	}
-	return nil
+	return nil, errors.New("Invalid webhook")
 }

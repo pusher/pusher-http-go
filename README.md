@@ -93,12 +93,12 @@ fmt.Fprintf(res, auth)
 ```go
 body, _ := ioutil.ReadAll(req.Body)
 
-webhook := client.Webhook(req.Header, body)
+webhook, err := client.Webhook(req.Header, body)
 
-if webhook.IsValid() {
-    fmt.Printf("%+v\n", webhook.Events)
+if err != nil {
+    fmt.Println("Webhook is invalid :(")
 } else {
-    fmt.Println("boo!")
+    fmt.Printf("%+v\n", webhook)
 }
 ```
 
