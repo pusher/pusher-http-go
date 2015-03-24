@@ -22,8 +22,8 @@ func TestPresenceChannelAuthentication(t *testing.T) {
 		Secret: "7ad3773142a6692b25b8",
 	}
 	post_params := []byte("channel_name=presence-foobar&socket_id=1234.1234")
-	presence_data := MemberData{UserId: 10, UserInfo: map[string]string{"name": "Mr. Pusher"}}
-	expected := "{\"auth\":\"278d425bdf160c739803:afaed3695da2ffd16931f457e338e6c9f2921fa133ce7dac49f529792be6304c\",\"channel_data\":\"{\\\"user_id\\\":10,\\\"user_info\\\":{\\\"name\\\":\\\"Mr. Pusher\\\"}}\"}"
+	presence_data := MemberData{UserId: "10", UserInfo: map[string]string{"name": "Mr. Pusher"}}
+	expected := "{\"auth\":\"278d425bdf160c739803:48dac51d2d7569e1e9c0f48c227d4b26f238fa68e5c0bb04222c966909c4f7c4\",\"channel_data\":\"{\\\"user_id\\\":\\\"10\\\",\\\"user_info\\\":{\\\"name\\\":\\\"Mr. Pusher\\\"}}\"}"
 	result := client.AuthenticateChannel(post_params, presence_data)
 	assert.Equal(t, expected, result)
 }

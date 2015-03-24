@@ -12,14 +12,6 @@ type Event struct {
 	SocketId string   `json:"socket_id"`
 }
 
-type WebhookEvent struct {
-	Name     string `json:"name"`
-	Channel  string `json:"channel"`
-	Event    string `json:"event"`
-	Data     string `json:"data"`
-	SocketId string `json:"socket_id"`
-}
-
 func createTriggerPayload(channels []string, event string, _data interface{}, socket_id string) ([]byte, error) {
 	data, _ := json.Marshal(_data)
 

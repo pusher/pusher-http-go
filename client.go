@@ -83,7 +83,10 @@ func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) strin
 	is_presence_channel := strings.HasPrefix(channel_name, "presence-")
 
 	if is_presence_channel {
-		presence_data := member[0]
+		var presence_data MemberData
+		if member != nil {
+			presence_data = member[0]
+		}
 		return c.authenticatePresenceChannel(_params, string_to_sign, presence_data)
 	} else {
 		return c.authenticatePrivateChannel(_params, string_to_sign)
@@ -111,7 +114,10 @@ func (c *Client) authenticatePresenceChannel(_params []byte, string_to_sign stri
 }
 
 func (c *Client) Webhook(header http.Header, body []byte) *Webhook {
-	webhook := &Webhook{Key: c.Key, Secret: c.Secret, Header: header, RawBody: string(body)}
-	json.Unmarshal(body, &webhook)
-	return webhook
+	for _, token := range header["X-Pusher-Key"] {
+		if token == c.Key && checkSignature(header["X-Pusher-Signature"][0], string(body), c.Secret) {
+			return unmarshalledWebhook(body)
+		}
+	}
+	return nil
 }
