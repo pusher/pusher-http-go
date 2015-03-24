@@ -49,3 +49,9 @@ func unmarshalledChannelUsers(response []byte) *Users {
 	json.Unmarshal(response, &users)
 	return users
 }
+
+func unmarshalledBufferedEvents(response []byte) *BufferedEvents {
+	bufferedEvents := &BufferedEvents{}
+	json.Unmarshal(response, bufferedEvents)
+	return bufferedEvents
+}

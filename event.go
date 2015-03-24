@@ -33,9 +33,3 @@ func createTriggerPayload(channels []string, event string, _data interface{}, so
 
 	return payload, nil
 }
-
-func unmarshalledBufferedEvents(response []byte) *BufferedEvents {
-	bufferedEvents := &BufferedEvents{}
-	json.Unmarshal(response, bufferedEvents)
-	return bufferedEvents
-}
