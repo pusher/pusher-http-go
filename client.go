@@ -53,7 +53,7 @@ func (c *Client) Channels(additional_queries map[string]string) (error, *Channel
 	if err != nil {
 		return err, nil
 	}
-	return err, unmarshalledChannelsList(response)
+	return nil, unmarshalledChannelsList(response)
 }
 
 func (c *Client) Channel(name string, additional_queries map[string]string) (error, *Channel) {
@@ -63,7 +63,7 @@ func (c *Client) Channel(name string, additional_queries map[string]string) (err
 	if err != nil {
 		return err, nil
 	}
-	return err, unmarshalledChannel(response, name)
+	return nil, unmarshalledChannel(response, name)
 }
 
 func (c *Client) GetChannelUsers(name string) (error, *Users) {
@@ -73,7 +73,7 @@ func (c *Client) GetChannelUsers(name string) (error, *Users) {
 	if err != nil {
 		return err, nil
 	}
-	return err, unmarshalledChannelUsers(response)
+	return nil, unmarshalledChannelUsers(response)
 }
 
 func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) string {
