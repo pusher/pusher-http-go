@@ -120,4 +120,11 @@ HTTPS                                      | *&#10008;*
 HTTP Proxy configuration                   | *&#10008;*
 Cluster configuration                      | *&#10004;*
 
+##TODO:
+
+* Finish feature support
+* More thorough error-handling.
+* Asynchronous requests(?)
+* Tests for webhooks
+* General refactoring
 
