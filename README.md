@@ -125,6 +125,5 @@ Cluster configuration                      | *&#10004;*
 * Finish feature support
 * More thorough error-handling.
 * Asynchronous requests(?)
-* Tests for webhooks
 * General refactoring
 
