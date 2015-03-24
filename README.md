@@ -18,7 +18,7 @@ client.Trigger([]string{"test_channel"}, "my_event", data)
 In place of the `""` in the last example, we enter the socket_id of the connection we wish to exclude from receiving the event:
 
 ```go
-client.TriggerExclusive([]string{"test_channel"}, "my_event", data, "1234.5678")
+client.Trigger([]string{"test_channel"}, "my_event", data, "1234.5678")
 ```
 
 ##Info From All Channels

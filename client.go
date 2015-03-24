@@ -11,7 +11,11 @@ type Client struct {
 	AppId, Key, Secret, Host string
 }
 
-func (c *Client) trigger(channels []string, event string, _data interface{}, socketId string) (*BufferedEvents, error) {
+func (c *Client) Trigger(channels []string, event string, _data interface{}, _socketId ...string) (*BufferedEvents, error) {
+	var socketId string
+	if len(_socketId) > 0 {
+		socketId = _socketId[0]
+	}
 
 	if len(channels) > 10 {
 		return nil, errors.New("You cannot trigger on more than 10 channels at once")
@@ -36,14 +40,6 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 	}
 
 	return unmarshalledBufferedEvents(response), nil
-}
-
-func (c *Client) Trigger(channels []string, event string, _data interface{}) (*BufferedEvents, error) {
-	return c.trigger(channels, event, _data, "")
-}
-
-func (c *Client) TriggerExclusive(channels []string, event string, _data interface{}, socketId string) (*BufferedEvents, error) {
-	return c.trigger(channels, event, _data, socketId)
 }
 
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {

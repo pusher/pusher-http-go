@@ -30,6 +30,23 @@ func TestTriggerSuccessCase(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestTriggerWithSocketId(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+
+		expected_body := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"\\\"yolo\\\"\",\"socket_id\":\"1234.12\"}"
+		actual_body, err := ioutil.ReadAll(req.Body)
+		assert.Equal(t, expected_body, string(actual_body))
+		assert.NoError(t, err)
+
+	}))
+	defer server.Close()
+	u, _ := url.Parse(server.URL)
+	client := Client{"id", "key", "secret", u.Host}
+	_, err := client.Trigger([]string{"test_channel"}, "test", "yolo", "1234.12")
+	assert.NoError(t, err)
+}
+
 func TestErrorResponseHandler(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(400)
