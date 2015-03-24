@@ -11,20 +11,20 @@ type Client struct {
 	AppId, Key, Secret, Host string
 }
 
-func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (error, string) {
+func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (error, *BufferedEvents) {
 
 	if len(channels) > 10 {
-		return errors.New("You cannot trigger on more than 10 channels at once"), ""
+		return errors.New("You cannot trigger on more than 10 channels at once"), nil
 	}
 
 	if !channelsAreValid(channels) {
-		return errors.New("At least one of your channels' names are invalid"), ""
+		return errors.New("At least one of your channels' names are invalid"), nil
 	}
 
 	payload, size_err := createTriggerPayload(channels, event, _data, socket_id)
 
 	if size_err != nil {
-		return size_err, ""
+		return size_err, nil
 	}
 
 	path := "/apps/" + c.AppId + "/" + "events"
@@ -32,17 +32,17 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 	response_err, response := request("POST", u, payload)
 
 	if response_err != nil {
-		return response_err, ""
+		return response_err, nil
 	}
 
-	return nil, string(response)
+	return nil, unmarshalledBufferedEvents(response)
 }
 
-func (c *Client) Trigger(channels []string, event string, _data interface{}) (error, string) {
+func (c *Client) Trigger(channels []string, event string, _data interface{}) (error, *BufferedEvents) {
 	return c.trigger(channels, event, _data, "")
 }
 
-func (c *Client) TriggerExclusive(channels []string, event string, _data interface{}, socket_id string) (error, string) {
+func (c *Client) TriggerExclusive(channels []string, event string, _data interface{}, socket_id string) (error, *BufferedEvents) {
 	return c.trigger(channels, event, _data, socket_id)
 }
 

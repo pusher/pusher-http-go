@@ -57,7 +57,7 @@ func TestChannelLengthValidation(t *testing.T) {
 	err, res := client.Trigger(channels, "yolo", "woot")
 
 	assert.EqualError(t, err, "You cannot trigger on more than 10 channels at once")
-	assert.Equal(t, "", res)
+	assert.Nil(t, res)
 }
 
 func TestChannelFormatValidation(t *testing.T) {
@@ -75,10 +75,10 @@ func TestChannelFormatValidation(t *testing.T) {
 	err2, res2 := client.Trigger([]string{channel2}, "yolo", "not 19 forever")
 
 	assert.EqualError(t, err1, "At least one of your channels' names are invalid")
-	assert.Equal(t, "", res1)
+	assert.Nil(t, res1)
 
 	assert.EqualError(t, err2, "At least one of your channels' names are invalid")
-	assert.Equal(t, "", res2)
+	assert.Nil(t, res2)
 
 }
 
@@ -93,6 +93,7 @@ func TestDataSizeValidation(t *testing.T) {
 	err, res := client.Trigger([]string{"channel"}, "event", data)
 
 	assert.EqualError(t, err, "Data must be smaller than 10kb")
-	assert.Equal(t, "", res)
+	// assert.Equal(t, "", res)
+	assert.Nil(t, res)
 
 }

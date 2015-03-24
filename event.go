@@ -12,6 +12,10 @@ type Event struct {
 	SocketId string   `json:"socket_id"`
 }
 
+type BufferedEvents struct {
+	EventIds map[string]string `json:"event_ids"`
+}
+
 func createTriggerPayload(channels []string, event string, _data interface{}, socket_id string) ([]byte, error) {
 	data, _ := json.Marshal(_data)
 
@@ -28,4 +32,10 @@ func createTriggerPayload(channels []string, event string, _data interface{}, so
 		SocketId: socket_id})
 
 	return payload, nil
+}
+
+func unmarshalledBufferedEvents(response []byte) *BufferedEvents {
+	bufferedEvents := &BufferedEvents{}
+	json.Unmarshal(response, bufferedEvents)
+	return bufferedEvents
 }

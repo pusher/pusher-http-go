@@ -47,3 +47,18 @@ func TestParsingChannelUsers(t *testing.T) {
 	result := unmarshalledChannelUsers(testJSON)
 	assert.Equal(t, expected, result)
 }
+
+func TestParsingTriggerResult(t *testing.T) {
+	testJSON := []byte("{\"event_ids\":{\"test_channel\":\"eudhq17zrhfc4f\",\"another_channel\":\"eudhq17zrhfc74\"}}")
+
+	expected := &BufferedEvents{
+		EventIds: map[string]string{
+			"test_channel": "eudhq17zrhfc4f",
+			"another_channel": "eudhq17zrhfc74",
+		},
+	}
+
+	result := unmarshalledBufferedEvents(testJSON)
+	assert.Equal(t, expected, result)
+
+}
