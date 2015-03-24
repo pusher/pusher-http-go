@@ -21,16 +21,16 @@ func request(method, url string, body []byte) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	resp_body, _ := ioutil.ReadAll(resp.Body)
+	responseBody, _ := ioutil.ReadAll(resp.Body)
 
-	return process_response(resp.StatusCode, resp_body)
+	return process_response(resp.StatusCode, responseBody)
 }
 
-func process_response(status int, resp_body []byte) ([]byte, error) {
+func process_response(status int, responseBody []byte) ([]byte, error) {
 	if status == 200 {
-		return resp_body, nil
+		return responseBody, nil
 	} else {
-		message := fmt.Sprintf("Status Code: %s - %s", strconv.Itoa(status), string(resp_body))
+		message := fmt.Sprintf("Status Code: %s - %s", strconv.Itoa(status), string(responseBody))
 		err := errors.New(message)
 		return nil, err
 	}

@@ -17,8 +17,8 @@ type WebhookEvent struct {
 	SocketId string `json:"socket_id"`
 }
 
-func unmarshalledWebhook(request_body []byte) *Webhook {
+func unmarshalledWebhook(requestBody []byte) *Webhook {
 	webhook := &Webhook{}
-	json.Unmarshal(request_body, &webhook)
+	json.Unmarshal(requestBody, &webhook)
 	return webhook
 }

@@ -5,21 +5,21 @@ import (
 	"strings"
 )
 
-const auth_version = "1.0"
+const AuthVersion = "1.0"
 
-func unsigned_params(key, timestamp string, body []byte, additional_queries map[string]string) url.Values {
+func unsignedParams(key, timestamp string, body []byte, additionalQueries map[string]string) url.Values {
 	params := url.Values{
 		"auth_key":       {key},
 		"auth_timestamp": {timestamp},
-		"auth_version":   {auth_version},
+		"auth_version":   {AuthVersion},
 	}
 
 	if body != nil {
 		params.Add("body_md5", md5Signature(body))
 	}
 
-	if additional_queries != nil {
-		for key, values := range additional_queries {
+	if additionalQueries != nil {
+		for key, values := range additionalQueries {
 			params.Add(key, values)
 		}
 	}
@@ -28,19 +28,19 @@ func unsigned_params(key, timestamp string, body []byte, additional_queries map[
 
 }
 
-func unescape_url(_url url.Values) string {
+func unescapeUrl(_url url.Values) string {
 	unesc, _ := url.QueryUnescape(_url.Encode())
 	return unesc
 }
 
-func createRequestUrl(method, host, path, key, secret, timestamp string, body []byte, additional_queries map[string]string) string {
-	params := unsigned_params(key, timestamp, body, additional_queries)
+func createRequestUrl(method, host, path, key, secret, timestamp string, body []byte, additionalQueries map[string]string) string {
+	params := unsignedParams(key, timestamp, body, additionalQueries)
 
-	string_to_sign := strings.Join([]string{method, path, unescape_url(params)}, "\n")
+	stringToSign := strings.Join([]string{method, path, unescapeUrl(params)}, "\n")
 
-	auth_signature := hmacSignature(string_to_sign, secret)
+	authSignature := hmacSignature(stringToSign, secret)
 
-	params.Add("auth_signature", auth_signature)
+	params.Add("auth_signature", authSignature)
 
 	if host == "" {
 		host = "api.pusherapp.com"
@@ -50,7 +50,7 @@ func createRequestUrl(method, host, path, key, secret, timestamp string, body []
 
 	endpoint, _ := url.Parse(base + path)
 
-	endpoint.RawQuery = unescape_url(params)
+	endpoint.RawQuery = unescapeUrl(params)
 
 	return endpoint.String()
 }

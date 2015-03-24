@@ -9,10 +9,10 @@ import (
 	"strings"
 )
 
-func hmacSignature(to_sign, secret string) string {
-	_auth_signature := hmac.New(sha256.New, []byte(secret))
-	_auth_signature.Write([]byte(to_sign))
-	return hex.EncodeToString(_auth_signature.Sum(nil))
+func hmacSignature(toSign, secret string) string {
+	_authSignature := hmac.New(sha256.New, []byte(secret))
+	_authSignature.Write([]byte(toSign))
+	return hex.EncodeToString(_authSignature.Sum(nil))
 }
 
 func checkSignature(result, body, secret string) bool {
@@ -20,14 +20,14 @@ func checkSignature(result, body, secret string) bool {
 	return result == expected
 }
 
-func createAuthMap(key, secret, string_to_sign string) map[string]string {
-	auth_signature := hmacSignature(string_to_sign, secret)
-	auth_string := strings.Join([]string{key, auth_signature}, ":")
-	return map[string]string{"auth": auth_string}
+func createAuthMap(key, secret, stringToSign string) map[string]string {
+	authSignature := hmacSignature(stringToSign, secret)
+	authString := strings.Join([]string{key, authSignature}, ":")
+	return map[string]string{"auth": authString}
 }
 
 func md5Signature(body []byte) string {
-	_body_md5 := md5.New()
-	_body_md5.Write([]byte(body))
-	return hex.EncodeToString(_body_md5.Sum(nil))
+	_bodyMD5 := md5.New()
+	_bodyMD5.Write([]byte(body))
+	return hex.EncodeToString(_bodyMD5.Sum(nil))
 }

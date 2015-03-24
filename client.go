@@ -11,7 +11,7 @@ type Client struct {
 	AppId, Key, Secret, Host string
 }
 
-func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (*BufferedEvents, error) {
+func (c *Client) trigger(channels []string, event string, _data interface{}, socketId string) (*BufferedEvents, error) {
 
 	if len(channels) > 10 {
 		return nil, errors.New("You cannot trigger on more than 10 channels at once")
@@ -21,7 +21,7 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
 
-	payload, size_err := createTriggerPayload(channels, event, _data, socket_id)
+	payload, size_err := createTriggerPayload(channels, event, _data, socketId)
 
 	if size_err != nil {
 		return nil, size_err
@@ -29,10 +29,10 @@ func (c *Client) trigger(channels []string, event string, _data interface{}, soc
 
 	path := "/apps/" + c.AppId + "/" + "events"
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
-	response, response_err := request("POST", u, payload)
+	response, responseErr := request("POST", u, payload)
 
-	if response_err != nil {
-		return nil, response_err
+	if responseErr != nil {
+		return nil, responseErr
 	}
 
 	return unmarshalledBufferedEvents(response), nil
@@ -42,13 +42,13 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}) (*B
 	return c.trigger(channels, event, _data, "")
 }
 
-func (c *Client) TriggerExclusive(channels []string, event string, _data interface{}, socket_id string) (*BufferedEvents, error) {
-	return c.trigger(channels, event, _data, socket_id)
+func (c *Client) TriggerExclusive(channels []string, event string, _data interface{}, socketId string) (*BufferedEvents, error) {
+	return c.trigger(channels, event, _data, socketId)
 }
 
-func (c *Client) Channels(additional_queries map[string]string) (*ChannelsList, error) {
+func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
 	path := "/apps/" + c.AppId + "/channels"
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additionalQueries)
 	response, err := request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -56,9 +56,9 @@ func (c *Client) Channels(additional_queries map[string]string) (*ChannelsList, 
 	return unmarshalledChannelsList(response), nil
 }
 
-func (c *Client) Channel(name string, additional_queries map[string]string) (*Channel, error) {
+func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
 	path := "/apps/" + c.AppId + "/channels/" + name
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additionalQueries)
 	response, err := request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -78,37 +78,37 @@ func (c *Client) GetChannelUsers(name string) (*Users, error) {
 
 func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) string {
 
-	channel_name, socket_id := parseAuthRequestParams(_params)
-	string_to_sign := strings.Join([]string{socket_id, channel_name}, ":")
-	is_presence_channel := strings.HasPrefix(channel_name, "presence-")
+	channelName, socketId := parseAuthRequestParams(_params)
+	stringToSign := strings.Join([]string{socketId, channelName}, ":")
+	isPresenceChannel := strings.HasPrefix(channelName, "presence-")
 
-	if is_presence_channel {
-		var presence_data MemberData
+	if isPresenceChannel {
+		var presenceData MemberData
 		if member != nil {
-			presence_data = member[0]
+			presenceData = member[0]
 		}
-		return c.authenticatePresenceChannel(_params, string_to_sign, presence_data)
+		return c.authenticatePresenceChannel(_params, stringToSign, presenceData)
 	} else {
-		return c.authenticatePrivateChannel(_params, string_to_sign)
+		return c.authenticatePrivateChannel(_params, stringToSign)
 	}
 
 }
 
-func (c *Client) authenticatePrivateChannel(_params []byte, string_to_sign string) string {
-	_response := createAuthMap(c.Key, c.Secret, string_to_sign)
+func (c *Client) authenticatePrivateChannel(_params []byte, stringToSign string) string {
+	_response := createAuthMap(c.Key, c.Secret, stringToSign)
 	response, _ := json.Marshal(_response)
 	return string(response)
 }
 
-func (c *Client) authenticatePresenceChannel(_params []byte, string_to_sign string, presence_data MemberData) string {
+func (c *Client) authenticatePresenceChannel(_params []byte, stringToSign string, presenceData MemberData) string {
 
-	_json_user_data, _ := json.Marshal(presence_data)
-	json_user_data := string(_json_user_data)
+	_jsonUserData, _ := json.Marshal(presenceData)
+	jsonUserData := string(_jsonUserData)
 
-	string_to_sign = strings.Join([]string{string_to_sign, json_user_data}, ":")
+	stringToSign = strings.Join([]string{stringToSign, jsonUserData}, ":")
 
-	_response := createAuthMap(c.Key, c.Secret, string_to_sign)
-	_response["channel_data"] = json_user_data
+	_response := createAuthMap(c.Key, c.Secret, stringToSign)
+	_response["channel_data"] = jsonUserData
 	response, _ := json.Marshal(_response)
 	return string(response)
 }
