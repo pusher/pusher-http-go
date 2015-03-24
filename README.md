@@ -28,7 +28,7 @@ channelParams := map[string]string{
     "filter_by_prefix": "presence-",
     "info":             "user_count"}
 
-err, channels := client.Channels(channelParams)
+channels, err := client.Channels(channelParams)
 
 fmt.Printf(channels)
 
@@ -41,13 +41,13 @@ fmt.Printf(channels)
 channelParams := map[string]string{
     "info": "user_count"}
 
-err, channel := client.Channel("presence-chatroom", channelParams)
+channel, err := client.Channel("presence-chatroom", channelParams)
 ```
 
 ###Gettings Users From Presence Channel
 
 ```go
-err, users := client.GetChannelUsers("presence-chatroom")
+users, err := client.GetChannelUsers("presence-chatroom")
 ```
 
 ## Channel Authentication

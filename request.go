@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func request(method, url string, body []byte) (error, []byte) {
+func request(method, url string, body []byte) ([]byte, error) {
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -17,27 +17,21 @@ func request(method, url string, body []byte) (error, []byte) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 
-	// fmt.Println(resp)
-
-	// fmt.Printf("%+v\n", resp)
-
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 	defer resp.Body.Close()
 	resp_body, _ := ioutil.ReadAll(resp.Body)
 
-	// fmt.Println(string(resp_body))
-
 	return process_response(resp.StatusCode, resp_body)
 }
 
-func process_response(status int, resp_body []byte) (error, []byte) {
+func process_response(status int, resp_body []byte) ([]byte, error) {
 	if status == 200 {
-		return nil, resp_body
+		return resp_body, nil
 	} else {
 		message := fmt.Sprintf("Status Code: %s - %s", strconv.Itoa(status), string(resp_body))
 		err := errors.New(message)
-		return err, nil
+		return nil, err
 	}
 }

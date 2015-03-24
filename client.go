@@ -11,69 +11,69 @@ type Client struct {
 	AppId, Key, Secret, Host string
 }
 
-func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (error, *BufferedEvents) {
+func (c *Client) trigger(channels []string, event string, _data interface{}, socket_id string) (*BufferedEvents, error) {
 
 	if len(channels) > 10 {
-		return errors.New("You cannot trigger on more than 10 channels at once"), nil
+		return nil, errors.New("You cannot trigger on more than 10 channels at once")
 	}
 
 	if !channelsAreValid(channels) {
-		return errors.New("At least one of your channels' names are invalid"), nil
+		return nil, errors.New("At least one of your channels' names are invalid")
 	}
 
 	payload, size_err := createTriggerPayload(channels, event, _data, socket_id)
 
 	if size_err != nil {
-		return size_err, nil
+		return nil, size_err
 	}
 
 	path := "/apps/" + c.AppId + "/" + "events"
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
-	response_err, response := request("POST", u, payload)
+	response, response_err := request("POST", u, payload)
 
 	if response_err != nil {
-		return response_err, nil
+		return nil, response_err
 	}
 
-	return nil, unmarshalledBufferedEvents(response)
+	return unmarshalledBufferedEvents(response), nil
 }
 
-func (c *Client) Trigger(channels []string, event string, _data interface{}) (error, *BufferedEvents) {
+func (c *Client) Trigger(channels []string, event string, _data interface{}) (*BufferedEvents, error) {
 	return c.trigger(channels, event, _data, "")
 }
 
-func (c *Client) TriggerExclusive(channels []string, event string, _data interface{}, socket_id string) (error, *BufferedEvents) {
+func (c *Client) TriggerExclusive(channels []string, event string, _data interface{}, socket_id string) (*BufferedEvents, error) {
 	return c.trigger(channels, event, _data, socket_id)
 }
 
-func (c *Client) Channels(additional_queries map[string]string) (error, *ChannelsList) {
+func (c *Client) Channels(additional_queries map[string]string) (*ChannelsList, error) {
 	path := "/apps/" + c.AppId + "/channels"
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
-	err, response := request("GET", u, nil)
+	response, err := request("GET", u, nil)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
-	return nil, unmarshalledChannelsList(response)
+	return unmarshalledChannelsList(response), nil
 }
 
-func (c *Client) Channel(name string, additional_queries map[string]string) (error, *Channel) {
+func (c *Client) Channel(name string, additional_queries map[string]string) (*Channel, error) {
 	path := "/apps/" + c.AppId + "/channels/" + name
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additional_queries)
-	err, response := request("GET", u, nil)
+	response, err := request("GET", u, nil)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
-	return nil, unmarshalledChannel(response, name)
+	return unmarshalledChannel(response, name), nil
 }
 
-func (c *Client) GetChannelUsers(name string) (error, *Users) {
+func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, nil)
-	err, response := request("GET", u, nil)
+	response, err := request("GET", u, nil)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
-	return nil, unmarshalledChannelUsers(response)
+	return unmarshalledChannelUsers(response), nil
 }
 
 func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) string {
