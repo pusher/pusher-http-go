@@ -118,6 +118,6 @@ WebHook validation                         | *&#10004;*
 Debugging & Logging                        | *&#10008;*
 HTTPS                                      | *&#10008;*
 HTTP Proxy configuration                   | *&#10008;*
-Cluster configuration                      | *&#10008;*
+Cluster configuration                      | *&#10004;*
 
 
