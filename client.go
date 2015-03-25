@@ -12,6 +12,7 @@ import (
 
 type Client struct {
 	AppId, Key, Secret, Host string
+	Timeout                  int
 }
 
 func ClientFromUrl(url string) Client {
@@ -47,7 +48,7 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}, _so
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
-	response, responseErr := request("POST", u, payload)
+	response, responseErr := request("POST", u, payload, c.Timeout)
 
 	if responseErr != nil {
 		return nil, responseErr
@@ -59,7 +60,7 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}, _so
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppId)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additionalQueries)
-	response, err := request("GET", u, nil)
+	response, err := request("GET", u, nil, c.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +70,7 @@ func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, e
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppId, name)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additionalQueries)
-	response, err := request("GET", u, nil)
+	response, err := request("GET", u, nil, c.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,7 @@ func (c *Client) Channel(name string, additionalQueries map[string]string) (*Cha
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppId, name)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, nil)
-	response, err := request("GET", u, nil)
+	response, err := request("GET", u, nil, c.Timeout)
 	if err != nil {
 		return nil, err
 	}

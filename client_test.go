@@ -26,7 +26,7 @@ func TestTriggerSuccessCase(t *testing.T) {
 	}))
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
-	client := Client{"id", "key", "secret", u.Host}
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 	_, err := client.Trigger([]string{"test_channel"}, "test", "yolo")
 	assert.NoError(t, err)
 }
@@ -43,7 +43,7 @@ func TestTriggerWithSocketId(t *testing.T) {
 	}))
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
-	client := Client{"id", "key", "secret", u.Host}
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 	_, err := client.Trigger([]string{"test_channel"}, "test", "yolo", "1234.12")
 	assert.NoError(t, err)
 }
@@ -58,7 +58,7 @@ func TestErrorResponseHandler(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{"id", "key", "secret", u.Host}
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 
 	channelParams := map[string]string{"info": "user_count,subscription_count"}
 	channel, err := client.Channel("this_is_not_a_presence_channel", channelParams)

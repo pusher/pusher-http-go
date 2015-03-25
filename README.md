@@ -121,8 +121,8 @@ WebHook validation                         | *&#10004;*
 Can instantiate from URL/ENV               | *&#10004;*
 Debugging & Logging                        | *&#10004;*
 Cluster configuration                      | *&#10004;*
+Timeouts                                   | *&#10004;*
 HTTPS                                      | *&#10008;*
-Timeouts                                   | *&#10008;*
 HTTP Proxy configuration                   | *&#10008;*
 HTTP KeepAlive                             | *&#10008;*
 
