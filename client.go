@@ -9,21 +9,51 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	u "net/url"
 )
 
-var PusherURLRegex = regexp.MustCompile("^(http|https)://(.*):(.*)@(.*)/apps/([0-9]+)$")
+var PusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 
 type Client struct {
-	AppId, Key, Secret, Host string
+	AppId string
+	Key string
+	Secret string
+	Host string
+	Secure bool
 	Timeout                  time.Duration
 }
 
 func ClientFromURL(url string) (*Client, error) {
-	matches := PusherURLRegex.FindStringSubmatch(url)
-	if len(matches) == 0 {
-		return nil, errors.New("No match found")
+	url2, err := u.Parse(url)
+	if err != nil {
+		return nil, err
 	}
-	return &Client{Key: matches[2], Secret: matches[3], Host: matches[4], AppId: matches[5]}, nil
+
+	c := Client{
+		Host: url2.Host,
+	}
+
+	matches := PusherPathRegex.FindStringSubmatch(url2.Path)
+	if len(matches) == 0 {
+		return nil, errors.New("No app ID found")
+	}
+	c.AppId = matches[1]
+
+	if url2.User == nil {
+		return nil, errors.New("Missing <key>:<secret>")
+	}
+	c.Key = url2.User.Username()
+	var isSet bool
+	c.Secret, isSet = url2.User.Password()
+	if !isSet {
+		return nil, errors.New("Missing <secret>")
+	}
+
+	if url2.Scheme == "https" {
+		c.Secure = true
+	}
+
+	return &c, nil
 }
 
 func ClientFromEnv(key string) (*Client, error) {
@@ -65,7 +95,7 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 	}
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
-	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), payload, nil)
+	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil)
 	response, err := request("POST", u, payload, c.Timeout)
 	if err != nil {
 		return nil, err
@@ -76,7 +106,7 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppId)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), nil, additionalQueries)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries)
 	response, err := request("GET", u, nil, c.Timeout)
 	if err != nil {
 		return nil, err
@@ -86,7 +116,7 @@ func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, e
 
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppId, name)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), nil, additionalQueries)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries)
 	response, err := request("GET", u, nil, c.Timeout)
 	if err != nil {
 		return nil, err
@@ -96,7 +126,7 @@ func (c *Client) Channel(name string, additionalQueries map[string]string) (*Cha
 
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppId, name)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), nil, nil)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil)
 	response, err := request("GET", u, nil, c.Timeout)
 	if err != nil {
 		return nil, err

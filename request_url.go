@@ -33,7 +33,7 @@ func unescapeUrl(_url url.Values) string {
 	return unesc
 }
 
-func createRequestUrl(method, host, path, key, secret, timestamp string, body []byte, additionalQueries map[string]string) string {
+func createRequestUrl(method, host, path, key, secret, timestamp string, secure bool, body []byte, additionalQueries map[string]string) string {
 	params := unsignedParams(key, timestamp, body, additionalQueries)
 
 	stringToSign := strings.Join([]string{method, path, unescapeUrl(params)}, "\n")
@@ -45,11 +45,18 @@ func createRequestUrl(method, host, path, key, secret, timestamp string, body []
 	if host == "" {
 		host = "api.pusherapp.com"
 	}
+	var base string
+	if secure {
+		base = "https://"
+	} else {
+		base = "http://"
+	}
+	base += host
 
-	base := "http://" + host
-
-	endpoint, _ := url.Parse(base + path)
-
+	endpoint, err := url.Parse(base + path)
+	if err != nil {
+		panic("logic error: " + err.Error())
+	}
 	endpoint.RawQuery = unescapeUrl(params)
 
 	return endpoint.String()
