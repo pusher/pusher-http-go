@@ -104,14 +104,27 @@ func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	return unmarshalledChannelUsers(response)
 }
 
-func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) string {
-	channelName, socketId := parseAuthRequestParams(_params)
+func (c *Client) AuthenticatePrivateChannel(params []byte) (response []byte, err error) {
+	return c.authenticateChannel(params, nil)
+}
+
+func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (response []byte, err error) {
+	return c.authenticateChannel(params, &member)
+}
+
+func (c *Client) authenticateChannel(params []byte, member *MemberData) (response []byte, err error) {
+	channelName, socketId := parseAuthRequestParams(params)
 	stringToSign := strings.Join([]string{socketId, channelName}, ":")
 
 	var jsonUserData string
 
 	if member != nil {
-		_jsonUserData, _ := json.Marshal(member[0])
+		var _jsonUserData []byte
+		_jsonUserData, err = json.Marshal(member)
+		if err != nil {
+			return
+		}
+
 		jsonUserData = string(_jsonUserData)
 		stringToSign = strings.Join([]string{stringToSign, jsonUserData}, ":")
 	}
@@ -122,8 +135,8 @@ func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) strin
 		_response["channel_data"] = jsonUserData
 	}
 
-	response, _ := json.Marshal(_response)
-	return string(response)
+	response, err = json.Marshal(_response)
+	return
 }
 
 func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
