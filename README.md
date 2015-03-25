@@ -16,6 +16,8 @@ $ go get github.com/pusher/pusher-http-go
 ## Getting Started
 
 ```go
+import "github.com/pusher/pusher-http-go"
+
 // instantiate a client
 client := pusher.Client{
   AppId: "your_app_id",
@@ -74,7 +76,7 @@ If you wish to set a time-limit for each HTTP request, set the `Timeout` propert
 ```go
 import "time"
 
-client.Timeout = time.Second * 3
+client.Timeout = time.Second * 3 // set the timeout to 3 seconds
 ```
 
 By default, timeouts will be 5 seconds.
@@ -84,7 +86,7 @@ By default, timeouts will be 5 seconds.
 Changing the `pusher.Client`'s `Host` property will make sure requests are sent to your specified host.
 
 ```go
-client.Host = "foo.host.com"
+client.Host = "foo.bar.com"
 ```
 
 By default, this is `"api.pusherapp.com"`.
@@ -358,7 +360,7 @@ users, err := client.GetChannelUsers("presence-chatroom")
 //users=> &{List:[{Id:13} {Id:90}]}
 ```
 
-### WebHook validation
+### Webhook validation
 
 On your [dashboard](http://app.pusher.com), you can set up webhooks to POST a payload to your server after certain events. Such events include channels being occupied or vacated, members being added or removed in presence-channels, or after client-originated events. For more information see <https://pusher.com/docs/webhooks>.
 
@@ -379,6 +381,7 @@ This library provides a mechanism for checking that these POST requests are inde
 ###### Custom Types
 
 **pusher.Webhook**
+
 ```go
 type Webhook struct {
     TimeMs int           
@@ -387,6 +390,7 @@ type Webhook struct {
 ```
 
 **pusher.WebhookEvent**
+
 ```go
 type WebhookEvent struct {
     Name     string 
@@ -447,23 +451,13 @@ Limit event name length to 200 chars     | &#10004;
 
 ## Developing the Library
 
-*A section providing information for developers who wish to develop the library*
+Feel more than free to fork this repo, improve it in any way you'd prefer, and send us a pull request :)
 
-### Testing
+### Running the tests
 
-*Any information specific to the library*
-
-### Running tests
+Simply type:
 
     $ go test
-
-### Deploy to Distribution Mechanism
-
-*Any additional information specific to the library*
-
-## Credits
-
-*It's always nice to give credit to those who inspired the work or who have contributed*
 
 ## License
 
