@@ -3,6 +3,7 @@ package pusher
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -31,7 +32,7 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}, _so
 		return nil, size_err
 	}
 
-	path := "/apps/" + c.AppId + "/" + "events"
+	path := fmt.Sprintf("/apps/%s/events", c.AppId)
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, auth_timestamp(), payload, nil)
 	response, responseErr := request("POST", u, payload)
 
@@ -43,7 +44,7 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}, _so
 }
 
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
-	path := "/apps/" + c.AppId + "/channels"
+	path := fmt.Sprintf("/apps/%s/channels", c.AppId)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additionalQueries)
 	response, err := request("GET", u, nil)
 	if err != nil {
@@ -53,7 +54,7 @@ func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, e
 }
 
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
-	path := "/apps/" + c.AppId + "/channels/" + name
+	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppId, name)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, additionalQueries)
 	response, err := request("GET", u, nil)
 	if err != nil {
@@ -63,7 +64,7 @@ func (c *Client) Channel(name string, additionalQueries map[string]string) (*Cha
 }
 
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
-	path := "/apps/" + c.AppId + "/channels/" + name + "/users"
+	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppId, name)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, auth_timestamp(), nil, nil)
 	response, err := request("GET", u, nil)
 	if err != nil {
