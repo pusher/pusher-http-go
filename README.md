@@ -134,7 +134,7 @@ For more information see our [docs](http://pusher.com/docs/authenticating_users)
 |:-:|:-:|
 |params `[]byte`| The request body sent by the client|
 
-|Return Values|Description|
+|Return Value|Description|
 |:-:|:-:|
 |response `[]byte` | The response to send back to the client, carrying an authentication signature |
 |err `error` | Any errors generated |
@@ -216,7 +216,7 @@ This library allows you to query our API to retrieve information about your appl
 |:-:|:-:|
 |additionalQueries `map[string]string`| A map with query options. A key with `"filter_by_prefix"` will filter the returned channels. To get number of users subscribed to a presence-channel, specify an `"info"` key with value `"user_count"`. <br><br>Pass in `nil` if you do not wish to specify any query attributes.  |
 
-|Return Values|Description|
+|Return Value|Description|
 |:-:|:-:|
 |channels `*pusher.ChannelsList`|A struct representing the list of channels. See below. |
 |err `error`|Any errors encountered|
@@ -248,7 +248,7 @@ channelsParams := map[string]string{
 
 channels, err := client.Channels(channelsParams)
 
-// => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
+//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
 ```
 
 #### Get the state of a single channel
@@ -260,7 +260,7 @@ channels, err := client.Channels(channelsParams)
 |name `string`| The name of the channel|
 |additionalQueries `map[string]string` |A map with query options. An `"info"` key can have comma-separated vales of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. Note that the subscription count is not allowed by default. Please [contact us](http://support.pusher.com) if you wish to enable this.<br><br>Pass in `nil` if you do not wish to specify any query attributes.|
 
-|Return Values|Description|
+|Return Value|Description|
 |:-:|:-:|
 |channel `*pusher.Channel` |A struct representing a channel. See below. |
 
@@ -285,30 +285,87 @@ channelParams := map[string]string{
 
 channel, err := client.Channel("presence-chatroom", channelParams)
 
-//=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
+//channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 ```
 
 #### Get a list of users in a presence channel
 
-*Any additional information specific to the library*
+##### `func (c *Client) GetChannelUsers`
 
-**{Example}:**
+|Argument|Description|
+|:-:|:-:|
+|name `string`| The channel name|
+
+|Return Value|Description|
+|:-:|:-:|
+|users `*pusher.Users`| A struct representing a list of the users subscribed to the presence-channel. See below |
+
+###### Custom Types
+
+**pusher.Users**
+
+```go
+type Users struct {
+    List []User
+}
+```
+
+**pusher.User**
+
+```go
+type User struct {
+    Id string
+}
+```
+
+###### Example
 
 ```go
 users, err := client.GetChannelUsers("presence-chatroom")
+
+//users=> &{List:[{Id:13} {Id:90}]}
 ```
 
 ### WebHook validation
 
-*Not all libraries presently offer this functionality. But if they do...*
+On your [dashboard](http://app.pusher.com), you can set up webhooks to POST a payload to your server after certain events. Such events include channels being occupied or vacated, members being added or removed in presence-channels, or after client-originated events. For more information see <https://pusher.com/docs/webhooks>.
 
-The library provides a simple helper for WebHooks.
+This library provides a mechanism for checking that these POST requests are indeed from Pusher, by checking the token and authentication signature in the header of the request. 
 
-*Any additional information specific to the library*
+##### `func (c *Client) Webhook`
 
-For more information see <https://pusher.com/docs/webhooks>.
+|Argument|Description|
+|:-:|:-:|
+|header `http.Header` | The header of the request to verify |
+|body `[]byte` | The body of the request |
 
-**{Example}:**
+|Return Value|Description|
+|:-:|:-:|
+|webhook `*pusher.Webhook`| If the webhook is valid, this method will return a representation of that webhook that includes its timestamp and associated events. If invalid, this value will be `nil`.
+|err `error` | If the webhook is invalid, an error value will be passed.|
+
+###### Custom Types
+
+**pusher.Webhook**
+```go
+type Webhook struct {
+    TimeMs int           
+    Events []WebhookEvent
+}
+```
+
+**pusher.WebhookEvent**
+```go
+type WebhookEvent struct {
+    Name     string 
+    Channel  string 
+    Event    string 
+    Data     string 
+    SocketId string
+}
+```
+
+###### Example
 
 ```go
 func pusherWebhook(res http.ResponseWriter, req *http.Request) {
@@ -323,12 +380,6 @@ func pusherWebhook(res http.ResponseWriter, req *http.Request) {
 
 }
 ```
-
-### Debugging & Logging
-
-*Information on how to debug the library and providing logging information. We've found that this is very useful during the development process*
-
-For additional information on debugging and logging please see <https://pusher.com/docs/debugging>.
 
 ### Feature Support
 
