@@ -8,7 +8,7 @@ import (
 )
 
 //this is Ruby :(
-func auth_timestamp() string {
+func authTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
