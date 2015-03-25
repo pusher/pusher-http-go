@@ -45,6 +45,17 @@ func TestWebhookImproperSignatureCase(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestWebhookNoSignature(t *testing.T) {
+	client := setUpClient()
+	bad_header := make(http.Header)
+	bad_header["X-Pusher-Key"] = []string{"key"}
+	bad_body := []byte("{\"hello\":\"world\"}")
+
+	bad_webhook, err := client.Webhook(bad_header, bad_body)
+	assert.Nil(t, bad_webhook)
+	assert.Error(t, err)
+}
+
 func TestWebhookUnmarshalling(t *testing.T) {
 	body := []byte("{\"time_ms\":1427233518933,\"events\":[{\"name\":\"client_event\",\"channel\":\"private-channel\",\"event\":\"client-yolo\",\"data\":\"{\\\"yolo\\\":\\\"woot\\\"}\",\"socket_id\":\"44610.7511910\"}]}")
 	result, err := unmarshalledWebhook(body)

@@ -127,8 +127,9 @@ func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) strin
 }
 
 func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
+
 	for _, token := range header["X-Pusher-Key"] {
-		if token == c.Key && checkSignature(header["X-Pusher-Signature"][0], string(body), c.Secret) {
+		if token == c.Key && checkSignature(header.Get("X-Pusher-Signature"), string(body), c.Secret) {
 			return unmarshalledWebhook(body)
 		}
 	}
