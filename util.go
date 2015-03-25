@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var ChannelValidationRegex = regexp.MustCompile("^[-a-zA-Z0-9_=@,.;]+$")
+
 func authTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
@@ -17,9 +19,8 @@ func parseAuthRequestParams(_params []byte) (string, string) {
 }
 
 func channelsAreValid(channels []string) bool {
-	r, _ := regexp.Compile("^[-a-zA-Z0-9_=@,.;]+$")
 	for _, channel := range channels {
-		if !r.MatchString(channel) || len(channel) > 200 {
+		if len(channel) > 200 || !ChannelValidationRegex.MatchString(channel) {
 			return false
 		}
 	}
