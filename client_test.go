@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestTriggerSuccessCase(t *testing.T) {
@@ -66,6 +67,25 @@ func TestErrorResponseHandler(t *testing.T) {
 	assert.Error(t, err)
 	assert.EqualError(t, err, "Status Code: 400 - Cannot retrieve the user count unless the channel is a presence channel")
 	assert.Nil(t, channel)
+}
+
+func TestRequestTimeouts(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		time.Sleep(time.Second * 3)
+		res.WriteHeader(200)
+		fmt.Fprintf(res, "{}")
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	client.Timeout = 2
+
+	_, err := client.Trigger([]string{"test_channel"}, "test", "yolo")
+
+	assert.EqualError(t, err, "The server was taking too long")
+
 }
 
 func TestChannelLengthValidation(t *testing.T) {
