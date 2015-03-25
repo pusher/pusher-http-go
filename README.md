@@ -6,11 +6,12 @@
 client := pusher.Client{
     AppId:  app_id,
     Key:    app_key,
-    Secret: app_secret}
+    Secret: app_secret,
+}
 
 data := map[string]string{"message": "hello world"}
 
-client.Trigger([]string{"test_channel"}, "my_event", data)
+client.Trigger("test_channel", "my_event", data)
 ```
 
 ### Excluding Recipients
@@ -18,7 +19,7 @@ client.Trigger([]string{"test_channel"}, "my_event", data)
 In place of the `""` in the last example, we enter the socket_id of the connection we wish to exclude from receiving the event:
 
 ```go
-client.Trigger([]string{"test_channel"}, "my_event", data, "1234.5678")
+client.Trigger("test_channel", "my_event", data, "1234.5678")
 ```
 
 ##Info From All Channels
@@ -55,7 +56,7 @@ users, err := client.GetChannelUsers("presence-chatroom")
 ### Private Channels
 
 ```go
-func pusher_auth(res http.ResponseWriter, req *http.Request) {
+func pusherAuth(res http.ResponseWriter, req *http.Request) {
 
     params, _ := ioutil.ReadAll(req.Body)
     auth := client.AuthenticateChannel(params)
@@ -65,7 +66,7 @@ func pusher_auth(res http.ResponseWriter, req *http.Request) {
 
 func main() {
     http.HandleFunc("/", root)
-    http.HandleFunc("/pusher/auth", pusher_auth)
+    http.HandleFunc("/pusher/auth", pusherAuth)
 
     http.ListenAndServe(":5000", nil)
 }
@@ -78,11 +79,11 @@ Like private channels, but one passes in user data to be associated with the mem
 ```go
 params, _ := ioutil.ReadAll(req.Body)
 
-presence_data := pusher.MemberData{
+presenceData := pusher.MemberData{
     UserId: "1", 
     UserInfo: map[string]string{"twitter": "jamiepatel"}}
 
-auth := client.AuthenticateChannel(params, presence_data)
+auth := client.AuthenticateChannel(params, presenceData)
 
 fmt.Fprintf(res, auth)
 

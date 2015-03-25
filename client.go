@@ -14,15 +14,19 @@ import (
 
 var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 
+// Client to the HTTP API of Pusher
 type Client struct {
 	AppId   string
 	Key     string
 	Secret  string
-	Host    string
-	Secure  bool
-	Timeout time.Duration
+	Host    string        // host or host:port pair
+	Secure  bool          // true for HTTPS
+	Timeout time.Duration // Request timeout for HTTP requests
 }
 
+// Client constructor from a specially crafted URL
+//
+// Eg: ClientFromURL("http://feaf18a411d3cb9216ee:fec81108d90e1898e17a@api.pusherapp.com/apps/104060")
 func ClientFromURL(url string) (*Client, error) {
 	url2, err := u.Parse(url)
 	if err != nil {
@@ -56,6 +60,9 @@ func ClientFromURL(url string) (*Client, error) {
 	return &c, nil
 }
 
+// Client constructor for an environment variable (like Heroku).
+//
+// Eg: ClientFromEnv("PUSHER_URL")
 func ClientFromEnv(key string) (*Client, error) {
 	url := os.Getenv(key)
 	return ClientFromURL(url)
