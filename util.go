@@ -13,9 +13,14 @@ func authTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
-func parseAuthRequestParams(_params []byte) (string, string) {
-	params, _ := url.ParseQuery(string(_params))
-	return params["channel_name"][0], params["socket_id"][0]
+func parseAuthRequestParams(_params []byte) (string, string, error) {
+	params, err := url.ParseQuery(string(_params))
+
+	if err != nil {
+		return "", "", err
+	}
+
+	return params["channel_name"][0], params["socket_id"][0], nil
 }
 
 func channelsAreValid(channels []string) bool {

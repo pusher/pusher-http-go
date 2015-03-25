@@ -113,7 +113,12 @@ func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (
 }
 
 func (c *Client) authenticateChannel(params []byte, member *MemberData) (response []byte, err error) {
-	channelName, socketId := parseAuthRequestParams(params)
+	channelName, socketId, err := parseAuthRequestParams(params)
+
+	if err != nil {
+		return
+	}
+
 	stringToSign := strings.Join([]string{socketId, channelName}, ":")
 
 	var jsonUserData string
