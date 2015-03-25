@@ -5,22 +5,22 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	u "net/url"
 	"os"
 	"regexp"
 	"strings"
 	"time"
-	u "net/url"
 )
 
-var PusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
+var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 
 type Client struct {
-	AppId string
-	Key string
-	Secret string
-	Host string
-	Secure bool
-	Timeout                  time.Duration
+	AppId   string
+	Key     string
+	Secret  string
+	Host    string
+	Secure  bool
+	Timeout time.Duration
 }
 
 func ClientFromURL(url string) (*Client, error) {
@@ -33,7 +33,7 @@ func ClientFromURL(url string) (*Client, error) {
 		Host: url2.Host,
 	}
 
-	matches := PusherPathRegex.FindStringSubmatch(url2.Path)
+	matches := pusherPathRegex.FindStringSubmatch(url2.Path)
 	if len(matches) == 0 {
 		return nil, errors.New("No app ID found")
 	}
