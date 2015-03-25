@@ -14,8 +14,9 @@ func TestParsingChannelsList(t *testing.T) {
 			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG": ChannelListItem{UserCount: 1},
 		},
 	}
-	result := unmarshalledChannelsList(testJSON)
+	result, err := unmarshalledChannelsList(testJSON)
 	assert.Equal(t, expected, result)
+	assert.NoError(t, err)
 }
 
 func TestParsingChannel(t *testing.T) {
@@ -27,8 +28,10 @@ func TestParsingChannel(t *testing.T) {
 		UserCount:         1,
 		SubscriptionCount: 1,
 	}
-	result := unmarshalledChannel(testJSON, channelName)
+	result, err := unmarshalledChannel(testJSON, channelName)
 	assert.Equal(t, expected, result)
+	assert.NoError(t, err)
+
 }
 
 func TestParsingChannelUsers(t *testing.T) {
@@ -36,8 +39,10 @@ func TestParsingChannelUsers(t *testing.T) {
 	expected := &Users{
 		List: []User{User{Id: "red"}, User{Id: "blue"}},
 	}
-	result := unmarshalledChannelUsers(testJSON)
+	result, err := unmarshalledChannelUsers(testJSON)
 	assert.Equal(t, expected, result)
+	assert.NoError(t, err)
+
 }
 
 func TestParsingTriggerResult(t *testing.T) {
@@ -48,6 +53,13 @@ func TestParsingTriggerResult(t *testing.T) {
 			"another_channel": "eudhq17zrhfc74",
 		},
 	}
-	result := unmarshalledBufferedEvents(testJSON)
+	result, err := unmarshalledBufferedEvents(testJSON)
 	assert.Equal(t, expected, result)
+	assert.NoError(t, err)
+}
+
+func TestParserError(t *testing.T) {
+	testJSON := []byte("[];;[[p{{}}{{{}[][][]@£$@")
+	_, err := unmarshalledChannelsList(testJSON)
+	assert.Error(t, err)
 }

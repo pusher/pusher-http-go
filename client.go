@@ -11,22 +11,28 @@ import (
 	"time"
 )
 
-var PusherURLRegex = regexp.MustCompile("(http|https)://(.*):(.*)@(.*)/apps/([0-9]+)")
+var PusherURLRegex = regexp.MustCompile("^(http|https)://(.*):(.*)@(.*)/apps/([0-9]+)$")
 
 type Client struct {
 	AppId, Key, Secret, Host string
 	Timeout                  time.Duration
 }
 
-func ClientFromURL(url string) Client {
-	matches := PusherURLRegex.FindAllStringSubmatch(url, -1)[0]
-	return Client{Key: matches[2], Secret: matches[3], Host: matches[4], AppId: matches[5]}
+func ClientFromURL(url string) (*Client, error) {
+	matches := PusherURLRegex.FindStringSubmatch(url)
+	if len(matches) == 0 {
+		return nil, errors.New("No match found")
+	}
+	return &Client{Key: matches[2], Secret: matches[3], Host: matches[4], AppId: matches[5]}, nil
 }
 
-func ClientFromEnv(key string) Client {
+func ClientFromEnv(key string) (*Client, error) {
 	url := os.Getenv(key)
 	return ClientFromURL(url)
 }
+
+// triggerMulti
+// socketId pointer to string
 
 func (c *Client) Trigger(channels []string, event string, _data interface{}, _socketId ...string) (*BufferedEvents, error) {
 	var socketId string
@@ -56,7 +62,7 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}, _so
 		return nil, responseErr
 	}
 
-	return unmarshalledBufferedEvents(response), nil
+	return unmarshalledBufferedEvents(response)
 }
 
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
@@ -66,7 +72,7 @@ func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, e
 	if err != nil {
 		return nil, err
 	}
-	return unmarshalledChannelsList(response), nil
+	return unmarshalledChannelsList(response)
 }
 
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
@@ -76,7 +82,7 @@ func (c *Client) Channel(name string, additionalQueries map[string]string) (*Cha
 	if err != nil {
 		return nil, err
 	}
-	return unmarshalledChannel(response, name), nil
+	return unmarshalledChannel(response, name)
 }
 
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
@@ -86,7 +92,7 @@ func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	if err != nil {
 		return nil, err
 	}
-	return unmarshalledChannelUsers(response), nil
+	return unmarshalledChannelUsers(response)
 }
 
 func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) string {
@@ -114,7 +120,7 @@ func (c *Client) AuthenticateChannel(_params []byte, member ...MemberData) strin
 func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 	for _, token := range header["X-Pusher-Key"] {
 		if token == c.Key && checkSignature(header["X-Pusher-Signature"][0], string(body), c.Secret) {
-			return unmarshalledWebhook(body), nil
+			return unmarshalledWebhook(body)
 		}
 	}
 	return nil, errors.New("Invalid webhook")

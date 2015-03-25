@@ -32,26 +32,48 @@ type MemberData struct {
 	UserInfo map[string]string `json:"user_info",omitempty`
 }
 
-func unmarshalledChannelsList(response []byte) *ChannelsList {
+// make sure to pass errors if any from json.Unmarshal
+
+func unmarshalledChannelsList(response []byte) (*ChannelsList, error) {
 	channels := &ChannelsList{}
-	json.Unmarshal(response, &channels)
-	return channels
+	err := json.Unmarshal(response, &channels)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return channels, nil
 }
 
-func unmarshalledChannel(response []byte, name string) *Channel {
+func unmarshalledChannel(response []byte, name string) (*Channel, error) {
 	channel := &Channel{Name: name}
-	json.Unmarshal(response, &channel)
-	return channel
+	err := json.Unmarshal(response, &channel)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return channel, nil
 }
 
-func unmarshalledChannelUsers(response []byte) *Users {
+func unmarshalledChannelUsers(response []byte) (*Users, error) {
 	users := &Users{}
-	json.Unmarshal(response, &users)
-	return users
+	err := json.Unmarshal(response, &users)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
-func unmarshalledBufferedEvents(response []byte) *BufferedEvents {
+func unmarshalledBufferedEvents(response []byte) (*BufferedEvents, error) {
 	bufferedEvents := &BufferedEvents{}
-	json.Unmarshal(response, bufferedEvents)
-	return bufferedEvents
+	err := json.Unmarshal(response, &bufferedEvents)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bufferedEvents, nil
 }

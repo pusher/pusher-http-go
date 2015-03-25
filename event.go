@@ -13,7 +13,7 @@ type Event struct {
 }
 
 type BufferedEvents struct {
-	EventIds map[string]string `json:"event_ids"`
+	EventIds map[string]string `json:"event_ids",omitempty`
 }
 
 func createTriggerPayload(channels []string, event string, _data interface{}, socket_id string) ([]byte, error) {

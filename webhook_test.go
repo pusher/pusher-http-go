@@ -47,7 +47,7 @@ func TestWebhookImproperSignatureCase(t *testing.T) {
 
 func TestWebhookUnmarshalling(t *testing.T) {
 	body := []byte("{\"time_ms\":1427233518933,\"events\":[{\"name\":\"client_event\",\"channel\":\"private-channel\",\"event\":\"client-yolo\",\"data\":\"{\\\"yolo\\\":\\\"woot\\\"}\",\"socket_id\":\"44610.7511910\"}]}")
-	result := unmarshalledWebhook(body)
+	result, err := unmarshalledWebhook(body)
 	expected := &Webhook{
 		TimeMs: 1427233518933,
 		Events: []WebhookEvent{
@@ -62,4 +62,5 @@ func TestWebhookUnmarshalling(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, result)
+	assert.NoError(t, err)
 }
