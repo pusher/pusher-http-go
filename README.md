@@ -65,11 +65,14 @@ It is possible to trigger an event on one or more channels. Channel names can co
 
 
 #### Single channel
-<b>
-```go
-func (c *Client) Trigger(channel string, event string, data interface{}) (*BufferedEvents, error)
-```
-</b>
+
+#####`func (c *Client) Trigger`
+
+|Argument   |Description   |
+|:-:|:-:|
+|channel `string`   |The name of the channel you wish to trigger on.   |
+|event `string` | The name of the event you wish to trigger |
+|data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
 
 ```go
 data := map[string]string{"hello": "world"}
@@ -78,9 +81,15 @@ client.Trigger("my_numbers", "numbers_for_all", data)
 
 #### Multiple channels
 
-*Notes on triggering an event on multiple channels*
+#####`func (c. *Client) TriggerMulti`
 
-**Example**
+|Argument | Description |
+|:-:|:-:|
+|channels `[]string`| A slice of channel names you wish to send an event on. The maximum length is 10.|
+|event `string` | As above.|
+|data `interface{}` |As above.|
+
+######Example
 
 ```go
 client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
@@ -88,32 +97,61 @@ client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 
 ### Excluding event recipients
 
-*Notes on triggering an event and identifying a socket_id that will not receive the event*
+`func (c *Client) TriggerExclusive` and `func (c *Client) TriggerMultiExclusive` follow the patterns above, except a `socket_id` is given as the last parameter.
 
-**{Example}:**
+These methods allow you to exclude a recipient whose connection has that `socket_id` from receiving the event. You can read more [here](http://pusher.com/docs/duplicates).
+
+######Examples
+
+**On one channel**:
 
 ```go
 client.TriggerExclusive("a_channel", "event", data, "123.12")
 ```
 
+**On multiple channels**:
+
 ```go
 client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
 ```
 
-### Authenticating private channels
+### Authenticating Channels
 
-To authorize your users to access private channels on Pusher *...*
+Application security is very important so Pusher provides a mechanism for authenticating a user’s access to a channel at the point of subscription.
 
-For more information see: <http://pusher.com/docs/authenticating_users>
+This can be used both to restrict access to private channels, and in the case of presence channels notify subscribers of who else is also subscribed via presence events.
 
-**{Example}:**
+This library provides a mechanism for generating an authentication signature to send back to the client and authorize them.
+
+For more information see our [docs](http://pusher.com/docs/authenticating_users).
+
+### Private channels
+
+
+#### `func (c *Client) AuthenticatePrivateChannel`
+
+|Argument|Description|
+|:-:|:-:|
+|params `[]byte`| The request body sent by the client|
+
+|Return Values|Description|
+|:-:|:-:|
+|response `[]byte` | The response to send back to the client, carrying an authentication signature |
+|err `error` | Any errors generated |
+
+######Example
 
 ```go
 func pusherAuth(res http.ResponseWriter, req *http.Request) {
 
 	params, _ := ioutil.ReadAll(req.Body)
-	response := client.AuthenticatePrivateChannel(params)
-	fmt.Fprintf(res, response)
+	response, err := client.AuthenticatePrivateChannel(params)
+	
+	if err != nil {
+		panic(err)
+	}
+	
+	fmt.Fprintf(res, string(response))
 
 }
 
@@ -125,19 +163,46 @@ func main() {
 
 ### Authenticating presence channels
 
-Using presence channels is similar to private channels, but you can specify extra data to identify that particular user.
+Using presence channels is similar to private channels, but in order to identify a user, clients are sent a user_id and, optionally, custom data.
 
-*Any additional information specific to the library*
+#### `func (c *Client) AuthenticatePresenceChannel`
 
-For more information see: <http://pusher.com/docs/authenticating_users>
+|Argument|Description|
+|:-:|:-:|
+|params `[]byte`| The request body sent by the client |
+|member `pusher.MemberData`| A struct representing what to assign to a channel member, consisting of a `UserId` and any custom `UserInfo`. See below |
 
-**{Example}:**
+##### Custom Types
+
+###### pusher.MemberData
+
+```go
+type MemberData struct {
+    UserId   string            `json:"user_id"`
+    UserInfo map[string]string `json:"user_info",omitempty`
+}
+```
+
+##### Example
 
 ```go
 params, _ := ioutil.ReadAll(req.Body)
 presenceData := pusher.MemberData{UserId: "1", UserInfo: map[string]string{"twitter": "@pusher"}}
-response := client.AuthenticatePresenceChannel(params, presence_data)
+response, err := client.AuthenticatePresenceChannel(params, presence_data)
+
+if err != nil {
+	panic(err)
+}
+
 fmt.Fprintf(res, response)
+```
+
+##### pusher.MemberData
+```go
+type MemberData struct {
+    UserId   string            `json:"user_id"`
+    UserInfo map[string]string `json:"user_info",omitempty`
+}
 ```
 
 ### Application state
