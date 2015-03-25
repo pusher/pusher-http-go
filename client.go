@@ -5,11 +5,24 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"regexp"
 	"strings"
 )
 
 type Client struct {
 	AppId, Key, Secret, Host string
+}
+
+func ClientFromUrl(url string) Client {
+	r, _ := regexp.Compile("(http|https)://(.*):(.*)@(.*)/apps/([0-9]+)")
+	matches := r.FindAllStringSubmatch(url, -1)[0]
+	return Client{Key: matches[2], Secret: matches[3], Host: matches[4], AppId: matches[5]}
+}
+
+func ClientFromENV(key string) Client {
+	url := os.Getenv(key)
+	return ClientFromUrl(url)
 }
 
 func (c *Client) Trigger(channels []string, event string, _data interface{}, _socketId ...string) (*BufferedEvents, error) {

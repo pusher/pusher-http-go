@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 )
 
@@ -110,7 +111,20 @@ func TestDataSizeValidation(t *testing.T) {
 	res, err := client.Trigger([]string{"channel"}, "event", data)
 
 	assert.EqualError(t, err, "Data must be smaller than 10kb")
-	// assert.Equal(t, "", res)
 	assert.Nil(t, res)
 
+}
+
+func TestInitialisationFromURL(t *testing.T) {
+	url := "http://feaf18a411d3cb9216ee:fec81108d90e1898e17a@api.pusherapp.com/apps/104060"
+	client := ClientFromUrl(url)
+	expectedClient := Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppId: "104060", Host: "api.pusherapp.com"}
+	assert.Equal(t, expectedClient, client)
+}
+
+func TestInitialisationFromENV(t *testing.T) {
+	os.Setenv("PUSHER_URL", "http://feaf18a411d3cb9216ee:fec81108d90e1898e17a@api.pusherapp.com/apps/104060")
+	client := ClientFromENV("PUSHER_URL")
+	expectedClient := Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppId: "104060", Host: "api.pusherapp.com"}
+	assert.Equal(t, expectedClient, client)
 }
