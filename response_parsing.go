@@ -32,8 +32,6 @@ type MemberData struct {
 	UserInfo map[string]string `json:"user_info",omitempty`
 }
 
-// make sure to pass errors if any from json.Unmarshal
-
 func unmarshalledChannelsList(response []byte) (*ChannelsList, error) {
 	channels := &ChannelsList{}
 	err := json.Unmarshal(response, &channels)

@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-//this is Ruby :(
 func authTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }

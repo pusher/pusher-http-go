@@ -34,12 +34,23 @@ func ClientFromEnv(key string) (*Client, error) {
 // triggerMulti
 // socketId pointer to string
 
-func (c *Client) Trigger(channels []string, event string, _data interface{}, _socketId ...string) (*BufferedEvents, error) {
-	var socketId string
-	if len(_socketId) > 0 {
-		socketId = _socketId[0]
-	}
+func (c *Client) Trigger(channel string, event string, data interface{}) (*BufferedEvents, error) {
+	return c.trigger([]string{channel}, event, data, nil)
+}
 
+func (c *Client) TriggerMulti(channels []string, event string, data interface{}) (*BufferedEvents, error) {
+	return c.trigger(channels, event, data, nil)
+}
+
+func (c *Client) TriggerExclusive(channel string, event string, data interface{}, socketID string) (*BufferedEvents, error) {
+	return c.trigger([]string{channel}, event, data, &socketID)
+}
+
+func (c *Client) TriggerMultiExclusive(channels []string, event string, data interface{}, socketID string) (*BufferedEvents, error) {
+	return c.trigger(channels, event, data, &socketID)
+}
+
+func (c *Client) trigger(channels []string, event string, data interface{}, socketId *string) (*BufferedEvents, error) {
 	if len(channels) > 10 {
 		return nil, errors.New("You cannot trigger on more than 10 channels at once")
 	}
@@ -48,18 +59,16 @@ func (c *Client) Trigger(channels []string, event string, _data interface{}, _so
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
 
-	payload, size_err := createTriggerPayload(channels, event, _data, socketId)
-
-	if size_err != nil {
-		return nil, size_err
+	payload, err := createTriggerPayload(channels, event, data, socketId)
+	if err != nil {
+		return nil, err
 	}
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), payload, nil)
-	response, responseErr := request("POST", u, payload, c.Timeout)
-
-	if responseErr != nil {
-		return nil, responseErr
+	response, err := request("POST", u, payload, c.Timeout)
+	if err != nil {
+		return nil, err
 	}
 
 	return unmarshalledBufferedEvents(response)

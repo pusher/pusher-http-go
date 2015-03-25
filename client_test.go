@@ -18,7 +18,7 @@ func TestTriggerSuccessCase(t *testing.T) {
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		expected_body := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"\\\"yolo\\\"\",\"socket_id\":\"\"}"
+		expected_body := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"\\\"yolo\\\"\"}"
 		actual_body, err := ioutil.ReadAll(req.Body)
 		assert.Equal(t, expected_body, string(actual_body))
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
@@ -28,7 +28,7 @@ func TestTriggerSuccessCase(t *testing.T) {
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
-	_, err := client.Trigger([]string{"test_channel"}, "test", "yolo")
+	_, err := client.Trigger("test_channel", "test", "yolo")
 	assert.NoError(t, err)
 }
 
@@ -45,7 +45,7 @@ func TestTriggerWithSocketId(t *testing.T) {
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
-	client.Trigger([]string{"test_channel"}, "test", "yolo", "1234.12")
+	client.TriggerExclusive("test_channel", "test", "yolo", "1234.12")
 }
 
 func TestErrorResponseHandler(t *testing.T) {
@@ -82,7 +82,7 @@ func TestRequestTimeouts(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 	client.Timeout = time.Millisecond * 100
 
-	_, err := client.Trigger([]string{"test_channel"}, "test", "yolo")
+	_, err := client.Trigger("test_channel", "test", "yolo")
 
 	assert.Error(t, err)
 
@@ -92,7 +92,7 @@ func TestChannelLengthValidation(t *testing.T) {
 	channels := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"}
 
 	client := Client{AppId: "id", Key: "key", Secret: "secret"}
-	res, err := client.Trigger(channels, "yolo", "woot")
+	res, err := client.TriggerMulti(channels, "yolo", "woot")
 
 	assert.EqualError(t, err, "You cannot trigger on more than 10 channels at once")
 	assert.Nil(t, res)
@@ -108,9 +108,9 @@ func TestChannelFormatValidation(t *testing.T) {
 	}
 
 	client := Client{AppId: "id", Key: "key", Secret: "secret"}
-	res1, err1 := client.Trigger([]string{channel1}, "yolo", "w00t")
+	res1, err1 := client.Trigger(channel1, "yolo", "w00t")
 
-	res2, err2 := client.Trigger([]string{channel2}, "yolo", "not 19 forever")
+	res2, err2 := client.Trigger(channel2, "yolo", "not 19 forever")
 
 	assert.EqualError(t, err1, "At least one of your channels' names are invalid")
 	assert.Nil(t, res1)
@@ -128,7 +128,7 @@ func TestDataSizeValidation(t *testing.T) {
 	for i := 0; i <= 10242; i++ {
 		data += "a"
 	}
-	res, err := client.Trigger([]string{"channel"}, "event", data)
+	res, err := client.Trigger("channel", "event", data)
 
 	assert.EqualError(t, err, "Data must be smaller than 10kb")
 	assert.Nil(t, res)

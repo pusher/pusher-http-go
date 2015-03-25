@@ -9,17 +9,17 @@ type Event struct {
 	Name     string   `json:"name"`
 	Channels []string `json:"channels"`
 	Data     string   `json:"data"`
-	SocketId string   `json:"socket_id"`
+	SocketId *string  `json:"socket_id,omitempty"`
 }
 
 type BufferedEvents struct {
-	EventIds map[string]string `json:"event_ids",omitempty`
+	EventIds map[string]string `json:"event_ids,omitempty"`
 }
 
-func createTriggerPayload(channels []string, event string, _data interface{}, socket_id string) ([]byte, error) {
-	data, _ := json.Marshal(_data)
+func createTriggerPayload(channels []string, event string, data interface{}, socketId *string) ([]byte, error) {
+	data2, _ := json.Marshal(data)
 
-	dataAsString := string(data)
+	dataAsString := string(data2)
 
 	if len(dataAsString) > 10240 {
 		return nil, errors.New("Data must be smaller than 10kb")
@@ -29,7 +29,8 @@ func createTriggerPayload(channels []string, event string, _data interface{}, so
 		Name:     event,
 		Channels: channels,
 		Data:     dataAsString,
-		SocketId: socket_id})
+		SocketId: socketId,
+	})
 
 	return payload, nil
 }
