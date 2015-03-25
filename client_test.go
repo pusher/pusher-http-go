@@ -80,11 +80,11 @@ func TestRequestTimeouts(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
-	client.Timeout = 2
+	client.Timeout = time.Second * 2
 
 	_, err := client.Trigger([]string{"test_channel"}, "test", "yolo")
 
-	assert.EqualError(t, err, "The server was taking too long")
+	assert.Error(t, err)
 
 }
 

@@ -10,51 +10,39 @@ import (
 	"time"
 )
 
-type Response struct {
-	StatusCode int
-	Body       []byte
-}
-
-func request(method, url string, body []byte, timeout int) ([]byte, error) {
-
-	responseChannel := make(chan Response)
-	httpClientError := make(chan error)
-	client := &http.Client{}
+// change timeout to time.Duration
+func request(method, url string, body []byte, timeout time.Duration) ([]byte, error) {
 
 	if timeout == 0 {
-		timeout = 5
+		timeout = time.Second * 5
 	}
 
-	go func() {
-		req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
-		resp, err := client.Do(req)
-		defer resp.Body.Close()
-		if err != nil {
-			httpClientError <- err
-		}
+	client := &http.Client{Timeout: timeout}
 
-		responseBody, _ := ioutil.ReadAll(resp.Body)
-		response := Response{resp.StatusCode, responseBody}
-		responseChannel <- response
-	}()
+	// use httpClient Timeout attribute - otherwise there will be a leak
 
-	select {
-	case response := <-responseChannel:
-		return processResponse(response)
-	case err := <-httpClientError:
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
 		return nil, err
-	case <-time.After(time.Duration(timeout) * time.Second):
-		return nil, errors.New("The server was taking too long")
 	}
+	defer resp.Body.Close()
 
+	return processResponse(resp)
 }
 
-func processResponse(response Response) ([]byte, error) {
+func processResponse(response *http.Response) ([]byte, error) {
+	responseBody, err := ioutil.ReadAll(response.Body)
+
+	if err != nil {
+		return nil, err
+	}
+
 	if response.StatusCode == 200 {
-		return response.Body, nil
+		return responseBody, nil
 	} else {
-		message := fmt.Sprintf("Status Code: %s - %s", strconv.Itoa(response.StatusCode), string(response.Body))
+		message := fmt.Sprintf("Status Code: %s - %s", strconv.Itoa(response.StatusCode), string(responseBody))
 		err := errors.New(message)
 		return nil, err
 	}

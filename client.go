@@ -8,11 +8,12 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type Client struct {
 	AppId, Key, Secret, Host string
-	Timeout                  int
+	Timeout                  time.Duration
 }
 
 func ClientFromUrl(url string) Client {
