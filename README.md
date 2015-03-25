@@ -125,10 +125,10 @@ This library provides a mechanism for generating an authentication signature to 
 
 For more information see our [docs](http://pusher.com/docs/authenticating_users).
 
-### Private channels
+#### Private channels
 
 
-#### `func (c *Client) AuthenticatePrivateChannel`
+##### `func (c *Client) AuthenticatePrivateChannel`
 
 |Argument|Description|
 |:-:|:-:|
@@ -161,20 +161,20 @@ func main() {
 }
 ```
 
-### Authenticating presence channels
+#### Authenticating presence channels
 
 Using presence channels is similar to private channels, but in order to identify a user, clients are sent a user_id and, optionally, custom data.
 
-#### `func (c *Client) AuthenticatePresenceChannel`
+##### `func (c *Client) AuthenticatePresenceChannel`
 
 |Argument|Description|
 |:-:|:-:|
 |params `[]byte`| The request body sent by the client |
 |member `pusher.MemberData`| A struct representing what to assign to a channel member, consisting of a `UserId` and any custom `UserInfo`. See below |
 
-##### Custom Types
+###### Custom Types
 
-###### pusher.MemberData
+**pusher.MemberData**
 
 ```go
 type MemberData struct {
@@ -183,12 +183,19 @@ type MemberData struct {
 }
 ```
 
-##### Example
+###### Example
 
 ```go
 params, _ := ioutil.ReadAll(req.Body)
-presenceData := pusher.MemberData{UserId: "1", UserInfo: map[string]string{"twitter": "@pusher"}}
-response, err := client.AuthenticatePresenceChannel(params, presence_data)
+
+presenceData := pusher.MemberData{
+	UserId: "1",
+	UserInfo: map[string]string{
+		"twitter": "jamiepatel",
+	},
+}
+
+response, err := client.AuthenticatePresenceChannel(params, presenceData)
 
 if err != nil {
 	panic(err)
@@ -197,44 +204,88 @@ if err != nil {
 fmt.Fprintf(res, response)
 ```
 
-##### pusher.MemberData
-```go
-type MemberData struct {
-    UserId   string            `json:"user_id"`
-    UserInfo map[string]string `json:"user_info",omitempty`
-}
-```
-
 ### Application state
 
-It's possible to query the state of the application.
-
-*Any additional information specific to the library*
-
-**{Example}:**
-
-```js
-pusher.get({ path: path, params: params }, callback);
-```
+This library allows you to query our API to retrieve information about your application's channels, their individual properties, and, for presence-channels, the users currently subscribed to them.
 
 #### Get the list of channels in an application
 
-*Any additional information specific to the library*
+##### `func (c *Client) Channels`
 
-**Example**:
+|Argument|Description|
+|:-:|:-:|
+|additionalQueries `map[string]string`| A map with query options. A key with `"filter_by_prefix"` will filter the returned channels. To get number of users subscribed to a presence-channel, specify an `"info"` key with value `"user_count"`. <br><br>Pass in `nil` if you do not wish to specify any query attributes.  |
+
+|Return Values|Description|
+|:-:|:-:|
+|channels `*pusher.ChannelsList`|A struct representing the list of channels. See below. |
+|err `error`|Any errors encountered|
+
+###### Custom Types
+
+**pusher.ChannelsList**
 
 ```go
+type ChannelsList struct {
+    Channels map[string]ChannelListItem `json:"channels"`
+}
+```
+
+**pusher.ChannelsListItem**
+
+```go
+type ChannelListItem struct {
+    UserCount int `json:"user_count"`
+}
+```
+######Example
+
+```go
+channelsParams := map[string]string{
+    "filter_by_prefix": "presence-",
+    "info":             "user_count",
+}
+
 channels, err := client.Channels(channelsParams)
+
+// => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
 ```
 
 #### Get the state of a single channel
 
-*Any additional information specific to the library*
+##### `func (c *Client) Channel`
 
-**{Example}:**
+|Argument|Description|
+|:-:|:-:|
+|name `string`| The name of the channel|
+|additionalQueries `map[string]string` |A map with query options. An `"info"` key can have comma-separated vales of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. Note that the subscription count is not allowed by default. Please [contact us](http://support.pusher.com) if you wish to enable this.<br><br>Pass in `nil` if you do not wish to specify any query attributes.|
+
+|Return Values|Description|
+|:-:|:-:|
+|channel `*pusher.Channel` |A struct representing a channel. See below. |
+
+######Custom Types
+
+**pusher.Channel**
 
 ```go
-channel, err := client.Channel("presence-chatroom")
+type Channel struct {
+    Name              string
+    Occupied          bool
+    UserCount         int  
+    SubscriptionCount int 
+}
+```
+
+###### Example
+```go
+channelParams := map[string]string{
+	"info": "user_count,subscription_count",
+}
+
+channel, err := client.Channel("presence-chatroom", channelParams)
+
+//=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 ```
 
 #### Get a list of users in a presence channel
