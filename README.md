@@ -43,19 +43,51 @@ client := pusher.Client{
 
 ### Additional options
 
-#### From URL
+#### Instantiation From URL
 
 ```go
 client := pusher.ClientFromURL("http://key:secret@api.pusherapp.com/apps/app_id")
 ```
 
-#### From Environment Variable
+#### Instantiation From Environment Variable
 
 ```go
 client := pusher.ClientFromEnv("PUSHER_URL")
 ```
 
 This is particularly relevant if you are using Pusher as a Heroku add-on, which stores credentials in a `"PUSHER_URL"` environment variable.
+
+#### HTTPS
+
+To ensure requests occur over HTTPS, set the `Encrypted` property of a `pusher.Client` to `true`.
+
+```go
+client.Secure = true
+```
+
+This is `false` by default.
+
+#### Request Timeouts
+
+If you wish to set a time-limit for each HTTP request, set the `Timeout` property to an instance of `time.Duration`, for example:
+
+```go
+import "time"
+
+client.Timeout = time.Second * 3
+```
+
+By default, timeouts will be 5 seconds.
+
+#### Changing Host
+
+Changing the `pusher.Client`'s `Host` property will make sure requests are sent to your specified host.
+
+```go
+client.Host = "foo.host.com"
+```
+
+By default, this is `"api.pusherapp.com"`.
 
 ## Usage
 
@@ -76,7 +108,7 @@ It is possible to trigger an event on one or more channels. Channel names can co
 
 ```go
 data := map[string]string{"hello": "world"}
-client.Trigger("my_numbers", "numbers_for_all", data)
+client.Trigger("greeting_channel", "say_hello", data)
 ```
 
 #### Multiple channels
@@ -372,19 +404,16 @@ func pusherWebhook(res http.ResponseWriter, req *http.Request) {
 
 	body, _ := ioutil.ReadAll(req.Body)
 	webhook, err := client.Webhook(req.Header, body)
-  if err != nil {
+  	if err != nil {
       fmt.Println("Webhook is invalid :(")
-  } else {
+  	} else {
       fmt.Printf("%+v\n", webhook.Events)
-  }
+  	}
 
 }
 ```
 
 ### Feature Support
-
-*Provide information regarding the features that the library supports. What it does and what it doesn't. This section can also form a table of contents to the information within the README*
-
 
 Feature                                    | Supported
 -------------------------------------------| :-------:
@@ -406,13 +435,13 @@ HTTP Proxy configuration                   | *&#10008;*
 HTTP KeepAlive                             | *&#10008;*
 
 
-### Helper Functionality
+#### Helper Functionality
 
-*Libraries can also offer additional helper functionality to ensure interactions with the HTTP API only occur if they will not be rejected e.g. [channel naming conventions][channel-names].*
+These are helpers that have been implemented to to ensure interactions with the HTTP API only occur if they will not be rejected e.g. [channel naming conventions](https://pusher.com/docs/client_api_guide/client_channels#naming-channels).
 
 Helper Functionality                     | Supported
 -----------------------------------------| :-------:
-[Channel name validation][channel-names] | &#10004;
+Channel name validation 					 | &#10004;
 Limit to 10 channels per trigger         | &#10004;
 Limit event name length to 200 chars     | &#10004;
 
@@ -439,5 +468,3 @@ Limit event name length to 200 chars     | &#10004;
 ## License
 
 This code is free to use under the terms of the MIT license.
-
-[channel-names]: https://pusher.com/docs/client_api_guide/client_channels#naming-channels
