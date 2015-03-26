@@ -6,6 +6,26 @@ This package lets you trigger events to your client and query the state of your 
 
 In order to use this library, you need to have an account on <http://pusher.com>. After registering, you will need the application credentials for your app.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+###Table of Contents
+
+- [Installation](#installation)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+  - [Additional options](#additional-options)
+- [Usage](#usage)
+  - [Triggering events](#triggering-events)
+  - [Excluding event recipients](#excluding-event-recipients)
+  - [Authenticating Channels](#authenticating-channels)
+  - [Application state](#application-state)
+  - [Webhook validation](#webhook-validation)
+- [Feature Support](#feature-support)
+- [Developing the Library](#developing-the-library)
+  - [Running the tests](#running-the-tests)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Installation
 
@@ -419,7 +439,7 @@ func pusherWebhook(res http.ResponseWriter, req *http.Request) {
 }
 ```
 
-### Feature Support
+## Feature Support
 
 Feature                                    | Supported
 -------------------------------------------| :-------:
