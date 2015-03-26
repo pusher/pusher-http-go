@@ -1,5 +1,7 @@
 # Pusher HTTP Go Library
 
+[![Build Status](https://travis-ci.org/pusher/pusher-http-go.svg?branch=master)](https://travis-ci.org/pusher/pusher-http-go)
+
 The Golang library for interacting with the Pusher HTTP API.
 
 This package lets you trigger events to your client and query the state of your Pusher channels. When used with a server, you can validate Pusher webhooks and authenticate private- or presence-channels.
