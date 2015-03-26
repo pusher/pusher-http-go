@@ -212,8 +212,8 @@ Using presence channels is similar to private channels, but in order to identify
 
 ```go
 type MemberData struct {
-    UserId   string            `json:"user_id"`
-    UserInfo map[string]string `json:"user_info",omitempty`
+    UserId   string            
+    UserInfo map[string]string 
 }
 ```
 
@@ -261,7 +261,7 @@ This library allows you to query our API to retrieve information about your appl
 
 ```go
 type ChannelsList struct {
-    Channels map[string]ChannelListItem `json:"channels"`
+    Channels map[string]ChannelListItem 
 }
 ```
 
@@ -269,7 +269,7 @@ type ChannelsList struct {
 
 ```go
 type ChannelListItem struct {
-    UserCount int `json:"user_count"`
+    UserCount int
 }
 ```
 ######Example
@@ -297,6 +297,7 @@ channels, err := client.Channels(channelsParams)
 |Return Value|Description|
 |:-:|:-:|
 |channel `*pusher.Channel` |A struct representing a channel. See below. |
+|err `error` | Any errors encountered |
 
 ######Custom Types
 
@@ -333,6 +334,7 @@ channel, err := client.Channel("presence-chatroom", channelParams)
 |Return Value|Description|
 |:-:|:-:|
 |users `*pusher.Users`| A struct representing a list of the users subscribed to the presence-channel. See below |
+| err `error` | Any errors encountered.|
 
 ###### Custom Types
 
