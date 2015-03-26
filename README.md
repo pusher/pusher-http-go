@@ -210,7 +210,7 @@ func pusherAuth(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/pusher/auth", pusher_auth)
+	http.HandleFunc("/pusher/auth", pusherAuth)
 	http.ListenAndServe(":5000", nil)
 }
 ```
