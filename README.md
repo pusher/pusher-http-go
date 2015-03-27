@@ -1,6 +1,6 @@
 # Pusher HTTP Go Library
 
-[![Build Status](https://travis-ci.org/pusher/pusher-http-go.svg?branch=master)](https://travis-ci.org/pusher/pusher-http-go) [![Coverage Status](https://coveralls.io/repos/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/r/pusher/pusher-http-go?branch=master) ![Go Doc](https://godoc.org/github.com/pusher/pusher-http-go?status.svg)
+[![Build Status](https://travis-ci.org/pusher/pusher-http-go.svg?branch=master)](https://travis-ci.org/pusher/pusher-http-go) [![Coverage Status](https://coveralls.io/repos/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/r/pusher/pusher-http-go?branch=master) [![GoDoc](https://godoc.org/github.com/pusher/pusher-http-go?status.svg)](https://godoc.org/github.com/pusher/pusher-http-go) 
 
 The Golang library for interacting with the Pusher HTTP API.
 
