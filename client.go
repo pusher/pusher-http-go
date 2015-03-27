@@ -253,7 +253,7 @@ This library provides a mechanism for generating an
 authentication signature to send back to the client
 and authorize them.
 
-For more information see our docs :http://pusher.com/docs/authenticating_users.
+For more information see our docs: http://pusher.com/docs/authenticating_users.
 
 This is an example of authenticating a private-channel, using the built-in
 Golang HTTP library to start a server.

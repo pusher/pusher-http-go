@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-type eventData struct {
+type eventPayload struct {
 	Name     string   `json:"name"`
 	Channels []string `json:"channels"`
 	Data     string   `json:"data"`
@@ -25,7 +25,7 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 		return nil, errors.New("Data must be smaller than 10kb")
 	}
 
-	return json.Marshal(&Event{
+	return json.Marshal(&eventPayload{
 		Name:     event,
 		Channels: channels,
 		Data:     string(data2),
