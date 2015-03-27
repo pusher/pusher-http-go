@@ -14,7 +14,31 @@ import (
 
 var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 
-// Client to the HTTP API of Pusher.
+/*
+Client to the HTTP API of Pusher.
+
+There easiest way to configure the library is by creating a new `Pusher` instance:
+
+	client := pusher.Client{
+	  AppId: "your_app_id",
+	  Key: "your_app_key",
+	  Secret: "your_app_secret",
+	}
+
+To ensure requests occur over HTTPS, set the `Encrypted` property of a `pusher.Client` to `true`.
+
+	client.Secure = true // false by default
+
+If you wish to set a time-limit for each HTTP request, set the `Timeout` property to an instance of `time.Duration`, for example:
+
+	client.Timeout = time.Second * 3 // set the timeout to 3 seconds - this is 5 seconds by default
+
+Changing the `pusher.Client`'s `Host` property will make sure requests are sent to your specified host.
+
+	client.Host = "foo.bar.com" // by default this is "api.pusherapp.com".
+
+
+*/
 type Client struct {
 	AppId   string
 	Key     string
@@ -229,10 +253,13 @@ This library provides a mechanism for generating an
 authentication signature to send back to the client
 and authorize them.
 
-For more information see our docs:http://pusher.com/docs/authenticating_users.
+For more information see our docs :http://pusher.com/docs/authenticating_users.
 
 This is an example of authenticating a private-channel, using the built-in
 Golang HTTP library to start a server.
+
+In order to authorize a client, one must read the response into type `[]byte` and pass it in.
+This will return a signature in the form of a `[]byte` for you to send back to the client.
 
 	func pusherAuth(res http.ResponseWriter, req *http.Request) {
 
@@ -261,6 +288,8 @@ func (c *Client) AuthenticatePrivateChannel(params []byte) (response []byte, err
 Using presence channels is similar to private channels,
 but in order to identify a user, clients are
 sent a user_id and, optionally, custom data.
+
+In this library, one does this by passing a `pusher.MemberData` instance.
 
 	params, _ := ioutil.ReadAll(req.Body)
 
@@ -317,7 +346,7 @@ func (c *Client) authenticateChannel(params []byte, member *MemberData) (respons
 }
 
 /*
-On your [dashboard](http://app.pusher.com), you can set up webhooks to POST
+On your dashboard at http://app.pusher.com, you can set up webhooks to POST
 a payload to your server after certain events. Such events include channels
 being occupied or vacated, members being added or removed in presence-channels,
 or after client-originated events. For more information see https://pusher.com/docs/webhooks.
