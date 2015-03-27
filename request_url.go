@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-const AuthVersion = "1.0"
+const authVersion = "1.0"
 
 func unsignedParams(key, timestamp string, body []byte, additionalQueries map[string]string) url.Values {
 	params := url.Values{
 		"auth_key":       {key},
 		"auth_timestamp": {timestamp},
-		"auth_version":   {AuthVersion},
+		"auth_version":   {authVersion},
 	}
 
 	if body != nil {
