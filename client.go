@@ -24,9 +24,12 @@ type Client struct {
 	Timeout time.Duration // Request timeout for HTTP requests
 }
 
-// Client constructor from a specially crafted URL
-//
-// Eg: ClientFromURL("http://feaf18a411d3cb9216ee:fec81108d90e1898e17a@api.pusherapp.com/apps/104060")
+/*
+Clients can be instantiated from a specially-crafted Pusher URL. For example:
+
+	client := pusher.ClientFromURL("http://key:secret@api.pusherapp.com/apps/app_id")
+
+*/
 func ClientFromURL(url string) (*Client, error) {
 	url2, err := u.Parse(url)
 	if err != nil {
@@ -60,9 +63,13 @@ func ClientFromURL(url string) (*Client, error) {
 	return &c, nil
 }
 
-// Client constructor for an environment variable (like Heroku).
-//
-// Eg: ClientFromEnv("PUSHER_URL")
+/*
+Alternatively, you can instantiate a client from an environment variable.
+This is particularly relevant if you are using Pusher as a Heroku add-on,
+which stores credentials in a `"PUSHER_URL"` environment variable. For example:
+	client := pusher.ClientFromEnv("PUSHER_URL")
+
+*/
 func ClientFromEnv(key string) (*Client, error) {
 	url := os.Getenv(key)
 	return ClientFromURL(url)
