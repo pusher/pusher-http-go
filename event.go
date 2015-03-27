@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-type Event struct {
+type eventData struct {
 	Name     string   `json:"name"`
 	Channels []string `json:"channels"`
 	Data     string   `json:"data"`
