@@ -34,19 +34,24 @@ $ go get github.com/pusher/pusher-http-go
 ## Getting Started
 
 ```go
+package main
+
 import "github.com/pusher/pusher-http-go"
 
-// instantiate a client
-client := pusher.Client{
-  AppId: "your_app_id",
-  Key: "your_app_key",
-  Secret: "your_app_secret",
+func main(){
+
+	// instantiate a client
+	client := pusher.Client{
+	  AppId: "your_app_id",
+	  Key: "your_app_key",
+	  Secret: "your_app_secret",
+	}
+	
+	data := map[string]string{"message": "hello world"}
+	
+	// trigger an event on a channel, along with a data payload
+	client.Trigger("test_channel", "my_event", data)
 }
-
-data := map[string]string{"message": "hello world"}
-
-// trigger an event on a channel, along with a data payload
-client.Trigger("test_channel", "my_event", data)
 ```
 
 ## Configuration
