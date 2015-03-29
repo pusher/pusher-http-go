@@ -51,6 +51,7 @@ func main(){
 	
 	// trigger an event on a channel, along with a data payload
 	client.Trigger("test_channel", "my_event", data)
+	
 }
 ```
 
