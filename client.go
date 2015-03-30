@@ -46,6 +46,7 @@ type Client struct {
 	Host    string        // host or host:port pair
 	Secure  bool          // true for HTTPS
 	Timeout time.Duration // Request timeout for HTTP requests
+	client  *http.Client
 }
 
 /*
@@ -97,6 +98,27 @@ which stores credentials in a `"PUSHER_URL"` environment variable. For example:
 func ClientFromEnv(key string) (*Client, error) {
 	url := os.Getenv(key)
 	return ClientFromURL(url)
+}
+
+/*
+Returns the underlying HTTP client.
+Useful to set custom properties to it.
+*/
+func (c *Client) HttpClient() *http.Client {
+	if c.client == nil {
+		c.client = new(http.Client)
+	}
+	if c.Timeout == 0 {
+		c.Timeout = time.Second * 5
+	}
+	if c.client.Timeout != c.Timeout {
+		c.client.Timeout = c.Timeout
+	}
+	return c.client
+}
+
+func (c *Client) request(method, url string, body []byte) ([]byte, error) {
+	return request(c.HttpClient(), method, url, body)
 }
 
 /*
@@ -161,7 +183,7 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
 	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil)
-	response, err := request("POST", u, payload, c.Timeout)
+	response, err := c.request("POST", u, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +211,7 @@ specify an `"info"` key with value `"user_count"`. Pass in `nil` if you do not w
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppId)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries)
-	response, err := request("GET", u, nil, c.Timeout)
+	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +238,7 @@ if you wish to enable this. Pass in `nil` if you do not wish to specify any quer
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppId, name)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries)
-	response, err := request("GET", u, nil, c.Timeout)
+	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +256,7 @@ Get a list of users in a presence-channel by passing to this method the channel 
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppId, name)
 	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil)
-	response, err := request("GET", u, nil, c.Timeout)
+	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
