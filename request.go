@@ -7,20 +7,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 // change timeout to time.Duration
-func request(method, url string, body []byte, timeout time.Duration) ([]byte, error) {
-
-	if timeout == 0 {
-		timeout = time.Second * 5
-	}
-
-	client := &http.Client{Timeout: timeout}
-
-	// use httpClient Timeout attribute - otherwise there will be a leak
-
+func request(client *http.Client, method, url string, body []byte) ([]byte, error) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
