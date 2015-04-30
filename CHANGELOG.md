@@ -1,3 +1,7 @@
+## 0.2.1 / 2015-04-30
+
+Webhook validation uses hmac.Equals to guard against timing attacks.
+
 0.2.0 / 2015-03-30
 ==================
 
