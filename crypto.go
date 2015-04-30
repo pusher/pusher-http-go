@@ -5,18 +5,28 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
+	// "fmt"
 	"strings"
 )
 
 func hmacSignature(toSign, secret string) string {
-	_authSignature := hmac.New(sha256.New, []byte(secret))
-	_authSignature.Write([]byte(toSign))
-	return hex.EncodeToString(_authSignature.Sum(nil))
+	return hex.EncodeToString(hmacBytes([]byte(toSign), []byte(secret)))
 }
 
-func checkSignature(result, body, secret string) bool {
-	expected := hmacSignature(body, secret)
-	return result == expected
+func hmacBytes(toSign, secret []byte) []byte {
+	_authSignature := hmac.New(sha256.New, secret)
+	_authSignature.Write(toSign)
+	return _authSignature.Sum(nil)
+}
+
+func checkSignature(result, secret string, body []byte) bool {
+	expected := hmacBytes(body, []byte(secret))
+	resultBytes, err := hex.DecodeString(result)
+
+	if err != nil {
+		return false
+	}
+	return hmac.Equal(expected, resultBytes)
 }
 
 func createAuthMap(key, secret, stringToSign string) map[string]string {

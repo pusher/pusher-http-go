@@ -395,7 +395,7 @@ If it is invalid, the first return value will be nil, and an error will be passe
 func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 
 	for _, token := range header["X-Pusher-Key"] {
-		if token == c.Key && checkSignature(header.Get("X-Pusher-Signature"), string(body), c.Secret) {
+		if token == c.Key && checkSignature(header.Get("X-Pusher-Signature"), c.Secret, body) {
 			return unmarshalledWebhook(body)
 		}
 	}
