@@ -1,6 +1,7 @@
 package pusher
 
 import (
+	"errors"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 )
 
 var channelValidationRegex = regexp.MustCompile("^[-a-zA-Z0-9_=@,.;]+$")
+var socketIdValidationRegex = regexp.MustCompile(`\A\d+\.\d+\z`)
 
 func authTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
@@ -30,4 +32,12 @@ func channelsAreValid(channels []string) bool {
 		}
 	}
 	return true
+}
+
+func validateSocketId(socketId *string) (err error) {
+	if (socketId == nil) || socketIdValidationRegex.MatchString(*socketId) {
+		return
+	} else {
+		return errors.New("socket_id invalid")
+	}
 }

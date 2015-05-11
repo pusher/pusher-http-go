@@ -48,6 +48,12 @@ func TestTriggerWithSocketId(t *testing.T) {
 	client.TriggerExclusive("test_channel", "test", "yolo", "1234.12")
 }
 
+func TestTriggerSocketIdValidation(t *testing.T) {
+	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	_, err := client.TriggerExclusive("test_channel", "test", "yolo", "1234.12:lalala")
+	assert.Error(t, err)
+}
+
 func TestErrorResponseHandler(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(400)

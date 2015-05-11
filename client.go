@@ -176,6 +176,10 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
 
+	if err := validateSocketId(socketId); err != nil {
+		return nil, err
+	}
+
 	payload, err := createTriggerPayload(channels, event, data, socketId)
 	if err != nil {
 		return nil, err
@@ -339,6 +343,10 @@ func (c *Client) authenticateChannel(params []byte, member *MemberData) (respons
 	channelName, socketId, err := parseAuthRequestParams(params)
 
 	if err != nil {
+		return
+	}
+
+	if err = validateSocketId(&socketId); err != nil {
 		return
 	}
 
