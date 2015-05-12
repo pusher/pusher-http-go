@@ -1,3 +1,7 @@
+## 0.2.2 / 2015-05-12
+
+Socket_ids are now validated upon Trigger*Exclusive and channel authentication.
+
 ## 0.2.1 / 2015-04-30
 
 Webhook validation uses hmac.Equals to guard against timing attacks.
