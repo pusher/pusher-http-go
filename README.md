@@ -85,7 +85,7 @@ This is particularly relevant if you are using Pusher as a Heroku add-on, which 
 
 #### HTTPS
 
-To ensure requests occur over HTTPS, set the `Encrypted` property of a `pusher.Client` to `true`.
+To ensure requests occur over HTTPS, set the `Secure` property of a `pusher.Client` to `true`.
 
 ```go
 client.Secure = true
