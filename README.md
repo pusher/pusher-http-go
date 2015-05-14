@@ -102,7 +102,7 @@ If you wish to set a time-limit for each HTTP request, create a `http.Client` in
 
 httpClient := &http.Client{Timeout: time.Second * 3}
 
-pusherClient.Client = httpClient
+pusherClient.HttpClient = httpClient
 ```
 
 If you do not specifically set a HTTP client, a default one is created with a timeout of 5 seconds.
@@ -119,7 +119,7 @@ By default, this is `"api.pusherapp.com"`.
 
 ### Google App Engine
 
-As of version 0.3.0, this library is compatible with Google App Engine's urlfetch library. Simply pass in the HTTP client returned by `urlfetch.Client` to your Pusher initialization struct.
+As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Simply pass in the HTTP client returned by `urlfetch.Client` to your Pusher initialization struct.
 
 ```go
 package helloworldapp
@@ -145,7 +145,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		AppId:  "app_id",
 		Key:    "key",
 		Secret: "secret",
-		Client: urlfetchClient,
+		HttpClient: urlfetchClient,
 	}
 
 	client.Trigger("test_channel", "my_event", map[string]string{"message": "hello world"})
