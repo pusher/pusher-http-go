@@ -1,3 +1,11 @@
+# 1.0.0 / 2015-05-14
+
+* Users can pass in a `http.Client` instance to the Pusher initializer. They can configure this instance directly to have specific options e.g. timeouts.
+* Therefore, the `Timeout` field on `pusher.Client` is deprecated.
+* `HttpClient()` function is no longer public. HTTP Client configuration is now done on the `HttpClient` **property** of `pusher.Client`. Read [here](https://github.com/pusher/pusher-http-go#request-timeouts) for more details.
+* If no `HttpClient` is specified, the library creates one with a default timeout of 5 seconds.
+* The library is now GAE compatible. Read [here](https://github.com/pusher/pusher-http-go#google-app-engine) for more details.
+
 ## 0.2.2 / 2015-05-12
 
 Socket_ids are now validated upon Trigger*Exclusive and channel authentication.
