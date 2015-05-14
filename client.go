@@ -40,13 +40,12 @@ Changing the `pusher.Client`'s `Host` property will make sure requests are sent 
 
 */
 type Client struct {
-	AppId   string
-	Key     string
-	Secret  string
-	Host    string        // host or host:port pair
-	Secure  bool          // true for HTTPS
-	Timeout time.Duration // Request timeout for HTTP requests
-	client  *http.Client
+	AppId  string
+	Key    string
+	Secret string
+	Host   string // host or host:port pair
+	Secure bool   // true for HTTPS
+	Client *http.Client
 }
 
 /*
@@ -104,21 +103,16 @@ func ClientFromEnv(key string) (*Client, error) {
 Returns the underlying HTTP client.
 Useful to set custom properties to it.
 */
-func (c *Client) HttpClient() *http.Client {
-	if c.client == nil {
-		c.client = new(http.Client)
+func (c *Client) httpClient() *http.Client {
+	if c.Client == nil {
+		c.Client = &http.Client{Timeout: time.Second * 5}
 	}
-	if c.Timeout == 0 {
-		c.Timeout = time.Second * 5
-	}
-	if c.client.Timeout != c.Timeout {
-		c.client.Timeout = c.Timeout
-	}
-	return c.client
+
+	return c.Client
 }
 
 func (c *Client) request(method, url string, body []byte) ([]byte, error) {
-	return request(c.HttpClient(), method, url, body)
+	return request(c.httpClient(), method, url, body)
 }
 
 /*
