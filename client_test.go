@@ -85,8 +85,7 @@ func TestRequestTimeouts(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
-	client.Timeout = time.Millisecond * 100
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	_, err := client.Trigger("test_channel", "test", "yolo")
 

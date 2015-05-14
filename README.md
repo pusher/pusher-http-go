@@ -14,6 +14,7 @@ In order to use this library, you need to have a free account on <http://pusher.
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
   - [Additional options](#additional-options)
+  - [Google App Engine](#google-app-engine)
 - [Usage](#usage)
   - [Triggering events](#triggering-events)
   - [Excluding event recipients](#excluding-event-recipients)
@@ -95,15 +96,16 @@ This is `false` by default.
 
 #### Request Timeouts
 
-If you wish to set a time-limit for each HTTP request, set the `Timeout` property to an instance of `time.Duration`, for example:
+If you wish to set a time-limit for each HTTP request, create a `http.Client` instance with your specified `Timeout` field and set it as the Pusher instance's `Client`:
 
 ```go
-import "time"
 
-client.Timeout = time.Second * 3 // set the timeout to 3 seconds
+httpClient := &http.Client{Timeout: time.Second * 3}
+
+pusherClient.HttpClient = httpClient
 ```
 
-By default, timeouts will be 5 seconds.
+If you do not specifically set a HTTP client, a default one is created with a timeout of 5 seconds.
 
 #### Changing Host
 
@@ -114,6 +116,43 @@ client.Host = "foo.bar.com"
 ```
 
 By default, this is `"api.pusherapp.com"`.
+
+### Google App Engine
+
+As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Simply pass in the HTTP client returned by `urlfetch.Client` to your Pusher initialization struct.
+
+```go
+package helloworldapp
+
+import (
+	"appengine"
+	"appengine/urlfetch"
+	"fmt"
+	"github.com/pusher/pusher-http-go"
+	"net/http"
+)
+
+func init() {
+	http.HandleFunc("/", handler)
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+
+	c := appengine.NewContext(r)
+	urlfetchClient := urlfetch.Client(c)
+
+	client := pusher.Client{
+		AppId:  "app_id",
+		Key:    "key",
+		Secret: "secret",
+		HttpClient: urlfetchClient,
+	}
+
+	client.Trigger("test_channel", "my_event", map[string]string{"message": "hello world"})
+
+	fmt.Fprint(w, "Hello, world!")
+}
+```
 
 ## Usage
 
