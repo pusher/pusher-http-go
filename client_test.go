@@ -32,6 +32,32 @@ func TestTriggerSuccessCase(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGetChannelsSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"channels\":{\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-5cbTiUiPNGI\":{\"user_count\":1},\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-PbZ5E1pP8uF\":{\"user_count\":1},\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG\":{\"user_count\":1}}}"
+
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "GET", req.Method)
+
+	}))
+	defer server.Close()
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	channels, err := client.Channels(nil)
+	assert.NoError(t, err)
+
+	expected := &ChannelsList{
+		Channels: map[string]ChannelListItem{
+			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-5cbTiUiPNGI": ChannelListItem{UserCount: 1},
+			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-PbZ5E1pP8uF": ChannelListItem{UserCount: 1},
+			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG": ChannelListItem{UserCount: 1},
+		},
+	}
+
+	assert.Equal(t, channels, expected)
+}
+
 func TestTriggerWithSocketId(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
@@ -145,6 +171,26 @@ func TestInitialisationFromURL(t *testing.T) {
 	client, _ := ClientFromURL(url)
 	expectedClient := &Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppId: "104060", Host: "api.pusherapp.com"}
 	assert.Equal(t, expectedClient, client)
+}
+
+func TestURLInitErrorNoSecret(t *testing.T) {
+	url := "http://fec81108d90e1898e17a@api.pusherapp.com/apps"
+	client, err := ClientFromURL(url)
+	assert.Nil(t, client)
+	assert.Error(t, err)
+}
+
+func TestURLInitHTTPS(t *testing.T) {
+	url := "https://key:secret@api.pusherapp.com/apps/104060"
+	client, _ := ClientFromURL(url)
+	assert.True(t, client.Secure)
+}
+
+func TestURLInitErrorNoID(t *testing.T) {
+	url := "http://fec81108d90e1898e17a@api.pusherapp.com/apps"
+	client, err := ClientFromURL(url)
+	assert.Nil(t, client)
+	assert.Error(t, err)
 }
 
 func TestInitialisationFromENV(t *testing.T) {
