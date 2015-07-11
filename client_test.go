@@ -58,6 +58,55 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 	assert.Equal(t, channels, expected)
 }
 
+func TestGetChannelSuccess(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"user_count\":1,\"occupied\":true,\"subscription_count\":1}"
+
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "GET", req.Method)
+
+	}))
+
+	defer server.Close()
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	channel, err := client.Channel("test_channel", nil)
+	assert.NoError(t, err)
+
+	expected := &Channel{
+		Name:              "test_channel",
+		Occupied:          true,
+		UserCount:         1,
+		SubscriptionCount: 1,
+	}
+
+	assert.Equal(t, channel, expected)
+}
+
+func TestGetChannelUserSuccess(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"users\":[{\"id\":\"red\"},{\"id\":\"blue\"}]}"
+
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "GET", req.Method)
+
+	}))
+
+	defer server.Close()
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	users, err := client.GetChannelUsers("test_channel")
+	assert.NoError(t, err)
+
+	expected := &Users{
+		List: []User{User{Id: "red"}, User{Id: "blue"}},
+	}
+
+	assert.Equal(t, users, expected)
+}
+
 func TestTriggerWithSocketId(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
