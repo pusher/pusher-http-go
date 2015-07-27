@@ -21,6 +21,13 @@ func TestPrivateChannelAuthentication(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestPrivateChannelAuthenticationWrongParams(t *testing.T) {
+	client := setUpAuthClient()
+	post_params := []byte("hello=hi&two=3")
+	_, err := client.AuthenticatePrivateChannel(post_params)
+	assert.Error(t, err)
+}
+
 func TestPresenceChannelAuthentication(t *testing.T) {
 	client := setUpAuthClient()
 	post_params := []byte("channel_name=presence-foobar&socket_id=1234.1234")
