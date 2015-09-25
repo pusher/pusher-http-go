@@ -19,11 +19,7 @@ Client to the HTTP API of Pusher.
 
 There easiest way to configure the library is by creating a new `Pusher` instance:
 
-	client := pusher.Client{
-	  AppId: "your_app_id",
-	  Key: "your_app_key",
-	  Secret: "your_app_secret",
-	}
+	client := pusher.New("your_app_id", "your_app_key", "your_app_secret")
 
 To ensure requests occur over HTTPS, set the `Encrypted` property of a `pusher.Client` to `true`.
 
@@ -40,12 +36,41 @@ Changing the `pusher.Client`'s `Host` property will make sure requests are sent 
 
 */
 type Client struct {
-	AppId      string
-	Key        string
-	Secret     string
+	AppId  string
+	Key    string
+	Secret string
+	*Config
+}
+
+type Config struct {
 	Host       string // host or host:port pair
 	Secure     bool   // true for HTTPS
 	HttpClient *http.Client
+}
+
+func New(appID, key, secret string) (client *Client, err error) {
+	return NewWithConfig(appID, key, secret, nil)
+}
+
+func NewWithConfig(appID, key, secret string, config *Config) (client *Client, err error) {
+	if appID == "" {
+		err = errors.New("No app ID found")
+	}
+
+	if key == "" {
+		err = errors.New("Missing key")
+	}
+
+	if secret == "" {
+		err = errors.New("Missing secret")
+	}
+
+	if config == nil {
+		config = &Config{}
+	}
+
+	client = &Client{appID, key, secret, config}
+	return
 }
 
 /*
@@ -60,9 +85,9 @@ func ClientFromURL(url string) (*Client, error) {
 		return nil, err
 	}
 
-	c := Client{
-		Host: url2.Host,
-	}
+	c := Client{Config: &Config{}}
+
+	c.Config.Host = url2.Host
 
 	matches := pusherPathRegex.FindStringSubmatch(url2.Path)
 	if len(matches) == 0 {
@@ -81,7 +106,7 @@ func ClientFromURL(url string) (*Client, error) {
 	}
 
 	if url2.Scheme == "https" {
-		c.Secure = true
+		c.Config.Secure = true
 	}
 
 	return &c, nil
