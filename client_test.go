@@ -169,7 +169,6 @@ func TestRequestTimeouts(t *testing.T) {
 	_, err := client.Trigger("test_channel", "test", "yolo")
 
 	assert.Error(t, err)
-
 }
 
 func TestChannelLengthValidation(t *testing.T) {
@@ -191,7 +190,7 @@ func TestChannelFormatValidation(t *testing.T) {
 		channel2 += "a"
 	}
 
-	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	client := Client{appId: "id", key: "key", secret: "secret"}
 	res1, err1 := client.Trigger(channel1, "yolo", "w00t")
 
 	res2, err2 := client.Trigger(channel2, "yolo", "not 19 forever")
@@ -205,7 +204,7 @@ func TestChannelFormatValidation(t *testing.T) {
 }
 
 func TestDataSizeValidation(t *testing.T) {
-	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	client := Client{appId: "id", key: "key", secret: "secret"}
 
 	var data string
 
@@ -252,4 +251,24 @@ func TestInitialisationFromENV(t *testing.T) {
 	client, _ := ClientFromEnv("PUSHER_URL")
 	expectedClient, _ := NewWithConfig("104060", "feaf18a411d3cb9216ee", "fec81108d90e1898e17a", &Config{Host: "api.pusherapp.com"})
 	assert.Equal(t, expectedClient, client)
+}
+
+func TestDefaultInitialisationWithNew(t *testing.T) {
+	client, _ := New("id", "key", "secret")
+	expectedClient := &Client{"id", "key", "secret", &Config{}}
+	assert.Equal(t, client, expectedClient)
+}
+
+func TestInitialisationWithParams(t *testing.T) {
+	config := &Config{
+		Secure:        true,
+		HttpTransport: &http.Transport{DisableKeepAlives: true},
+		HttpClient:    &http.Client{},
+	}
+	client, _ := NewWithConfig("id", "key", "secret", config)
+	expectedClient := &Client{"id", "key", "secret", config}
+	assert.Equal(t, client, expectedClient)
+	assert.Equal(t, client.Secure, true)
+	assert.Equal(t, client.HttpTransport, &http.Transport{DisableKeepAlives: true})
+	assert.Equal(t, client.HttpClient, &http.Client{})
 }

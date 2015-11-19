@@ -7,8 +7,8 @@ import (
 
 func setUpAuthClient() Client {
 	return Client{
-		Key:    "278d425bdf160c739803",
-		Secret: "7ad3773142a6692b25b8",
+		key:    "278d425bdf160c739803",
+		secret: "7ad3773142a6692b25b8",
 	}
 }
 

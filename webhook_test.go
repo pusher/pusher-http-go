@@ -7,7 +7,7 @@ import (
 )
 
 func setUpClient() Client {
-	return Client{AppId: "id", Key: "key", Secret: "secret"}
+	return Client{appId: "id", key: "key", secret: "secret"}
 }
 
 func TestClientWebhookValidation(t *testing.T) {

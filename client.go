@@ -33,19 +33,23 @@ Changing the `pusher.Client`'s `Host` property will make sure requests are sent 
 
 	client.Host = "foo.bar.com" // by default this is "api.pusherapp.com".
 
+If you wish to use a custom transport for the http client, for instance, to set HTTPKeepAlive etc, you may
+pass it in as part of `Config` or simpley use `client.Transport = &http.Transport{...}`
 
 */
 type Client struct {
-	AppId  string
-	Key    string
-	Secret string
+	appId  string
+	key    string
+	secret string
 	*Config
 }
 
 type Config struct {
-	Host       string // host or host:port pair
-	Secure     bool   // true for HTTPS
-	HttpClient *http.Client
+	Host          string          // host or host:port pair
+	Secure        bool            // true for HTTPS
+	HttpTransport *http.Transport // to set custom transport
+	HttpClient    *http.Client    // to pass in an http client
+	Timeout       time.Duration   // set a custom timeout
 }
 
 func New(appID, key, secret string) (client *Client, err error) {
@@ -93,14 +97,14 @@ func ClientFromURL(url string) (*Client, error) {
 	if len(matches) == 0 {
 		return nil, errors.New("No app ID found")
 	}
-	c.AppId = matches[1]
+	c.appId = matches[1]
 
 	if url2.User == nil {
 		return nil, errors.New("Missing <key>:<secret>")
 	}
-	c.Key = url2.User.Username()
+	c.key = url2.User.Username()
 	var isSet bool
-	c.Secret, isSet = url2.User.Password()
+	c.secret, isSet = url2.User.Password()
 	if !isSet {
 		return nil, errors.New("Missing <secret>")
 	}
@@ -129,8 +133,19 @@ Returns the underlying HTTP client.
 Useful to set custom properties to it.
 */
 func (c *Client) requestClient() *http.Client {
+	if c.HttpTransport == nil {
+		c.HttpTransport = &http.Transport{}
+	}
+
+	if c.Timeout == 0 {
+		c.Timeout = time.Second * 5
+	}
+
 	if c.HttpClient == nil {
-		c.HttpClient = &http.Client{Timeout: time.Second * 5}
+		c.HttpClient = &http.Client{
+			Transport: c.HttpTransport,
+			Timeout:   c.Timeout,
+		}
 	}
 
 	return c.HttpClient
@@ -204,8 +219,8 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 		return nil, err
 	}
 
-	path := fmt.Sprintf("/apps/%s/events", c.AppId)
-	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil)
+	path := fmt.Sprintf("/apps/%s/events", c.appId)
+	u := createRequestUrl("POST", c.Host, path, c.key, c.secret, authTimestamp(), c.Secure, payload, nil)
 	response, err := c.request("POST", u, payload)
 	if err != nil {
 		return nil, err
@@ -232,8 +247,8 @@ specify an `"info"` key with value `"user_count"`. Pass in `nil` if you do not w
 
 */
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
-	path := fmt.Sprintf("/apps/%s/channels", c.AppId)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries)
+	path := fmt.Sprintf("/apps/%s/channels", c.appId)
+	u := createRequestUrl("GET", c.Host, path, c.key, c.secret, authTimestamp(), c.Secure, nil, additionalQueries)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -259,8 +274,8 @@ if you wish to enable this. Pass in `nil` if you do not wish to specify any quer
 	//channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 */
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
-	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppId, name)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries)
+	path := fmt.Sprintf("/apps/%s/channels/%s", c.appId, name)
+	u := createRequestUrl("GET", c.Host, path, c.key, c.secret, authTimestamp(), c.Secure, nil, additionalQueries)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -277,8 +292,8 @@ Get a list of users in a presence-channel by passing to this method the channel 
 
 */
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
-	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppId, name)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil)
+	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.appId, name)
+	u := createRequestUrl("GET", c.Host, path, c.key, c.secret, authTimestamp(), c.Secure, nil, nil)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -384,7 +399,7 @@ func (c *Client) authenticateChannel(params []byte, member *MemberData) (respons
 		stringToSign = strings.Join([]string{stringToSign, jsonUserData}, ":")
 	}
 
-	_response := createAuthMap(c.Key, c.Secret, stringToSign)
+	_response := createAuthMap(c.key, c.secret, stringToSign)
 
 	if member != nil {
 		_response["channel_data"] = jsonUserData
@@ -422,7 +437,7 @@ If it is invalid, the first return value will be nil, and an error will be passe
 func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 
 	for _, token := range header["X-Pusher-Key"] {
-		if token == c.Key && checkSignature(header.Get("X-Pusher-Signature"), c.Secret, body) {
+		if token == c.key && checkSignature(header.Get("X-Pusher-Signature"), c.secret, body) {
 			return unmarshalledWebhook(body)
 		}
 	}
