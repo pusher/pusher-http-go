@@ -1,6 +1,6 @@
 # Pusher HTTP Go Library
 
-[![Build Status](https://travis-ci.org/pusher/pusher-http-go.svg?branch=master)](https://travis-ci.org/pusher/pusher-http-go) [![Coverage Status](https://coveralls.io/repos/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/r/pusher/pusher-http-go?branch=master) [![GoDoc](https://godoc.org/github.com/pusher/pusher-http-go?status.svg)](https://godoc.org/github.com/pusher/pusher-http-go) 
+[![Build Status](https://travis-ci.org/pusher/pusher-http-go.svg?branch=master)](https://travis-ci.org/pusher/pusher-http-go) [![Coverage Status](https://coveralls.io/repos/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/r/pusher/pusher-http-go?branch=master) [![GoDoc](https://godoc.org/github.com/pusher/pusher-http-go?status.svg)](https://godoc.org/github.com/pusher/pusher-http-go)
 
 The Golang library for interacting with the Pusher HTTP API.
 
@@ -47,18 +47,18 @@ func main(){
 	  Key: "your_app_key",
 	  Secret: "your_app_secret",
 	}
-	
+
 	data := map[string]string{"message": "hello world"}
-	
+
 	// trigger an event on a channel, along with a data payload
 	client.Trigger("test_channel", "my_event", data)
-	
+
 }
 ```
 
 ## Configuration
 
-There easiest way to configure the library is by creating a new `Pusher` instance:
+The easiest way to configure the library is by creating a new `Pusher` instance:
 
 ```go
 client := pusher.Client{
@@ -243,11 +243,11 @@ func pusherAuth(res http.ResponseWriter, req *http.Request) {
 
 	params, _ := ioutil.ReadAll(req.Body)
 	response, err := client.AuthenticatePrivateChannel(params)
-	
+
 	if err != nil {
 		panic(err)
 	}
-	
+
 	fmt.Fprintf(res, string(response))
 
 }
@@ -275,8 +275,8 @@ Using presence channels is similar to private channels, but in order to identify
 
 ```go
 type MemberData struct {
-    UserId   string            
-    UserInfo map[string]string 
+    UserId   string
+    UserInfo map[string]string
 }
 ```
 
@@ -324,7 +324,7 @@ This library allows you to query our API to retrieve information about your appl
 
 ```go
 type ChannelsList struct {
-    Channels map[string]ChannelListItem 
+    Channels map[string]ChannelListItem
 }
 ```
 
@@ -370,8 +370,8 @@ channels, err := client.Channels(channelsParams)
 type Channel struct {
     Name              string
     Occupied          bool
-    UserCount         int  
-    SubscriptionCount int 
+    UserCount         int
+    SubscriptionCount int
 }
 ```
 
@@ -429,7 +429,7 @@ users, err := client.GetChannelUsers("presence-chatroom")
 
 On your [dashboard](http://app.pusher.com), you can set up webhooks to POST a payload to your server after certain events. Such events include channels being occupied or vacated, members being added or removed in presence-channels, or after client-originated events. For more information see <https://pusher.com/docs/webhooks>.
 
-This library provides a mechanism for checking that these POST requests are indeed from Pusher, by checking the token and authentication signature in the header of the request. 
+This library provides a mechanism for checking that these POST requests are indeed from Pusher, by checking the token and authentication signature in the header of the request.
 
 ##### `func (c *Client) Webhook`
 
@@ -449,7 +449,7 @@ This library provides a mechanism for checking that these POST requests are inde
 
 ```go
 type Webhook struct {
-    TimeMs int           
+    TimeMs int
     Events []WebhookEvent
 }
 ```
@@ -458,10 +458,10 @@ type Webhook struct {
 
 ```go
 type WebhookEvent struct {
-    Name     string 
-    Channel  string 
-    Event    string 
-    Data     string 
+    Name     string
+    Channel  string
+    Event    string
+    Data     string
     SocketId string
 }
 ```
