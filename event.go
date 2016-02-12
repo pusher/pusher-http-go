@@ -17,18 +17,29 @@ type BufferedEvents struct {
 }
 
 func createTriggerPayload(channels []string, event string, data interface{}, socketId *string) ([]byte, error) {
-	data2, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
+	var dataBytes []byte
+	var err error
+
+	switch d := data.(type) {
+	case []byte:
+		dataBytes = d
+	case string:
+		dataBytes = []byte(d)
+	default:
+		dataBytes, err = json.Marshal(data)
+		if err != nil {
+			return nil, err
+		}
 	}
-	if len(data2) > 10240 {
+
+	if len(dataBytes) > 10240 {
 		return nil, errors.New("Data must be smaller than 10kb")
 	}
 
 	return json.Marshal(&eventPayload{
 		Name:     event,
 		Channels: channels,
-		Data:     string(data2),
+		Data:     string(dataBytes),
 		SocketId: socketId,
 	})
 }
