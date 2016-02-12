@@ -18,7 +18,7 @@ func TestTriggerSuccessCase(t *testing.T) {
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		expected_body := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"\\\"yolo\\\"\"}"
+		expected_body := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"yolo\"}"
 		actual_body, err := ioutil.ReadAll(req.Body)
 		assert.Equal(t, expected_body, string(actual_body))
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
@@ -111,7 +111,7 @@ func TestTriggerWithSocketId(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 
-		expected_body := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"\\\"yolo\\\"\",\"socket_id\":\"1234.12\"}"
+		expected_body := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"yolo\",\"socket_id\":\"1234.12\"}"
 		actual_body, err := ioutil.ReadAll(req.Body)
 		assert.Equal(t, expected_body, string(actual_body))
 		assert.NoError(t, err)
