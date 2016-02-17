@@ -45,6 +45,7 @@ type Client struct {
 	Secret     string
 	Host       string // host or host:port pair
 	Secure     bool   // true for HTTPS
+	Cluster    string
 	HttpClient *http.Client
 }
 
@@ -180,7 +181,7 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 	}
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
-	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil)
+	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	response, err := c.request("POST", u, payload)
 	if err != nil {
 		return nil, err
@@ -208,7 +209,7 @@ specify an `"info"` key with value `"user_count"`. Pass in `nil` if you do not w
 */
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppId)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -235,7 +236,7 @@ if you wish to enable this. Pass in `nil` if you do not wish to specify any quer
 */
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppId, name)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -253,7 +254,7 @@ Get a list of users in a presence-channel by passing to this method the channel 
 */
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppId, name)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil)
+	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil, c.Cluster)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err

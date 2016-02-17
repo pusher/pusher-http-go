@@ -117,6 +117,16 @@ client.Host = "foo.bar.com"
 
 By default, this is `"api.pusherapp.com"`.
 
+#### Changing the Cluster
+
+Setting the `pusher.Client`'s `Cluster` property will make sure requests are sent to the cluster where you created your app.
+
+*NOTE! `Host` option has precendece over the `Cluster`, ie. if `Host` is set then `Cluster` will be ignored.
+
+```go
+client.Cluster = "eu" // in this case requests will be made to api-eu.pusher.com.
+```
+
 ### Google App Engine
 
 As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Simply pass in the HTTP client returned by `urlfetch.Client` to your Pusher initialization struct.
