@@ -33,7 +33,7 @@ func unescapeUrl(_url url.Values) string {
 	return unesc
 }
 
-func createRequestUrl(method, host, path, key, secret, timestamp string, secure bool, body []byte, additionalQueries map[string]string) string {
+func createRequestUrl(method, host, path, key, secret, timestamp string, secure bool, body []byte, additionalQueries map[string]string, cluster string) string {
 	params := unsignedParams(key, timestamp, body, additionalQueries)
 
 	stringToSign := strings.Join([]string{method, path, unescapeUrl(params)}, "\n")
@@ -43,7 +43,11 @@ func createRequestUrl(method, host, path, key, secret, timestamp string, secure 
 	params.Add("auth_signature", authSignature)
 
 	if host == "" {
-		host = "api.pusherapp.com"
+		if cluster != "" {
+			host = "api-" + cluster + ".pusher.com"
+		} else {
+			host = "api.pusherapp.com"
+		}
 	}
 	var base string
 	if secure {
