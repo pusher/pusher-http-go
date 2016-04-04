@@ -31,9 +31,8 @@ func processResponse(response *http.Response) ([]byte, error) {
 
 	if response.StatusCode == 200 {
 		return responseBody, nil
-	} else {
-		message := fmt.Sprintf("Status Code: %s - %s", strconv.Itoa(response.StatusCode), string(responseBody))
-		err := errors.New(message)
-		return nil, err
 	}
+	message := fmt.Sprintf("Status Code: %s - %s", strconv.Itoa(response.StatusCode), string(responseBody))
+	err = errors.New(message)
+	return nil, err
 }

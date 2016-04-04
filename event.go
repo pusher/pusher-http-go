@@ -16,7 +16,7 @@ type BufferedEvents struct {
 	EventIds map[string]string `json:"event_ids,omitempty"`
 }
 
-func createTriggerPayload(channels []string, event string, data interface{}, socketId *string) ([]byte, error) {
+func createTriggerPayload(channels []string, event string, data interface{}, socketID *string) ([]byte, error) {
 	var dataBytes []byte
 	var err error
 
@@ -40,6 +40,6 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 		Name:     event,
 		Channels: channels,
 		Data:     string(dataBytes),
-		SocketId: socketId,
+		SocketId: socketID,
 	})
 }

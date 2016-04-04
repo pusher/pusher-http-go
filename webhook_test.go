@@ -23,36 +23,36 @@ func TestClientWebhookValidation(t *testing.T) {
 
 func TestWebhookImproperKeyCase(t *testing.T) {
 	client := setUpClient()
-	bad_header := make(http.Header)
-	bad_header["X-Pusher-Key"] = []string{"narr you're going down!"}
-	bad_header["X-Pusher-Signature"] = []string{"2677ad3e7c090b2fa2c0fb13020d66d5420879b8316eb356a2d60fb9073bc778"}
-	bad_body := []byte("{\"hello\":\"world\"}")
+	badHeader := make(http.Header)
+	badHeader["X-Pusher-Key"] = []string{"narr you're going down!"}
+	badHeader["X-Pusher-Signature"] = []string{"2677ad3e7c090b2fa2c0fb13020d66d5420879b8316eb356a2d60fb9073bc778"}
+	badBody := []byte("{\"hello\":\"world\"}")
 
-	bad_webhook, err := client.Webhook(bad_header, bad_body)
-	assert.Nil(t, bad_webhook)
+	badWebhook, err := client.Webhook(badHeader, badBody)
+	assert.Nil(t, badWebhook)
 	assert.Error(t, err)
 }
 
 func TestWebhookImproperSignatureCase(t *testing.T) {
 	client := setUpClient()
-	bad_header := make(http.Header)
-	bad_header["X-Pusher-Key"] = []string{"key"}
-	bad_header["X-Pusher-Signature"] = []string{"2677ad3e7c090i'mgonnagetyaeb356a2d60fb9073bc778"}
-	bad_body := []byte("{\"hello\":\"world\"}")
+	badHeader := make(http.Header)
+	badHeader["X-Pusher-Key"] = []string{"key"}
+	badHeader["X-Pusher-Signature"] = []string{"2677ad3e7c090i'mgonnagetyaeb356a2d60fb9073bc778"}
+	badBody := []byte("{\"hello\":\"world\"}")
 
-	bad_webhook, err := client.Webhook(bad_header, bad_body)
-	assert.Nil(t, bad_webhook)
+	badWebhook, err := client.Webhook(badHeader, badBody)
+	assert.Nil(t, badWebhook)
 	assert.Error(t, err)
 }
 
 func TestWebhookNoSignature(t *testing.T) {
 	client := setUpClient()
-	bad_header := make(http.Header)
-	bad_header["X-Pusher-Key"] = []string{"key"}
-	bad_body := []byte("{\"hello\":\"world\"}")
+	badHeader := make(http.Header)
+	badHeader["X-Pusher-Key"] = []string{"key"}
+	badBody := []byte("{\"hello\":\"world\"}")
 
-	bad_webhook, err := client.Webhook(bad_header, bad_body)
-	assert.Nil(t, bad_webhook)
+	badWebhook, err := client.Webhook(badHeader, badBody)
+	assert.Nil(t, badWebhook)
 	assert.Error(t, err)
 }
 

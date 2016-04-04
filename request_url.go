@@ -28,15 +28,15 @@ func unsignedParams(key, timestamp string, body []byte, additionalQueries map[st
 
 }
 
-func unescapeUrl(_url url.Values) string {
+func unescapeURL(_url url.Values) string {
 	unesc, _ := url.QueryUnescape(_url.Encode())
 	return unesc
 }
 
-func createRequestUrl(method, host, path, key, secret, timestamp string, secure bool, body []byte, additionalQueries map[string]string, cluster string) string {
+func createRequestURL(method, host, path, key, secret, timestamp string, secure bool, body []byte, additionalQueries map[string]string, cluster string) string {
 	params := unsignedParams(key, timestamp, body, additionalQueries)
 
-	stringToSign := strings.Join([]string{method, path, unescapeUrl(params)}, "\n")
+	stringToSign := strings.Join([]string{method, path, unescapeURL(params)}, "\n")
 
 	authSignature := hmacSignature(stringToSign, secret)
 
@@ -61,7 +61,7 @@ func createRequestUrl(method, host, path, key, secret, timestamp string, secure 
 	if err != nil {
 		panic("logic error: " + err.Error())
 	}
-	endpoint.RawQuery = unescapeUrl(params)
+	endpoint.RawQuery = unescapeURL(params)
 
 	return endpoint.String()
 }
