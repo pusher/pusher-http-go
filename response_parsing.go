@@ -7,9 +7,9 @@ import (
 // Represents the information received about a channel from the Pusher API.
 type Channel struct {
 	Name              string
-	Occupied          bool `json:"occupied",omitempty`
-	UserCount         int  `json:"user_count",omitempty`
-	SubscriptionCount int  `json:"subscription_count",omitempty`
+	Occupied          bool `json:"occupied,omitempty"`
+	UserCount         int  `json:"user_count,omitempty"`
+	SubscriptionCount int  `json:"subscription_count,omitempty"`
 }
 
 // Represents a list of channels received by the Pusher API.
@@ -37,7 +37,7 @@ A struct representing what to assign to a channel member, consisting of a `UserI
 */
 type MemberData struct {
 	UserId   string            `json:"user_id"`
-	UserInfo map[string]string `json:"user_info",omitempty`
+	UserInfo map[string]string `json:"user_info,omitempty"`
 }
 
 func unmarshalledChannelsList(response []byte) (*ChannelsList, error) {
