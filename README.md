@@ -246,7 +246,7 @@ For more information see our [docs](http://pusher.com/docs/authenticating_users)
 |response `[]byte` | The response to send back to the client, carrying an authentication signature |
 |err `error` | Any errors generated |
 
-######Example
+###### Example
 
 ```go
 func pusherAuth(res http.ResponseWriter, req *http.Request) {
@@ -259,11 +259,43 @@ func pusherAuth(res http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Fprintf(res, string(response))
-
 }
 
 func main() {
 	http.HandleFunc("/pusher/auth", pusherAuth)
+	http.ListenAndServe(":5000", nil)
+}
+```
+
+###### Example (JSONP)
+
+```go
+func pusherJsonpAuth(res http.ResponseWriter, req *http.Request) {
+	var (
+		callback, params string
+	)
+
+	{
+		q := r.URL.Query()
+		callback = q.Get("callback")
+		if callback == "" {
+			panic("callback missing")
+		}
+		q.Del("callback")
+		params = []byte(q.Encode())
+	}
+
+	response, err := client.AuthenticatePrivateChannel(params)
+	if err != nil {
+		panic(err)
+	}
+
+	res.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	fmt.Fprintf(res, "%s(%s);", callback, string(response))
+}
+
+func main() {
+	http.HandleFunc("/pusher/auth", pusherJsonpAuth)
 	http.ListenAndServe(":5000", nil)
 }
 ```
