@@ -162,7 +162,7 @@ func (c *Client) TriggerMultiExclusive(channels []string, event string, data int
 	return c.trigger(channels, event, data, &socketID)
 }
 
-func (c *Client) trigger(channels []string, event string, data interface{}, socketId *string) (*BufferedEvents, error) {
+func (c *Client) trigger(channels []string, event string, data interface{}, socketID *string) (*BufferedEvents, error) {
 	if len(channels) > 10 {
 		return nil, errors.New("You cannot trigger on more than 10 channels at once")
 	}
@@ -171,17 +171,17 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
 
-	if err := validateSocketId(socketId); err != nil {
+	if err := validateSocketID(socketID); err != nil {
 		return nil, err
 	}
 
-	payload, err := createTriggerPayload(channels, event, data, socketId)
+	payload, err := createTriggerPayload(channels, event, data, socketID)
 	if err != nil {
 		return nil, err
 	}
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
-	u := createRequestUrl("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	u := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	response, err := c.request("POST", u, payload)
 	if err != nil {
 		return nil, err
@@ -209,7 +209,7 @@ specify an `"info"` key with value `"user_count"`. Pass in `nil` if you do not w
 */
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppId)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
+	u := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -236,7 +236,7 @@ if you wish to enable this. Pass in `nil` if you do not wish to specify any quer
 */
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppId, name)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
+	u := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -254,7 +254,7 @@ Get a list of users in a presence-channel by passing to this method the channel 
 */
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppId, name)
-	u := createRequestUrl("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil, c.Cluster)
+	u := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil, c.Cluster)
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -335,17 +335,17 @@ func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (
 }
 
 func (c *Client) authenticateChannel(params []byte, member *MemberData) (response []byte, err error) {
-	channelName, socketId, err := parseAuthRequestParams(params)
+	channelName, socketID, err := parseAuthRequestParams(params)
 
 	if err != nil {
 		return
 	}
 
-	if err = validateSocketId(&socketId); err != nil {
+	if err = validateSocketID(&socketID); err != nil {
 		return
 	}
 
-	stringToSign := strings.Join([]string{socketId, channelName}, ":")
+	stringToSign := strings.Join([]string{socketID, channelName}, ":")
 
 	var jsonUserData string
 
