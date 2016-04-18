@@ -55,6 +55,7 @@ Clients can be instantiated from a specially-crafted Pusher URL. For example:
 
 */
 func ClientFromURL(url string) (*Client, error) {
+
 	url2, err := u.Parse(url)
 	if err != nil {
 		return nil, err
