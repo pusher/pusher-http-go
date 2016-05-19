@@ -190,6 +190,26 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 	return unmarshalledBufferedEvents(response)
 }
 
+type batchRequest struct {
+	Batch []Event `json:"batch"`
+}
+
+func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
+	payload, err := json.Marshal(&batchRequest{batch})
+	if err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("/apps/%s/batch_events", c.AppId)
+	u := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	response, err := c.request("POST", u, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalledBufferedEvents(response)
+}
+
 /*
 One can use this method to get a list of all the channels in an applicaiton.
 

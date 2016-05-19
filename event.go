@@ -5,6 +5,13 @@ import (
 	"errors"
 )
 
+type Event struct {
+	Channel  string  `json:"channel"`
+	Name     string  `json:"name"`
+	Data     string  `json:"data"`
+	SocketId *string `json:"socket_id,omitempty"`
+}
+
 type eventPayload struct {
 	Name     string   `json:"name"`
 	Channels []string `json:"channels"`

@@ -129,6 +129,32 @@ func TestTriggerSocketIdValidation(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestTriggerBatch(t *testing.T) {
+	expectedBody := `{"batch":[{"channel":"test_channel","name":"test","data":"yolo1"},{"channel":"test_channel","name":"test","data":"yolo2"}]}`
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		fmt.Fprintf(res, "{}")
+		assert.Equal(t, "POST", req.Method)
+
+		actualBody, err := ioutil.ReadAll(req.Body)
+		assert.Equal(t, expectedBody, string(actualBody))
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
+		assert.NoError(t, err)
+
+	}))
+	defer server.Close()
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "appid", Key: "key", Secret: "secret", Host: u.Host}
+
+	_, err := client.TriggerBatch([]Event{
+		{"test_channel", "test", "yolo1", nil},
+		{"test_channel", "test", "yolo2", nil},
+	})
+
+	assert.NoError(t, err)
+}
+
 func TestErrorResponseHandler(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(400)
