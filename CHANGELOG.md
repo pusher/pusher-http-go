@@ -1,3 +1,10 @@
+
+1.2.0 / 2016-05-20
+==================
+
+  * Adds support for batch events
+  * Introduce JSONP example
+
 1.1.0 / 2016-02-22
 ==================
 
