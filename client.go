@@ -128,8 +128,8 @@ be marshallable into JSON.
 	client.Trigger("greeting_channel", "say_hello", data)
 
 */
-func (c *Client) Trigger(channel string, event string, data interface{}) (*BufferedEvents, error) {
-	return c.trigger([]string{channel}, event, data, nil)
+func (c *Client) Trigger(channel string, eventName string, data interface{}) (*BufferedEvents, error) {
+	return c.trigger([]string{channel}, eventName, data, nil)
 }
 
 /*
@@ -137,8 +137,8 @@ The same as `client.Trigger`, except one passes in a slice of `channels` as the 
 The maximum length of channels is 10.
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
-func (c *Client) TriggerMulti(channels []string, event string, data interface{}) (*BufferedEvents, error) {
-	return c.trigger(channels, event, data, nil)
+func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) (*BufferedEvents, error) {
+	return c.trigger(channels, eventName, data, nil)
 }
 
 /*
@@ -148,8 +148,8 @@ This method allow you to exclude a recipient whose connection has that
 	client.TriggerExclusive("a_channel", "event", data, "123.12")
 
 */
-func (c *Client) TriggerExclusive(channel string, event string, data interface{}, socketID string) (*BufferedEvents, error) {
-	return c.trigger([]string{channel}, event, data, &socketID)
+func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
+	return c.trigger([]string{channel}, eventName, data, &socketID)
 }
 
 /*
@@ -158,11 +158,11 @@ Excluding a recipient on a trigger to multiple channels.
 	client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
 
 */
-func (c *Client) TriggerMultiExclusive(channels []string, event string, data interface{}, socketID string) (*BufferedEvents, error) {
-	return c.trigger(channels, event, data, &socketID)
+func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
+	return c.trigger(channels, eventName, data, &socketID)
 }
 
-func (c *Client) trigger(channels []string, event string, data interface{}, socketID *string) (*BufferedEvents, error) {
+func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
 	if len(channels) > 10 {
 		return nil, errors.New("You cannot trigger on more than 10 channels at once")
 	}
@@ -175,12 +175,32 @@ func (c *Client) trigger(channels []string, event string, data interface{}, sock
 		return nil, err
 	}
 
-	payload, err := createTriggerPayload(channels, event, data, socketID)
+	payload, err := createTriggerPayload(channels, eventName, data, socketID)
 	if err != nil {
 		return nil, err
 	}
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
+	u := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	response, err := c.request("POST", u, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalledBufferedEvents(response)
+}
+
+type batchRequest struct {
+	Batch []Event `json:"batch"`
+}
+
+func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
+	payload, err := json.Marshal(&batchRequest{batch})
+	if err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("/apps/%s/batch_events", c.AppId)
 	u := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	response, err := c.request("POST", u, payload)
 	if err != nil {

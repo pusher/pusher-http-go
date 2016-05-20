@@ -222,6 +222,23 @@ client.TriggerExclusive("a_channel", "event", data, "123.12")
 client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
 ```
 
+#### Batches
+
+#####`func (c. *Client) TriggerBatch`
+
+|Argument | Description |
+|:-:|:-:|
+|batch `[]Event`| A list of events to publish|
+
+###### Example
+
+```go
+client.TriggerBatch([]pusher.Event{
+  { Channel: "a_channel", Name: "event", Data: "hello world", nil },
+  { Channel: "a_channel", Name: "event", Data: "hi my name is bob", nil },
+})
+```
+
 ### Authenticating Channels
 
 Application security is very important so Pusher provides a mechanism for authenticating a user’s access to a channel at the point of subscription.
@@ -530,6 +547,7 @@ Feature                                    | Supported
 -------------------------------------------| :-------:
 Trigger event on single channel            | *&#10004;*
 Trigger event on multiple channels         | *&#10004;*
+Trigger events in batches                  | *&#10004;*
 Excluding recipients from events           | *&#10004;*
 Authenticating private channels            | *&#10004;*
 Authenticating presence channels           | *&#10004;*
@@ -537,7 +555,7 @@ Get the list of channels in an application | *&#10004;*
 Get the state of a single channel          | *&#10004;*
 Get a list of users in a presence channel  | *&#10004;*
 WebHook validation                         | *&#10004;*
-Heroku add-on support						   | *&#10004;*
+Heroku add-on support                      | *&#10004;*
 Debugging & Logging                        | *&#10004;*
 Cluster configuration                      | *&#10004;*
 Timeouts                                   | *&#10004;*
