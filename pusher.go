@@ -3,11 +3,11 @@ package pusher
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pusher/pusher/authentications"
-	"github.com/pusher/pusher/errors"
-	"github.com/pusher/pusher/requests"
-	"github.com/pusher/pusher/signatures"
-	"github.com/pusher/pusher/validate"
+	"github.com/pusher/pusher-http-go/authentications"
+	"github.com/pusher/pusher-http-go/errors"
+	"github.com/pusher/pusher-http-go/requests"
+	"github.com/pusher/pusher-http-go/signatures"
+	"github.com/pusher/pusher-http-go/validate"
 	"net/http"
 	"time"
 )

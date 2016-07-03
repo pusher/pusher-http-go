@@ -2,7 +2,7 @@ package validate
 
 import (
 	"fmt"
-	"github.com/pusher/pusher/errors"
+	"github.com/pusher/pusher-http-go/errors"
 	"regexp"
 	s "strings"
 )

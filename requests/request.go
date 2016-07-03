@@ -3,7 +3,7 @@ package requests
 import (
 	"bytes"
 	"fmt"
-	"github.com/pusher/pusher/errors"
+	"github.com/pusher/pusher-http-go/errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"

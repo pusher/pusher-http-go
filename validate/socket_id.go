@@ -1,7 +1,7 @@
 package validate
 
 import (
-	"github.com/pusher/pusher/errors"
+	"github.com/pusher/pusher-http-go/errors"
 	"regexp"
 )
 

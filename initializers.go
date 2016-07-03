@@ -1,7 +1,7 @@
 package pusher
 
 import (
-	"github.com/pusher/pusher/errors"
+	"github.com/pusher/pusher-http-go/errors"
 	"net/url"
 	"os"
 	"regexp"

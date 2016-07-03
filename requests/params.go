@@ -1,7 +1,7 @@
 package requests
 
 import (
-	"github.com/pusher/pusher/signatures"
+	"github.com/pusher/pusher-http-go/signatures"
 	"net/url"
 )
 

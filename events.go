@@ -2,7 +2,7 @@ package pusher
 
 import (
 	"encoding/json"
-	"github.com/pusher/pusher/errors"
+	"github.com/pusher/pusher-http-go/errors"
 )
 
 type TriggerResponse struct {

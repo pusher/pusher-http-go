@@ -2,8 +2,8 @@ package authentications
 
 import (
 	"fmt"
-	"github.com/pusher/pusher/errors"
-	"github.com/pusher/pusher/validate"
+	"github.com/pusher/pusher-http-go/errors"
+	"github.com/pusher/pusher-http-go/validate"
 	"net/url"
 )
 

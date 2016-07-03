@@ -1,7 +1,7 @@
 package pusher
 
 import (
-	"github.com/pusher/pusher/requests"
+	"github.com/pusher/pusher-http-go/requests"
 	"net/url"
 )
 

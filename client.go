@@ -1,7 +1,7 @@
 package pusher
 
 import (
-	"github.com/pusher/pusher/authentications"
+	"github.com/pusher/pusher-http-go/authentications"
 	"net/http"
 )
 
