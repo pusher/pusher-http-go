@@ -256,8 +256,6 @@ func (p *Pusher) Notify(interests []string, notification *Notification) (respons
 		return
 	}
 
-	fmt.Println(string(body))
-
 	params := &requests.Params{
 		Body: body,
 	}
