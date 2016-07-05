@@ -9,7 +9,12 @@ import (
 	"github.com/pusher/pusher-http-go/signatures"
 	"github.com/pusher/pusher-http-go/validate"
 	"net/http"
+	"net/url"
 	"time"
+)
+
+const (
+	NATIVE_NOTIFICATIONS_HOST = "yolo.ngrok.io"
 )
 
 type Pusher struct {
@@ -90,7 +95,7 @@ func (p *Pusher) trigger(event *event) (response *TriggerResponse, err error) {
 		Body: eventJSON,
 	}
 
-	if byteResponse, err = p.sendRequest(p, requests.Trigger, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.Trigger, params); err != nil {
 		return
 	}
 
@@ -112,7 +117,7 @@ func (p *Pusher) TriggerBatch(batch []Event) (response *TriggerResponse, err err
 		Body: batchJSON,
 	}
 
-	if byteResponse, err = p.sendRequest(p, requests.TriggerBatch, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.TriggerBatch, params); err != nil {
 		return
 	}
 
@@ -127,7 +132,7 @@ func (p *Pusher) Channels(additionalQueries map[string]string) (response *Channe
 		Queries: additionalQueries,
 	}
 
-	if byteResponse, err = p.sendRequest(p, requests.Channels, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.Channels, params); err != nil {
 		return
 	}
 
@@ -143,7 +148,7 @@ func (p *Pusher) Channel(name string, additionalQueries map[string]string) (resp
 		Queries: additionalQueries,
 	}
 
-	if byteResponse, err = p.sendRequest(p, requests.Channel, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.Channel, params); err != nil {
 		return
 	}
 
@@ -158,7 +163,7 @@ func (p *Pusher) ChannelUsers(name string) (response *UserList, err error) {
 		Channel: name,
 	}
 
-	if byteResponse, err = p.sendRequest(p, requests.ChannelUsers, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.ChannelUsers, params); err != nil {
 		return
 	}
 
@@ -194,6 +199,77 @@ func (p *Pusher) authenticate(request authentications.Request) (response []byte,
 	return json.Marshal(responseMap)
 }
 
+func (p *Pusher) Notify(interests []string, notification *Notification) (response []NotificationResponse, err error) {
+	if len(interests) != 1 {
+		err = errors.New("Currently only sending to one interest is supported.")
+		return
+	}
+
+	if notification.Gcm != nil {
+		ttl := notification.Gcm.TimeToLive
+		if ttl != nil && (*ttl < uint(0) || uint(2419200) < *ttl) {
+			err = errors.New("GCM's TimeToLive field must be an integer between 0 and 2419200 (4 weeks)")
+			return
+		}
+
+		if notification.Gcm.Payload != nil {
+			payload := notification.Gcm.Payload
+			if len(payload.Title) == 0 {
+				err = errors.New("Notification title is a required field for GCM")
+				return
+			}
+
+			if len(payload.Icon) == 0 {
+				err = errors.New("Notification icon is a required field for GCM")
+				return
+			}
+
+		}
+
+		if notification.WebhookURL != "" {
+			if _, err = url.Parse(notification.WebhookURL); err != nil {
+				return
+			}
+		}
+	}
+
+	if !map[string]bool{"INFO": true, "DEBUG": true, "": true}[notification.WebhookLevel] {
+		err = errors.New("Webhook level must be either INFO or DEBUG. Blank will default to INFO")
+		return
+	}
+
+	var body, byteResponse []byte
+
+	req := &notificationRequest{
+		Interests:    interests,
+		Notification: notification,
+	}
+
+	config := &urlConfig{
+		key:    p.key,
+		secret: p.secret,
+		host:   NATIVE_NOTIFICATIONS_HOST,
+		appID:  p.appID,
+	}
+
+	if body, err = json.Marshal(&req); err != nil {
+		return
+	}
+
+	fmt.Println(string(body))
+
+	params := &requests.Params{
+		Body: body,
+	}
+
+	if byteResponse, err = p.sendRequest(config, p.httpClient(), requests.NativePush, params); err != nil {
+		return
+	}
+
+	err = json.Unmarshal(byteResponse, &response)
+	return
+}
+
 func (p *Pusher) Webhook(header http.Header, body []byte) (webhook *Webhook, err error) {
 	for _, token := range header["X-Pusher-Key"] {
 		if token == p.key && signatures.CheckHMAC(header.Get("X-Pusher-Signature"), p.secret, body) {
@@ -202,6 +278,17 @@ func (p *Pusher) Webhook(header http.Header, body []byte) (webhook *Webhook, err
 	}
 	err = errors.New("Invalid webhook")
 	return
+}
+
+func (p *Pusher) urlConfig() *urlConfig {
+	return &urlConfig{
+		key:     p.key,
+		secret:  p.secret,
+		host:    p.Host,
+		cluster: p.Cluster,
+		appID:   p.appID,
+		secure:  p.Secure,
+	}
 }
 
 func (p *Pusher) httpClient() *http.Client {

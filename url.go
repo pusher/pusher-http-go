@@ -9,7 +9,12 @@ import (
 	s "strings"
 )
 
-func requestURL(p *Pusher, request *requests.Request, params *requests.Params) (u *url.URL, err error) {
+type urlConfig struct {
+	key, secret, host, cluster, appID string
+	secure                            bool
+}
+
+func requestURL(p *urlConfig, request *requests.Request, params *requests.Params) (u *url.URL, err error) {
 	values := params.URLValues(p.key)
 
 	var path string
@@ -33,15 +38,15 @@ func requestURL(p *Pusher, request *requests.Request, params *requests.Params) (
 	host := "api.pusherapp.com"
 	scheme := "http"
 
-	if p.Host != "" {
-		host = p.Host
+	if p.host != "" {
+		host = p.host
 	}
 
-	if p.Cluster != "" {
-		host = fmt.Sprintf("api-%s.pusher.com", p.Cluster)
+	if p.cluster != "" {
+		host = fmt.Sprintf("api-%s.pusher.com", p.cluster)
 	}
 
-	if p.Secure {
+	if p.secure {
 		scheme = "https"
 	}
 

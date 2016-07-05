@@ -28,3 +28,8 @@ var ChannelUsers = &Request{
 	Method:      http.MethodGet,
 	PathPattern: "/apps/%s/channels/%s/users",
 }
+
+var NativePush = &Request{
+	Method:      http.MethodPost,
+	PathPattern: "/customer_api/v1/apps/%s/notifications",
+}

@@ -40,7 +40,7 @@ func (r *Request) Do(client *http.Client, u *url.URL, payload []byte) (responseB
 		return
 	}
 
-	if httpResponse.StatusCode != http.StatusOK {
+	if httpResponse.StatusCode != http.StatusOK || httpResponse.StatusCode != http.StatusAccepted {
 		err = errors.New(fmt.Sprintf("Status Code: %s - %s", httpResponse.Status, string(responseBody)))
 	}
 	return
