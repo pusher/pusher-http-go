@@ -13,11 +13,12 @@ type Notification struct {
 }
 
 type ApnsNotification struct {
-	Id         string       `json:"apns-id,omitempty"`
-	Expiration int64        `json:"expiration,omitempty"`
-	Priority   int          `json:"priority,omitempty"`
-	CollapseID string       `json:"collapse_id,omitempty"`
-	Payload    *ApnsPayload `json:"aps"`
+	Id         string                 `json:"apns-id,omitempty"`
+	Expiration int64                  `json:"expiration,omitempty"`
+	Priority   int                    `json:"priority,omitempty"`
+	CollapseID string                 `json:"collapse_id,omitempty"`
+	Payload    *ApnsPayload           `json:"aps,omitempty"`
+	Data       map[string]interface{} `json:"data,omitempty"`
 }
 
 type ApnsPayload struct {
