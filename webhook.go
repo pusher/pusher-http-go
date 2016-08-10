@@ -19,11 +19,7 @@ type WebhookEvent struct {
 	UserId   string `json:"user_id,omitempty"`   // the user_id of a member who has joined or vacated a presence-channel
 }
 
-func unmarshalledWebhook(requestBody []byte) (*Webhook, error) {
-	webhook := &Webhook{}
-	err := json.Unmarshal(requestBody, &webhook)
-	if err != nil {
-		return nil, err
-	}
-	return webhook, nil
+func newWebhook(body []byte) (webhook *Webhook, err error) {
+	err = json.Unmarshal(body, &webhook)
+	return
 }
