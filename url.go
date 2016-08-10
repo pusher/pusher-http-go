@@ -10,8 +10,7 @@ import (
 )
 
 type urlConfig struct {
-	key, secret, host, cluster, appID string
-	secure                            bool
+	appID, key, secret, host, scheme string
 }
 
 func requestURL(p *urlConfig, request *requests.Request, params *requests.Params) (u *url.URL, err error) {
@@ -35,24 +34,9 @@ func requestURL(p *urlConfig, request *requests.Request, params *requests.Params
 	signed := signatures.HMAC(unsigned, p.secret)
 	values.Add("auth_signature", signed)
 
-	host := "api.pusherapp.com"
-	scheme := "http"
-
-	if p.host != "" {
-		host = p.host
-	}
-
-	if p.cluster != "" {
-		host = fmt.Sprintf("api-%s.pusher.com", p.cluster)
-	}
-
-	if p.secure {
-		scheme = "https"
-	}
-
 	u = &url.URL{
-		Scheme:   scheme,
-		Host:     host,
+		Scheme:   p.scheme,
+		Host:     p.host,
 		Path:     path,
 		RawQuery: values.Encode(),
 	}

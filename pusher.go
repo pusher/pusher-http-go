@@ -10,24 +10,12 @@ import (
 	"github.com/pusher/pusher-http-go/validate"
 	"net/http"
 	"net/url"
-	"time"
-)
-
-const (
-	NATIVE_NOTIFICATIONS_HOST = "yolo.ngrok.io"
 )
 
 type Pusher struct {
 	appID, key, secret string
 	dispatcher
 	Options
-}
-
-type Options struct {
-	Host       string // host or host:port pair
-	Secure     bool   // true for HTTPS
-	Cluster    string
-	HttpClient *http.Client
 }
 
 func (p *Pusher) Trigger(channel string, eventName string, data interface{}) (*TriggerResponse, error) {
@@ -95,7 +83,7 @@ func (p *Pusher) trigger(event *event) (response *TriggerResponse, err error) {
 		Body: eventJSON,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.Trigger, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Trigger, params); err != nil {
 		return
 	}
 
@@ -117,7 +105,7 @@ func (p *Pusher) TriggerBatch(batch []Event) (response *TriggerResponse, err err
 		Body: batchJSON,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.TriggerBatch, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.TriggerBatch, params); err != nil {
 		return
 	}
 
@@ -132,7 +120,7 @@ func (p *Pusher) Channels(additionalQueries map[string]string) (response *Channe
 		Queries: additionalQueries,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.Channels, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Channels, params); err != nil {
 		return
 	}
 
@@ -148,7 +136,7 @@ func (p *Pusher) Channel(name string, additionalQueries map[string]string) (resp
 		Queries: additionalQueries,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.Channel, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Channel, params); err != nil {
 		return
 	}
 
@@ -163,7 +151,7 @@ func (p *Pusher) ChannelUsers(name string) (response *UserList, err error) {
 		Channel: name,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.httpClient(), requests.ChannelUsers, params); err != nil {
+	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.ChannelUsers, params); err != nil {
 		return
 	}
 
@@ -246,10 +234,11 @@ func (p *Pusher) Notify(interests []string, notification *Notification) (respons
 	}
 
 	config := &urlConfig{
+		appID:  p.appID,
 		key:    p.key,
 		secret: p.secret,
-		host:   NATIVE_NOTIFICATIONS_HOST,
-		appID:  p.appID,
+		host:   p.GetNotificationHost(),
+		scheme: p.GetScheme(),
 	}
 
 	if body, err = json.Marshal(&req); err != nil {
@@ -260,7 +249,7 @@ func (p *Pusher) Notify(interests []string, notification *Notification) (respons
 		Body: body,
 	}
 
-	if byteResponse, err = p.sendRequest(config, p.httpClient(), requests.NativePush, params); err != nil {
+	if byteResponse, err = p.sendRequest(config, p.GetHttpClient(), requests.NativePush, params); err != nil {
 		return
 	}
 
@@ -280,19 +269,10 @@ func (p *Pusher) Webhook(header http.Header, body []byte) (webhook *Webhook, err
 
 func (p *Pusher) urlConfig() *urlConfig {
 	return &urlConfig{
-		key:     p.key,
-		secret:  p.secret,
-		host:    p.Host,
-		cluster: p.Cluster,
-		appID:   p.appID,
-		secure:  p.Secure,
+		appID:  p.appID,
+		key:    p.key,
+		secret: p.secret,
+		host:   p.GetHost(),
+		scheme: p.GetScheme(),
 	}
-}
-
-func (p *Pusher) httpClient() *http.Client {
-	if p.HttpClient == nil {
-		p.HttpClient = &http.Client{Timeout: time.Second * 5}
-	}
-
-	return p.HttpClient
 }
