@@ -187,7 +187,7 @@ func (p *Pusher) authenticate(request authentications.Request) (response []byte,
 	return json.Marshal(responseMap)
 }
 
-func (p *Pusher) Notify(interests []string, notification *Notification) (response []NotificationResponse, err error) {
+func (p *Pusher) Notify(interests []string, notification *Notification) (response NotifyResponse, err error) {
 	if len(interests) != 1 {
 		err = errors.New("Currently only sending to one interest is supported.")
 		return

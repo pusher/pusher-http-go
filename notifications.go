@@ -71,11 +71,6 @@ type GcmPayload struct {
 	TitleLocKey  string `json:"title_loc_key,omitempty"`
 }
 
-type NotificationResponse struct {
-	Description         string `json:"description,omitempty"`
-	MessageId           string `json:"id,omitempty"`
-	SentDeviceToken     string `json:"sent_device_token,omitempty"`
-	Success             bool   `json:"success"`
-	Platform            string `json:"platform"`
-	ReceivedDeviceToken string `json:"received_device_token,omitempty"`
+type NotifyResponse struct {
+	NumSubscribers int `json:"number_of_subscribers"`
 }
