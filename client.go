@@ -181,7 +181,10 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	}
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
-	u := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	if err != nil {
+		return nil, err
+	}
 	response, err := c.request("POST", u, payload)
 	if err != nil {
 		return nil, err
@@ -201,7 +204,10 @@ func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
 	}
 
 	path := fmt.Sprintf("/apps/%s/batch_events", c.AppId)
-	u := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	if err != nil {
+		return nil, err
+	}
 	response, err := c.request("POST", u, payload)
 	if err != nil {
 		return nil, err
@@ -229,7 +235,10 @@ specify an `"info"` key with value `"user_count"`. Pass in `nil` if you do not w
 */
 func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppId)
-	u := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
+	if err != nil {
+		return nil, err
+	}
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -256,7 +265,10 @@ if you wish to enable this. Pass in `nil` if you do not wish to specify any quer
 */
 func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppId, name)
-	u := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
+	if err != nil {
+		return nil, err
+	}
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -274,7 +286,10 @@ Get a list of users in a presence-channel by passing to this method the channel 
 */
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppId, name)
-	u := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil, c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil, c.Cluster)
+	if err != nil {
+		return nil, err
+	}
 	response, err := c.request("GET", u, nil)
 	if err != nil {
 		return nil, err
