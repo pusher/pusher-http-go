@@ -9,7 +9,6 @@ import (
 	"github.com/pusher/pusher-http-go/signatures"
 	"github.com/pusher/pusher-http-go/validate"
 	"net/http"
-	"net/url"
 )
 
 type Pusher struct {
@@ -190,39 +189,6 @@ func (p *Pusher) authenticate(request authentications.Request) (response []byte,
 func (p *Pusher) Notify(interests []string, notification *Notification) (response NotifyResponse, err error) {
 	if len(interests) == 0 {
 		err = errors.New("The interests slice must not be empty")
-		return
-	}
-
-	if notification.Gcm != nil {
-		ttl := notification.Gcm.TimeToLive
-		if ttl != nil && (*ttl < uint(0) || uint(2419200) < *ttl) {
-			err = errors.New("GCM's TimeToLive field must be an integer between 0 and 2419200 (4 weeks)")
-			return
-		}
-
-		if notification.Gcm.Payload != nil {
-			payload := notification.Gcm.Payload
-			if len(payload.Title) == 0 {
-				err = errors.New("Notification title is a required field for GCM")
-				return
-			}
-
-			if len(payload.Icon) == 0 {
-				err = errors.New("Notification icon is a required field for GCM")
-				return
-			}
-
-		}
-
-		if notification.WebhookURL != "" {
-			if _, err = url.Parse(notification.WebhookURL); err != nil {
-				return
-			}
-		}
-	}
-
-	if !map[string]bool{"INFO": true, "DEBUG": true, "": true}[notification.WebhookLevel] {
-		err = errors.New("Webhook level must be either INFO or DEBUG. Blank will default to INFO")
 		return
 	}
 
