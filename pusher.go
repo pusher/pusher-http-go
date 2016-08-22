@@ -188,8 +188,8 @@ func (p *Pusher) authenticate(request authentications.Request) (response []byte,
 }
 
 func (p *Pusher) Notify(interests []string, notification *Notification) (response NotifyResponse, err error) {
-	if len(interests) != 1 {
-		err = errors.New("Currently only sending to one interest is supported.")
+	if len(interests) == 0 {
+		err = errors.New("The interests slice must not be empty")
 		return
 	}
 
