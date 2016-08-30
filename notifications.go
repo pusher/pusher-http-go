@@ -6,22 +6,22 @@ type notificationRequest struct {
 }
 
 type Notification struct {
-	WebhookURL   string            `json:"webhook_url,omitempty"`
-	WebhookLevel string            `json:"webhook_level,omitempty"`
-	Apns         *ApnsNotification `json:"apns,omitempty"`
-	Gcm          *GcmNotification  `json:"gcm,omitempty"`
+	WebhookURL   string                `json:"webhook_url,omitempty"`
+	WebhookLevel string                `json:"webhook_level,omitempty"`
+	Apns         *ApnsPushNotification `json:"apns,omitempty"`
+	Gcm          *GcmPushNotification  `json:"gcm,omitempty"`
 }
 
-type ApnsNotification struct {
+type ApnsPushNotification struct {
 	Id         string                 `json:"apns-id,omitempty"`
 	Expiration int64                  `json:"expiration,omitempty"`
 	Priority   int                    `json:"priority,omitempty"`
 	CollapseID string                 `json:"collapse_id,omitempty"`
-	Payload    *ApnsPayload           `json:"aps,omitempty"`
+	Aps        *ApnsAps               `json:"aps,omitempty"`
 	Data       map[string]interface{} `json:"data,omitempty"`
 }
 
-type ApnsPayload struct {
+type ApnsAps struct {
 	Badge            int        `json:"badge,omitempty"`
 	Category         string     `json:"category,omitempty"`
 	ContentAvailable int        `json:"content-available,omitempty"`
@@ -44,7 +44,7 @@ type ApnsAlert struct {
 	TitleLocKey  string   `json:"title-loc-key,omitempty"`
 }
 
-type GcmNotification struct {
+type GcmPushNotification struct {
 	CollapseKey           string                 `json:"collapse_key,omitempty"`
 	Priority              string                 `json:"priority,omitempty"`
 	ContentAvailable      bool                   `json:"content_available,omitempty"`
@@ -53,10 +53,10 @@ type GcmNotification struct {
 	RestrictedPackageName string                 `json:"restricted_package_name,omitempty"`
 	DryRun                bool                   `json:"dry_run,omitempty"`
 	Data                  map[string]interface{} `json:"data,omitempty"`
-	Payload               *GcmPayload            `json:"notification,omitempty"`
+	Notification          *GcmNotification       `json:"notification,omitempty"`
 }
 
-type GcmPayload struct {
+type GcmNotification struct {
 	Title        string `json:"title,omitempty"`
 	Body         string `json:"body,omitempty"`
 	Icon         string `json:"icon,omitempty"`
