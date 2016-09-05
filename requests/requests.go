@@ -31,5 +31,5 @@ var ChannelUsers = &Request{
 
 var NativePush = &Request{
 	Method:      http.MethodPost,
-	PathPattern: "/customer_api/v1/apps/%s/notifications",
+	PathPattern: "/server_api/v1/apps/%s/notifications",
 }
