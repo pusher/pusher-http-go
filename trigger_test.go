@@ -4,6 +4,7 @@ import (
 	"github.com/pusher/pusher-http-go/requests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"net/http"
 	"testing"
 )
 
@@ -11,13 +12,15 @@ type mockDispatcher struct {
 	mock.Mock
 }
 
-func (m *mockDispatcher) sendRequest(p *Pusher, request *requests.Request, params *requests.Params) (response []byte, err error) {
-	args := m.Called(p, request, params)
+func (m *mockDispatcher) sendRequest(uc *urlConfig, httpClient *http.Client, request *requests.Request, params *requests.Params) (response []byte, err error) {
+	args := m.Called(uc, httpClient, request, params)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
 func testTrigger(t *testing.T, req *requests.Request, triggerFunc func(*Pusher) (*TriggerResponse, error), expectJSON string) {
 	mDispatcher := &mockDispatcher{}
+	httpClient := &http.Client{}
+
 	p := &Pusher{
 		appID:      "id",
 		key:        "key",
@@ -25,12 +28,15 @@ func testTrigger(t *testing.T, req *requests.Request, triggerFunc func(*Pusher) 
 		dispatcher: mDispatcher,
 	}
 
+	p.Options.HttpClient = httpClient
+	urlConfig := p.urlConfig()
+
 	expectedParams := &requests.Params{
 		Body: []byte(expectJSON),
 	}
 
 	mDispatcher.
-		On("sendRequest", p, req, expectedParams).
+		On("sendRequest", urlConfig, httpClient, req, expectedParams).
 		Return([]byte("{}"), nil)
 
 	_, err := triggerFunc(p)
