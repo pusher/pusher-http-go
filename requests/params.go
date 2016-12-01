@@ -5,16 +5,16 @@ import (
 	"net/url"
 )
 
+const authVersion = "1.0"
+
 type Params struct {
 	Body    []byte
 	Queries map[string]string
 	Channel string
 }
 
-const authVersion = "1.0"
-
-func (p *Params) URLValues(key string) (values *url.Values) {
-	values = &url.Values{
+func (p *Params) URLValues(key string) *url.Values {
+	values := &url.Values{
 		"auth_key":       {key},
 		"auth_timestamp": {authClock.Now()},
 		"auth_version":   {authVersion},
@@ -25,9 +25,10 @@ func (p *Params) URLValues(key string) (values *url.Values) {
 	}
 
 	if p.Queries != nil {
-		for key, value := range p.Queries {
-			values.Add(key, value)
+		for k, v := range p.Queries {
+			values.Add(k, v)
 		}
 	}
-	return
+
+	return values
 }

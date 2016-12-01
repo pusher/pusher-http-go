@@ -14,34 +14,28 @@ type Request struct {
 	PathPattern string
 }
 
-func (r *Request) Do(client *http.Client, u *url.URL, payload []byte) (responseBody []byte, err error) {
-	var (
-		httpResponse *http.Response
-		httpRequest  *http.Request
-	)
-
-	defer func() {
-		if httpResponse != nil {
-			httpResponse.Body.Close()
-		}
-	}()
-
-	if httpRequest, err = http.NewRequest(r.Method, u.String(), bytes.NewReader(payload)); err != nil {
-		return
+func (req *Request) Do(client *http.Client, u *url.URL, payload []byte) ([]byte, error) {
+	httpRequest, err := http.NewRequest(req.Method, u.String(), bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
 	}
 
 	httpRequest.Header.Set("Content-Type", "application/json")
 
-	if httpResponse, err = client.Do(httpRequest); err != nil {
-		return
+	httpResponse, err := client.Do(httpRequest)
+	if err != nil {
+		return nil, err
 	}
+	defer httpResponse.Body.Close()
 
-	if responseBody, err = ioutil.ReadAll(httpResponse.Body); err != nil {
-		return
+	responseBody, err := ioutil.ReadAll(httpResponse.Body)
+	if err != nil {
+		return nil, err
 	}
 
 	if httpResponse.StatusCode != http.StatusOK && httpResponse.StatusCode != http.StatusAccepted {
-		err = errors.New(fmt.Sprintf("Status Code: %s - %s", httpResponse.Status, string(responseBody)))
+		return nil, errors.New(fmt.Sprintf("Status Code: %s - %s", httpResponse.Status, string(responseBody)))
 	}
-	return
+
+	return responseBody, nil
 }

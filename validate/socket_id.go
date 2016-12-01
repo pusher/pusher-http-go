@@ -7,9 +7,10 @@ import (
 
 var socketIDValidationRegex = regexp.MustCompile(`\A\d+\.\d+\z`)
 
-func SocketID(socketID *string) (err error) {
+func SocketID(socketID *string) error {
 	if (socketID == nil) || socketIDValidationRegex.MatchString(*socketID) {
-		return
+		return nil
 	}
+
 	return errors.New("socket_id invalid")
 }

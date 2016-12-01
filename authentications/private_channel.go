@@ -11,42 +11,33 @@ type PrivateChannel struct {
 	Body []byte
 }
 
-func (p *PrivateChannel) StringToSign() (unsigned string, err error) {
-	var (
-		params             url.Values
-		keyExists          bool
-		channelNameWrapper []string
-		socketIDWrapper    []string
-		channelName        string
-		socketID           string
-	)
-
-	if params, err = url.ParseQuery(string(p.Body)); err != nil {
-		return
+func (p *PrivateChannel) StringToSign() (string, error) {
+	params, err := url.ParseQuery(string(p.Body))
+	if err != nil {
+		return "", err
 	}
 
-	if channelNameWrapper, keyExists = params["channel_name"]; !keyExists || len(channelNameWrapper) == 0 {
-		err = errors.New("Channel param not found")
-		return
+	channelNameWrapper, keyExists := params["channel_name"]
+	if !keyExists || len(channelNameWrapper) == 0 {
+		return "", errors.New("Channel param not found")
 	}
 
-	if socketIDWrapper, keyExists = params["socket_id"]; !keyExists || len(socketIDWrapper) == 0 {
-		err = errors.New("Socket_id not found")
-		return
+	socketIDWrapper, keyExists := params["socket_id"]
+	if !keyExists || len(socketIDWrapper) == 0 {
+		return "", errors.New("Socket_id not found")
 	}
 
-	if channelName = channelNameWrapper[0]; len(channelName) == 0 {
-		err = errors.New("Channel name cannot be blank")
-		return
+	channelName := channelNameWrapper[0]
+	if len(channelName) == 0 {
+		return "", errors.New("Channel name cannot be blank")
 	}
 
-	socketID = socketIDWrapper[0]
+	socketID := socketIDWrapper[0]
 	if err = validate.SocketID(&socketID); err != nil {
-		return
+		return "", err
 	}
 
-	unsigned = fmt.Sprintf("%s:%s", socketID, channelName)
-	return
+	return fmt.Sprintf("%s:%s", socketID, channelName), nil
 }
 
 func (p *PrivateChannel) UserData() (userData string, err error) {

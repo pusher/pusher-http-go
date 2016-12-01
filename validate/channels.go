@@ -9,8 +9,9 @@ import (
 
 var channelValidationRegex = regexp.MustCompile("^[-a-zA-Z0-9_=@,.;]+$")
 
-func Channels(channels []string) (err error) {
-	channelErrors := []string{}
+func Channels(channels []string) error {
+	var channelErrors []string
+
 	for _, channel := range channels {
 		if len(channel) > 200 {
 			channelErrors = append(channelErrors, channelTooLong(channel))
@@ -25,10 +26,10 @@ func Channels(channels []string) (err error) {
 
 	if len(channelErrors) > 0 {
 		message := s.Join(channelErrors, ". ")
-		err = errors.New(message)
+		return errors.New(message)
 	}
 
-	return
+	return nil
 }
 
 func channelTooLong(channel string) string {

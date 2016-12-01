@@ -32,48 +32,40 @@ func NewWithOptions(appID, key, secret string, options Options) Client {
 
 var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 
-func NewFromURL(rawURL string) (client Client, err error) {
-	var (
-		u           *url.URL
-		host        string
-		appID       string
-		key         string
-		secret      string
-		secretGiven bool
-		secure      bool
-	)
-
-	if u, err = url.Parse(rawURL); err != nil {
-		return
+func NewFromURL(rawURL string) (Client, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
 	}
 
-	host = u.Host
+	host := u.Host
 
 	matches := pusherPathRegex.FindStringSubmatch(u.Path)
 	if len(matches) == 0 {
-		err = errors.New("No app ID found")
-		return
+		return nil, errors.New("No app ID found")
 	}
-	appID = matches[1]
+
+	appID := matches[1]
 
 	if u.User == nil {
-		err = errors.New("Missing <key>:<secret>")
-		return
-	}
-	key = u.User.Username()
-
-	if secret, secretGiven = u.User.Password(); !secretGiven {
-		err = errors.New("Missing <secret>")
-		return
+		return nil, errors.New("Missing <key>:<secret>")
 	}
 
-	secure = u.Scheme == "https"
+	key := u.User.Username()
 
-	client = NewWithOptions(appID, key, secret, Options{
+	secret, secretGiven := u.User.Password()
+	if !secretGiven {
+		return nil, errors.New("Missing <secret>")
+	}
+
+	secure := u.Scheme == "https"
+
+	client := NewWithOptions(appID, key, secret, Options{
 		Secure: secure,
 		Host:   host,
 	})
-	return
+
+	return client, nil
 }
 
 func NewFromEnv(key string) (Client, error) {

@@ -11,6 +11,11 @@ import (
 	"net/http"
 )
 
+const (
+	PUSHER_APP_KEY_HEADER   = "X-Pusher-Key"
+	PUSHER_SIGNATURE_HEADER = "X-Pusher-Signature"
+)
+
 type Pusher struct {
 	appID, key, secret string
 	dispatcher
@@ -18,181 +23,194 @@ type Pusher struct {
 }
 
 func (p *Pusher) Trigger(channel string, eventName string, data interface{}) (*TriggerResponse, error) {
-	event := &event{
+	return p.trigger(&event{
 		Channels: []string{channel},
 		Name:     eventName,
 		Data:     data,
-	}
-	return p.trigger(event)
+	})
 }
 
 func (p *Pusher) TriggerMulti(channels []string, eventName string, data interface{}) (*TriggerResponse, error) {
-	event := &event{
+	return p.trigger(&event{
 		Channels: channels,
 		Name:     eventName,
 		Data:     data,
-	}
-	return p.trigger(event)
+	})
 }
 
 func (p *Pusher) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) (*TriggerResponse, error) {
-	event := &event{
+	return p.trigger(&event{
 		Channels: []string{channel},
 		Name:     eventName,
 		Data:     data,
 		SocketID: &socketID,
-	}
-	return p.trigger(event)
+	})
 }
 
 func (p *Pusher) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) (*TriggerResponse, error) {
-	event := &event{
+	return p.trigger(&event{
 		Channels: channels,
 		Name:     eventName,
 		Data:     data,
 		SocketID: &socketID,
-	}
-	return p.trigger(event)
+	})
 }
 
-func (p *Pusher) trigger(event *event) (response *TriggerResponse, err error) {
-	var (
-		eventJSON    []byte
-		byteResponse []byte
-	)
+func (p *Pusher) trigger(event *event) (*TriggerResponse, error) {
+	var eventJSON []byte
 
 	if len(event.Channels) > 10 {
-		err = errors.New("You cannot trigger on more than 10 channels at once")
-		return
+		return nil, errors.New("You cannot trigger on more than 10 channels at once")
 	}
 
-	if err = validate.Channels(event.Channels); err != nil {
-		return
+	err := validate.Channels(event.Channels)
+	if err != nil {
+		return nil, err
 	}
 
-	if err = validate.SocketID(event.SocketID); err != nil {
-		return
+	err = validate.SocketID(event.SocketID)
+	if err != nil {
+		return nil, err
 	}
 
-	if eventJSON, err = json.Marshal(event); err != nil {
-		return
+	eventJSON, err = json.Marshal(event)
+	if err != nil {
+		return nil, err
 	}
 
-	params := &requests.Params{
-		Body: eventJSON,
+	params := &requests.Params{Body: eventJSON}
+
+	byteResponse, err := p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Trigger, params)
+	if err != nil {
+		return nil, err
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Trigger, params); err != nil {
-		return
-	}
-
+	var response *TriggerResponse
 	err = json.Unmarshal(byteResponse, &response)
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
-func (p *Pusher) TriggerBatch(batch []Event) (response *TriggerResponse, err error) {
-	var (
-		byteResponse []byte
-		batchJSON    []byte
-	)
-
-	if batchJSON, err = json.Marshal(&batchRequest{batch}); err != nil {
-		return
+func (p *Pusher) TriggerBatch(batch []Event) (*TriggerResponse, error) {
+	batchJSON, err := json.Marshal(&batchRequest{batch})
+	if err != nil {
+		return nil, err
 	}
 
 	params := &requests.Params{
 		Body: batchJSON,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.TriggerBatch, params); err != nil {
-		return
+	byteResponse, err := p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.TriggerBatch, params)
+	if err != nil {
+		return nil, err
 	}
 
+	var response *TriggerResponse
 	err = json.Unmarshal(byteResponse, &response)
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
-func (p *Pusher) Channels(additionalQueries map[string]string) (response *ChannelList, err error) {
-	var byteResponse []byte
-
+func (p *Pusher) Channels(additionalQueries map[string]string) (*ChannelList, error) {
 	params := &requests.Params{
 		Queries: additionalQueries,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Channels, params); err != nil {
-		return
+	byteResponse, err := p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Channels, params)
+	if err != nil {
+		return nil, err
 	}
 
+	var response *ChannelList
 	err = json.Unmarshal(byteResponse, &response)
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
-func (p *Pusher) Channel(name string, additionalQueries map[string]string) (response *Channel, err error) {
-	var byteResponse []byte
-
+func (p *Pusher) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
 	params := &requests.Params{
 		Channel: name,
 		Queries: additionalQueries,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Channel, params); err != nil {
-		return
+	byteResponse, err := p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.Channel, params)
+	if err != nil {
+		return nil, err
 	}
 
+	var response *Channel
 	err = json.Unmarshal(byteResponse, &response)
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
-func (p *Pusher) ChannelUsers(name string) (response *UserList, err error) {
-	var byteResponse []byte
-
+func (p *Pusher) ChannelUsers(name string) (*UserList, error) {
 	params := &requests.Params{
 		Channel: name,
 	}
 
-	if byteResponse, err = p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.ChannelUsers, params); err != nil {
-		return
+	byteResponse, err := p.sendRequest(p.urlConfig(), p.GetHttpClient(), requests.ChannelUsers, params)
+	if err != nil {
+		return nil, err
 	}
 
+	var response *UserList
 	err = json.Unmarshal(byteResponse, &response)
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
-func (p *Pusher) AuthenticatePrivateChannel(body []byte) (response []byte, err error) {
+func (p *Pusher) AuthenticatePrivateChannel(body []byte) ([]byte, error) {
 	return p.authenticate(&authentications.PrivateChannel{Body: body})
 }
 
-func (p *Pusher) AuthenticatePresenceChannel(body []byte, member authentications.Member) (response []byte, err error) {
+func (p *Pusher) AuthenticatePresenceChannel(body []byte, member authentications.Member) ([]byte, error) {
 	return p.authenticate(&authentications.PresenceChannel{Body: body, Member: member})
 }
 
-func (p *Pusher) authenticate(request authentications.Request) (response []byte, err error) {
-	var unsigned string
-	if unsigned, err = request.StringToSign(); err != nil {
-		return
+func (p *Pusher) authenticate(request authentications.Request) ([]byte, error) {
+	unsigned, err := request.StringToSign()
+	if err != nil {
+		return nil, err
 	}
-	authSignature := signatures.HMAC(unsigned, p.secret)
 
+	authSignature := signatures.HMAC(unsigned, p.secret)
 	responseMap := map[string]string{
 		"auth": fmt.Sprintf("%s:%s", p.key, authSignature),
 	}
-	var userData string
-	if userData, err = request.UserData(); err != nil {
-		return
+
+	userData, err := request.UserData()
+	if err != nil {
+		return nil, err
 	}
+
 	if userData != "" {
 		responseMap["channel_data"] = userData
 	}
+
 	return json.Marshal(responseMap)
 }
 
-func (p *Pusher) Notify(interests []string, notification *Notification) (response NotifyResponse, err error) {
+func (p *Pusher) Notify(interests []string, notification *Notification) (*NotifyResponse, error) {
 	if len(interests) == 0 {
-		err = errors.New("The interests slice must not be empty")
-		return
+		return nil, errors.New("The interests slice must not be empty")
 	}
-
-	var body, byteResponse []byte
 
 	req := &notificationRequest{
 		Interests:    interests,
@@ -207,30 +225,37 @@ func (p *Pusher) Notify(interests []string, notification *Notification) (respons
 		scheme: p.GetScheme(),
 	}
 
-	if body, err = json.Marshal(&req); err != nil {
-		return
+	body, err := json.Marshal(&req)
+	if err != nil {
+		return nil, err
 	}
 
 	params := &requests.Params{
 		Body: body,
 	}
 
-	if byteResponse, err = p.sendRequest(config, p.GetHttpClient(), requests.NativePush, params); err != nil {
-		return
+	byteResponse, err := p.sendRequest(config, p.GetHttpClient(), requests.NativePush, params)
+	if err != nil {
+		return nil, err
 	}
 
+	var response *NotifyResponse
 	err = json.Unmarshal(byteResponse, &response)
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
-func (p *Pusher) Webhook(header http.Header, body []byte) (webhook *Webhook, err error) {
-	for _, token := range header["X-Pusher-Key"] {
-		if token == p.key && signatures.CheckHMAC(header.Get("X-Pusher-Signature"), p.secret, body) {
+func (p *Pusher) Webhook(header http.Header, body []byte) (*Webhook, error) {
+	for _, token := range header[PUSHER_APP_KEY_HEADER] {
+		if token == p.key && signatures.CheckHMAC(header.Get(PUSHER_SIGNATURE_HEADER), p.secret, body) {
 			return newWebhook(body)
 		}
 	}
-	err = errors.New("Invalid webhook")
-	return
+
+	return nil, errors.New("Invalid webhook")
 }
 
 func (p *Pusher) urlConfig() *urlConfig {

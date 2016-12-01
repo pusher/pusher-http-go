@@ -10,15 +10,11 @@ func HMAC(unsigned, secret string) string {
 	return hex.EncodeToString(signBytesHMAC([]byte(unsigned), []byte(secret)))
 }
 
-func CheckHMAC(result, secret string, body []byte) (isEqual bool) {
-	var (
-		resultBytes []byte
-		err         error
-	)
-
+func CheckHMAC(result, secret string, body []byte) bool {
 	expected := signBytesHMAC(body, []byte(secret))
-	if resultBytes, err = hex.DecodeString(result); err != nil {
-		return
+	resultBytes, err := hex.DecodeString(result)
+	if err != nil {
+		return false
 	}
 
 	return hmac.Equal(expected, resultBytes)

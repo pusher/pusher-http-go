@@ -5,6 +5,9 @@ import (
 	"github.com/pusher/pusher-http-go/errors"
 )
 
+// Max body size = 10 KB
+const maxDataSize = 10240
+
 type TriggerResponse struct {
 	EventIds map[string]string `json:"event_ids,omitempty"`
 }
@@ -27,9 +30,7 @@ type batchRequest struct {
 	Batch []Event `json:"batch"`
 }
 
-const maxDataSize = 10240
-
-func (e *event) MarshalJSON() (body []byte, err error) {
+func (e *event) MarshalJSON() ([]byte, error) {
 	var dataJSON []byte
 
 	switch d := e.Data.(type) {
@@ -38,14 +39,16 @@ func (e *event) MarshalJSON() (body []byte, err error) {
 	case string:
 		dataJSON = []byte(d)
 	default:
-		if dataJSON, err = json.Marshal(d); err != nil {
-			return
+		marshalled, err := json.Marshal(d)
+		if err != nil {
+			return nil, err
 		}
+
+		dataJSON = marshalled
 	}
 
 	if len(dataJSON) > maxDataSize {
-		err = errors.New("Data must be smaller than 10kb")
-		return
+		return nil, errors.New("Data must be smaller than 10kb")
 	}
 
 	return json.Marshal(&struct {

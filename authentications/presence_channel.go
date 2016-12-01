@@ -9,16 +9,18 @@ type PresenceChannel struct {
 	Member
 }
 
-func (p *PresenceChannel) StringToSign() (unsigned string, err error) {
+func (p *PresenceChannel) StringToSign() (string, error) {
 	privateChannelRequest := &PrivateChannel{p.Body}
-	if unsigned, err = privateChannelRequest.StringToSign(); err != nil {
-		return
+	unsigned, err := privateChannelRequest.StringToSign()
+	if err != nil {
+		return "", err
 	}
-	var userData string
-	if userData, err = p.UserData(); err != nil {
-		return
+
+	userData, err := p.UserData()
+	if err != nil {
+		return "", err
 	}
 
 	unsigned = fmt.Sprintf("%s:%s", unsigned, userData)
-	return
+	return unsigned, err
 }

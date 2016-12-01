@@ -9,11 +9,11 @@ type Member struct {
 	UserInfo map[string]string `json:"user_info,omitempty"`
 }
 
-func (m *Member) UserData() (userData string, err error) {
-	var userDataBytes []byte
-	if userDataBytes, err = json.Marshal(m); err != nil {
-		return
+func (m *Member) UserData() (string, error) {
+	userDataBytes, err := json.Marshal(m)
+	if err != nil {
+		return "", err
 	}
-	userData = string(userDataBytes)
-	return
+
+	return string(userDataBytes), nil
 }
