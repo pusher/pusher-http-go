@@ -217,7 +217,7 @@ func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
 }
 
 /*
-One can use this method to get a list of all the channels in an applicaiton.
+One can use this method to get a list of all the channels in an application.
 
 The parameter `additionalQueries` is a map with query options. A key with `"filter_by_prefix"`
 will filter the returned channels. To get number of users subscribed to a presence-channel,
