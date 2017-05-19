@@ -275,3 +275,72 @@ func TestInitialisationFromENV(t *testing.T) {
 	expectedClient := &Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppId: "104060", Host: "api.pusherapp.com"}
 	assert.Equal(t, expectedClient, client)
 }
+
+func TestNotifySuccess(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusOK)
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		Interests:    []string{"testInterest"},
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+		GCM:          []byte(`hello`),
+	}
+
+	err := client.Notify(testPN)
+
+	assert.NoError(t, err)
+
+}
+
+func TestNotifyServerError(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusInternalServerError)
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		Interests:    []string{"testInterest"},
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+		GCM:          []byte(`hello`),
+	}
+
+	err := client.Notify(testPN)
+
+	assert.Error(t, err)
+}
+
+func TestNotifyInvalidPushNotification(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusInternalServerError)
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		Interests:    []string{"testInterest"},
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+	}
+
+	err := client.Notify(testPN)
+
+	assert.Error(t, err)
+}

@@ -439,3 +439,27 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 	}
 	return nil, errors.New("Invalid webhook")
 }
+
+/*
+Notify is used to send native notifications via Apple APNS or Google GCM or FCM systems
+*/
+func (c *Client) Notify(pushNotification PushNotification) error {
+	err := pushNotification.validate()
+	if err != nil {
+		return err
+	}
+
+	path := fmt.Sprintf("/apps/%s/notifications", c.AppId)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil, c.Cluster)
+	if err != nil {
+		return err
+	}
+
+	requestBody, err := json.Marshal(pushNotification)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.request("POST", u, requestBody)
+	return err
+}
