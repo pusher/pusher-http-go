@@ -6,8 +6,8 @@ const (
 	WebhookLvlInfo            = "INFO"
 	WebhookLvlDebug           = "DEBUG"
 	PushNotiHostDefault       = "nativepush-cluster1.pusher.com"
-	PushNotiAPIPrefixDefault  = "server_api"
-	PushNotiAPIVersionDefault = "v1"
+	PushNotifAPIPrefixDefault  = "server_api"
+	PushNotifAPIVersionDefault = "v1"
 )
 
 // PushNotification is a type for requesting push notifications

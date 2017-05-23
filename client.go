@@ -37,7 +37,8 @@ Changing the `pusher.Client`'s `Host` property will make sure requests are sent 
 
 	client.Host = "foo.bar.com" // by default this is "api.pusherapp.com".
 
-
+If you wish to use push notifications, you need to define the Client.PushNotificationHost,
+please see Pusher docs for more details: https://pusher.com/docs/push_notifications
 */
 type Client struct {
 	AppId                string
@@ -442,7 +443,8 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 }
 
 /*
-Notify is used to send native notifications via Apple APNS or Google GCM or FCM systems
+Notify is used to send native push notifications via Apple APNS or Google GCM/FCM systems. Please make sure that
+you have provided a Client.PushNotificationHost, please see Pusher docs for details: https://pusher.com/docs/push_notifications
 */
 func (c *Client) Notify(pushNotification PushNotification) error {
 	err := pushNotification.validate()
@@ -459,7 +461,7 @@ func (c *Client) Notify(pushNotification PushNotification) error {
 		return err
 	}
 
-	path := fmt.Sprintf("/%s/%s/apps/%s/notifications", PushNotiAPIPrefixDefault, PushNotiAPIVersionDefault, c.AppId)
+	path := fmt.Sprintf("/%s/%s/apps/%s/notifications", PushNotifAPIPrefixDefault, PushNotifAPIVersionDefault, c.AppId)
 
 	url, err := createRequestURL("POST", c.PushNotificationHost, path, c.Key, c.Secret, authTimestamp(), c.Secure, requestBody, nil, c.Cluster)
 	if err != nil {
