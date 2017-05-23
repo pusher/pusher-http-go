@@ -40,13 +40,14 @@ Changing the `pusher.Client`'s `Host` property will make sure requests are sent 
 
 */
 type Client struct {
-	AppId      string
-	Key        string
-	Secret     string
-	Host       string // host or host:port pair
-	Secure     bool   // true for HTTPS
-	Cluster    string
-	HttpClient *http.Client
+	AppId                string
+	Key                  string
+	Secret               string
+	Host                 string // host or host:port pair
+	PushNotificationHost string
+	Secure               bool // true for HTTPS
+	Cluster              string
+	HttpClient           *http.Client
 }
 
 /*
@@ -449,10 +450,8 @@ func (c *Client) Notify(pushNotification PushNotification) error {
 		return err
 	}
 
-	path := fmt.Sprintf("/apps/%s/notifications", c.AppId)
-	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil, c.Cluster)
-	if err != nil {
-		return err
+	if c.PushNotificationHost == "" {
+		return errors.New("no Client.PushNotificationHost provided")
 	}
 
 	requestBody, err := json.Marshal(pushNotification)
@@ -460,6 +459,13 @@ func (c *Client) Notify(pushNotification PushNotification) error {
 		return err
 	}
 
-	_, err = c.request("POST", u, requestBody)
+	path := fmt.Sprintf("/%s/%s/apps/%s/notifications", PushNotiAPIPrefixDefault, PushNotiAPIVersionDefault, c.AppId)
+
+	url, err := createRequestURL("POST", c.PushNotificationHost, path, c.Key, c.Secret, authTimestamp(), c.Secure, requestBody, nil, c.Cluster)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.request("POST", url, requestBody)
 	return err
 }

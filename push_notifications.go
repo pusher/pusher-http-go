@@ -3,18 +3,21 @@ package pusher
 import "errors"
 
 const (
-	WebhookLvlInfo  = "INFO"
-	WebhookLvlDebug = "DEBUG"
+	WebhookLvlInfo            = "INFO"
+	WebhookLvlDebug           = "DEBUG"
+	PushNotiHostDefault       = "nativepush-cluster1.pusher.com"
+	PushNotiAPIPrefixDefault  = "server_api"
+	PushNotiAPIVersionDefault = "v1"
 )
 
 // PushNotification is a type for requesting push notifications
 type PushNotification struct {
-	Interests    []string `json:"interests"`
-	WebhookURL   string   `json:"webhook_url,omitempty"`
-	WebhookLevel string   `json:"webhook_level,omitempty"`
-	APNS         []byte   `json:"apns,omitempty"`
-	GCM          []byte   `json:"gcm,omitempty"`
-	FCM          []byte   `json:"fcm,omitempty"`
+	Interests    []string    `json:"interests"`
+	WebhookURL   string      `json:"webhook_url,omitempty"`
+	WebhookLevel string      `json:"webhook_level,omitempty"`
+	APNS         interface{} `json:"apns,omitempty"`
+	GCM          interface{} `json:"gcm,omitempty"`
+	FCM          interface{} `json:"fcm,omitempty"`
 }
 
 // validate checks the PushNotification has 0<Interests<11 and has a

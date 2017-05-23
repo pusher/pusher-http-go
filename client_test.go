@@ -285,7 +285,7 @@ func TestNotifySuccess(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
 		Interests:    []string{"testInterest"},
@@ -309,7 +309,7 @@ func TestNotifyServerError(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
 		Interests:    []string{"testInterest"},
@@ -332,7 +332,28 @@ func TestNotifyInvalidPushNotification(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		Interests:    []string{"testInterest"},
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+	}
+
+	err := client.Notify(testPN)
+
+	assert.Error(t, err)
+}
+
+func TestNotifyNoPushNotificationHost(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusInternalServerError)
+	}))
+
+	defer server.Close()
+
+	client := Client{AppId: "id", Key: "key", Secret: "secret", HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
 		Interests:    []string{"testInterest"},
