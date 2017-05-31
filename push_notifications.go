@@ -37,3 +37,9 @@ func (pN *notificationRequest) validate() error {
 
 	return nil
 }
+
+// NotifyResponse is returned from a successful PushNotification and contain the number of
+// subscribers to those interests
+type NotifyResponse struct {
+	NumSubscribers int `json:"number_of_subscribers"`
+}

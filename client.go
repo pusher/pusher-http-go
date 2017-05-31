@@ -446,7 +446,7 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 Notify is used to send native push notifications via Apple APNS or Google GCM/FCM systems. Please make sure that
 you have provided a Client.PushNotificationHost, please see Pusher docs for details: https://pusher.com/docs/push_notifications
 */
-func (c *Client) Notify(interests []string, pushNotification PushNotification) error {
+func (c *Client) Notify(interests []string, pushNotification PushNotification) (*NotifyResponse, error) {
 	pNRequest := notificationRequest{
 		interests,
 		&pushNotification,
@@ -454,25 +454,32 @@ func (c *Client) Notify(interests []string, pushNotification PushNotification) e
 
 	err := pNRequest.validate()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if c.PushNotificationHost == "" {
-		return errors.New("no Client.PushNotificationHost provided")
+		return nil, errors.New("no Client.PushNotificationHost provided")
 	}
 
-	requestBody, err := json.Marshal(pushNotification)
+	requestBody, err := json.Marshal(pNRequest)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	path := fmt.Sprintf("/%s/%s/apps/%s/notifications", PushNotifAPIPrefixDefault, PushNotifAPIVersionDefault, c.AppId)
 
 	url, err := createRequestURL("POST", c.PushNotificationHost, path, c.Key, c.Secret, authTimestamp(), c.Secure, requestBody, nil, c.Cluster)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = c.request("POST", url, requestBody)
-	return err
+	byteResponse, err := c.request("POST", url, requestBody)
+
+	var response *NotifyResponse
+	err = json.Unmarshal(byteResponse, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, err
 }

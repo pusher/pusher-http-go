@@ -280,6 +280,7 @@ func TestNotifySuccess(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
+		res.Write([]byte(`{"number_of_subscribers": 10}`))
 	}))
 
 	defer server.Close()
@@ -294,10 +295,35 @@ func TestNotifySuccess(t *testing.T) {
 	}
 
 	interests := []string{"testInterest"}
-	err := client.Notify(interests, testPN)
+	response, err := client.Notify(interests, testPN)
 
+	assert.Equal(t, 10, response.NumSubscribers, "returned response.NumSubscribers should be equal to the server response body amount")
 	assert.NoError(t, err)
+}
 
+func TestNotifySuccessNoSubscribers(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusOK)
+		res.Write([]byte(`{"number_of_subscribers":0}`))
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+		GCM:          []byte(`hello`),
+	}
+
+	interests := []string{"testInterest"}
+	response, err := client.Notify(interests, testPN)
+
+	assert.Equal(t, 0, response.NumSubscribers, "returned response.NumSubscribers should be equal to the server response body amount")
+	assert.NoError(t, err)
 }
 
 func TestNotifyServerError(t *testing.T) {
@@ -319,8 +345,9 @@ func TestNotifyServerError(t *testing.T) {
 
 	interests := []string{"testInterest"}
 
-	err := client.Notify(interests, testPN)
+	response, err := client.Notify(interests, testPN)
 
+	assert.Nil(t, response, "response should return nil on error")
 	assert.Error(t, err)
 }
 
@@ -342,8 +369,9 @@ func TestNotifyInvalidPushNotification(t *testing.T) {
 
 	interests := []string{"testInterest"}
 
-	err := client.Notify(interests, testPN)
+	response, err := client.Notify(interests, testPN)
 
+	assert.Nil(t, response, "response should return nil on error")
 	assert.Error(t, err)
 }
 
@@ -364,7 +392,8 @@ func TestNotifyNoPushNotificationHost(t *testing.T) {
 
 	interests := []string{"testInterest"}
 
-	err := client.Notify(interests, testPN)
+	response, err := client.Notify(interests, testPN)
 
+	assert.Nil(t, response, "response should return nil on error")
 	assert.Error(t, err)
 }
