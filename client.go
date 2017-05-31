@@ -446,8 +446,13 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 Notify is used to send native push notifications via Apple APNS or Google GCM/FCM systems. Please make sure that
 you have provided a Client.PushNotificationHost, please see Pusher docs for details: https://pusher.com/docs/push_notifications
 */
-func (c *Client) Notify(pushNotification PushNotification) error {
-	err := pushNotification.validate()
+func (c *Client) Notify(interests []string, pushNotification PushNotification) error {
+	pNRequest := notificationRequest{
+		interests,
+		&pushNotification,
+	}
+
+	err := pNRequest.validate()
 	if err != nil {
 		return err
 	}

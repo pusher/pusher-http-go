@@ -2,50 +2,66 @@ package pusher
 
 import "testing"
 
-func TestPushNotificationValidate(t *testing.T) {
-	pnNoPayload := PushNotification{
-		Interests:    []string{"testInterest"},
+func TestNotificationRequestValidate(t *testing.T) {
+	testPayload := PushNotification{
 		WebhookURL:   "testURL",
 		WebhookLevel: WebhookLvlDebug,
 	}
 
-	err := pnNoPayload.validate()
+	pNReqNoPayload := notificationRequest{
+		[]string{"testInterest"},
+		&testPayload,
+	}
+
+	err := pNReqNoPayload.validate()
 	if err == nil {
 		t.Error("Invalid PushNotification with no GCM, FCM or APNS payload did not return an error")
 	}
 
-	pnNoInterests := PushNotification{
-		Interests:    []string{},
+	testPayload = PushNotification{
 		WebhookURL:   "testURL",
 		WebhookLevel: WebhookLvlDebug,
 		GCM:          []byte(`hello`),
 	}
 
-	err = pnNoInterests.validate()
+	pnReqNoInterests := notificationRequest{
+		[]string{},
+		&testPayload,
+	}
+
+	err = pnReqNoInterests.validate()
 	if err == nil {
 		t.Error("Invalid PushNotification with no Interests did not return an error")
 	}
 
-	pnManyInterests := PushNotification{
-		Interests:    []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"},
+	testPayload = PushNotification{
 		WebhookURL:   "testURL",
 		WebhookLevel: WebhookLvlDebug,
 		GCM:          []byte(`hello`),
 	}
 
-	err = pnManyInterests.validate()
+	pnReqManyInterests := notificationRequest{
+		[]string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"},
+		&testPayload,
+	}
+
+	err = pnReqManyInterests.validate()
 	if err == nil {
 		t.Error("Invalid PushNotification with 10 < Interests did not return an error")
 	}
 
-	pnValid := PushNotification{
-		Interests:    []string{"testInterest"},
+	testPayload = PushNotification{
 		WebhookURL:   "testURL",
 		WebhookLevel: WebhookLvlDebug,
 		GCM:          []byte(`hello`),
 	}
 
-	err = pnValid.validate()
+	pnReqValid := notificationRequest{
+		[]string{"testInterest"},
+		&testPayload,
+	}
+
+	err = pnReqValid.validate()
 	if err != nil {
 		t.Error(err)
 	}

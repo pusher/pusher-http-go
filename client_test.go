@@ -288,13 +288,13 @@ func TestNotifySuccess(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		Interests:    []string{"testInterest"},
 		WebhookURL:   "testURL",
 		WebhookLevel: WebhookLvlDebug,
 		GCM:          []byte(`hello`),
 	}
 
-	err := client.Notify(testPN)
+	interests := []string{"testInterest"}
+	err := client.Notify(interests, testPN)
 
 	assert.NoError(t, err)
 
@@ -312,13 +312,14 @@ func TestNotifyServerError(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		Interests:    []string{"testInterest"},
 		WebhookURL:   "testURL",
 		WebhookLevel: WebhookLvlDebug,
 		GCM:          []byte(`hello`),
 	}
 
-	err := client.Notify(testPN)
+	interests := []string{"testInterest"}
+
+	err := client.Notify(interests, testPN)
 
 	assert.Error(t, err)
 }
@@ -335,12 +336,13 @@ func TestNotifyInvalidPushNotification(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		Interests:    []string{"testInterest"},
 		WebhookURL:   "testURL",
 		WebhookLevel: WebhookLvlDebug,
 	}
 
-	err := client.Notify(testPN)
+	interests := []string{"testInterest"}
+
+	err := client.Notify(interests, testPN)
 
 	assert.Error(t, err)
 }
@@ -356,12 +358,13 @@ func TestNotifyNoPushNotificationHost(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		Interests:    []string{"testInterest"},
 		WebhookURL:   "testURL",
 		WebhookLevel: WebhookLvlDebug,
 	}
 
-	err := client.Notify(testPN)
+	interests := []string{"testInterest"}
+
+	err := client.Notify(interests, testPN)
 
 	assert.Error(t, err)
 }
