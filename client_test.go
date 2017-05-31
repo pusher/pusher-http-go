@@ -304,7 +304,7 @@ func TestNotifySuccess(t *testing.T) {
 func TestNotifySuccessNoSubscribers(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		res.WriteHeader(http.StatusOK)
+		res.WriteHeader(http.StatusAccepted)
 		res.Write([]byte(`{"number_of_subscribers":0}`))
 	}))
 
