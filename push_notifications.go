@@ -5,7 +5,7 @@ import "errors"
 const (
 	WebhookLvlInfo             = "INFO"
 	WebhookLvlDebug            = "DEBUG"
-	PushNotiHostDefault        = "nativepush-cluster1.pusher.com"
+	PushNotifHostDefault       = "nativepush-cluster1.pusher.com"
 	PushNotifAPIPrefixDefault  = "server_api"
 	PushNotifAPIVersionDefault = "v1"
 )
@@ -26,12 +26,12 @@ type notificationRequest struct {
 
 // validate checks the notificationRequest has 0<Interests<11 and has a
 // APNS, GCM or FCM payload
-func (pN *notificationRequest) validate() error {
-	if 0 == len(pN.Interests) || len(pN.Interests) > 10 {
+func (pn *notificationRequest) validate() error {
+	if 0 == len(pn.Interests) || len(pn.Interests) > 10 {
 		return errors.New("Interests must contain between 1 and 10 interests")
 	}
 
-	if pN.APNS == nil && pN.GCM == nil && pN.FCM == nil {
+	if pn.APNS == nil && pn.GCM == nil && pn.FCM == nil {
 		return errors.New("PushNotification must contain a GCM, FCM or APNS payload")
 	}
 

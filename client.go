@@ -458,7 +458,7 @@ func (c *Client) Notify(interests []string, pushNotification PushNotification) (
 	}
 
 	if c.PushNotificationHost == "" {
-		return nil, errors.New("no Client.PushNotificationHost provided")
+		return nil, errors.New("PushNotificationHost not provided")
 	}
 
 	requestBody, err := json.Marshal(pNRequest)
