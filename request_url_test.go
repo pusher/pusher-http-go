@@ -1,8 +1,9 @@
 package pusher
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTriggerRequestUrl(t *testing.T) {
@@ -68,7 +69,7 @@ func TestGetUsersUrl(t *testing.T) {
 }
 
 func TestBrokenUrl(t *testing.T) {
-	result, err := createRequestURL("GET", "", "#foo", "d41a439c438a100756f5", "4bf35003e819bb138249", "1427053709", false, nil, nil, "")
+	result, err := createRequestURL("GET", "", "#%$)(!foo", "d41a439c438a100756f5", "4bf35003e819bb138249", "1427053709", false, nil, nil, "")
 	assert.Error(t, err)
 	assert.Equal(t, "", result)
 }
