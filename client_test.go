@@ -2,7 +2,6 @@ package pusher
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +9,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTriggerSuccessCase(t *testing.T) {
@@ -273,4 +274,126 @@ func TestInitialisationFromENV(t *testing.T) {
 	client, _ := ClientFromEnv("PUSHER_URL")
 	expectedClient := &Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppId: "104060", Host: "api.pusherapp.com"}
 	assert.Equal(t, expectedClient, client)
+}
+
+func TestNotifySuccess(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusOK)
+		res.Write([]byte(`{"number_of_subscribers": 10}`))
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+		GCM:          []byte(`hello`),
+	}
+
+	interests := []string{"testInterest"}
+	response, err := client.Notify(interests, testPN)
+
+	assert.Equal(t, 10, response.NumSubscribers, "returned response.NumSubscribers should be equal to the server response body amount")
+	assert.NoError(t, err)
+}
+
+func TestNotifySuccessNoSubscribers(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusAccepted)
+		res.Write([]byte(`{"number_of_subscribers":0}`))
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+		GCM:          []byte(`hello`),
+	}
+
+	interests := []string{"testInterest"}
+	response, err := client.Notify(interests, testPN)
+
+	assert.Equal(t, 0, response.NumSubscribers, "returned response.NumSubscribers should be equal to the server response body amount")
+	assert.NoError(t, err)
+}
+
+func TestNotifyServerError(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusInternalServerError)
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+		GCM:          []byte(`hello`),
+	}
+
+	interests := []string{"testInterest"}
+
+	response, err := client.Notify(interests, testPN)
+
+	assert.Nil(t, response, "response should return nil on error")
+	assert.Error(t, err)
+}
+
+func TestNotifyInvalidPushNotification(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusInternalServerError)
+	}))
+
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+	}
+
+	interests := []string{"testInterest"}
+
+	response, err := client.Notify(interests, testPN)
+
+	assert.Nil(t, response, "response should return nil on error")
+	assert.Error(t, err)
+}
+
+func TestNotifyNoPushNotificationHost(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusInternalServerError)
+	}))
+
+	defer server.Close()
+
+	client := Client{AppId: "id", Key: "key", Secret: "secret", HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+
+	testPN := PushNotification{
+		WebhookURL:   "testURL",
+		WebhookLevel: WebhookLvlDebug,
+	}
+
+	interests := []string{"testInterest"}
+
+	response, err := client.Notify(interests, testPN)
+
+	assert.Nil(t, response, "response should return nil on error")
+	assert.Error(t, err)
 }

@@ -21,6 +21,7 @@ In order to use this library, you need to have a free account on <http://pusher.
   - [Authenticating Channels](#authenticating-channels)
   - [Application state](#application-state)
   - [Webhook validation](#webhook-validation)
+  - [Push Notifications (beta)](#push-notifications)
 - [Feature Support](#feature-support)
 - [Developing the Library](#developing-the-library)
   - [Running the tests](#running-the-tests)
@@ -541,6 +542,48 @@ func pusherWebhook(res http.ResponseWriter, req *http.Request) {
 }
 ```
 
+### Push Notifications
+
+Send a push notification to native iOS and Android apps even when they are not open on the device. You can combine push notifications with our WebSocket system to deliver data to users whether they are connected or not. For more information see <https://pusher.com/docs/push_notifications>.
+
+##### `func (c *Client) Notify`
+
+|Argument|Description|
+|:-:|:-:|
+|PushNotification `pusher.PushNotification` | The struct containing your push notification data |
+
+|Return Value|Description|
+|:-:|:-:|
+|err `error` | If Notify is unsuccessful, an error value will be passed.|
+
+###### Custom Types
+
+**pusher.PushNotification**
+
+```go
+type PushNotification struct {
+	Interests    []string    
+	WebhookURL   string      
+	WebhookLevel string      
+	APNS         interface{} 
+	GCM          interface{} 
+	FCM          interface{} 
+}
+```
+
+###### Example
+
+```go
+func sendPushNotification(client pusher.Client, GCMNotification interface{}) error {
+    pn := pusher.PushNotification{
+        Interests: []string{"testInterest"},
+        GCM: GCMNotification,
+    }
+
+    return client.Notify(pn)    
+}
+```
+
 ## Feature Support
 
 Feature                                    | Supported
@@ -554,6 +597,7 @@ Authenticating presence channels           | *&#10004;*
 Get the list of channels in an application | *&#10004;*
 Get the state of a single channel          | *&#10004;*
 Get a list of users in a presence channel  | *&#10004;*
+Push Notifications                         | *&#10004;*
 WebHook validation                         | *&#10004;*
 Heroku add-on support                      | *&#10004;*
 Debugging & Logging                        | *&#10004;*
