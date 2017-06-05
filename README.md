@@ -47,6 +47,7 @@ func main(){
 	  AppId: "your_app_id",
 	  Key: "your_app_key",
 	  Secret: "your_app_secret",
+	  Cluster: "your_app_cluster",
 	}
 
 	data := map[string]string{"message": "hello world"}
@@ -66,6 +67,7 @@ client := pusher.Client{
   AppId: "your_app_id",
   Key: "your_app_key",
   Secret: "your_app_secret",
+  Cluster: "your_app_cluster",
 }
 ```
 
@@ -75,6 +77,12 @@ client := pusher.Client{
 
 ```go
 client := pusher.ClientFromURL("http://key:secret@api.pusherapp.com/apps/app_id")
+```
+Note: the API URL differs depending on the cluster your app was created in:
+
+```
+http://key:secret@eu-api.pusherapp.com/apps/app_id")
+http://key:secret@ap1-api.pusherapp.com/apps/app_id")
 ```
 
 #### Instantiation From Environment Variable
