@@ -81,8 +81,8 @@ client := pusher.ClientFromURL("http://key:secret@api.pusherapp.com/apps/app_id"
 Note: the API URL differs depending on the cluster your app was created in:
 
 ```
-http://key:secret@eu-api.pusherapp.com/apps/app_id")
-http://key:secret@ap1-api.pusherapp.com/apps/app_id")
+http://key:secret@api-eu.pusher.com/apps/app_id
+http://key:secret@api-ap1.pusher.com/apps/app_id
 ```
 
 #### Instantiation From Environment Variable
