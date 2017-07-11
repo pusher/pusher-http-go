@@ -572,7 +572,6 @@ Send a push notification to native iOS and Android apps even when they are not o
 type PushNotification struct {
 	Interests    []string    
 	WebhookURL   string      
-	WebhookLevel string      
 	APNS         interface{} 
 	GCM          interface{} 
 	FCM          interface{} 

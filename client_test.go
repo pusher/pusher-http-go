@@ -289,9 +289,8 @@ func TestNotifySuccess(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
-		GCM:          []byte(`hello`),
+		WebhookURL: "testURL",
+		GCM:        []byte(`hello`),
 	}
 
 	interests := []string{"testInterest"}
@@ -314,9 +313,8 @@ func TestNotifySuccessNoSubscribers(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
-		GCM:          []byte(`hello`),
+		WebhookURL: "testURL",
+		GCM:        []byte(`hello`),
 	}
 
 	interests := []string{"testInterest"}
@@ -338,9 +336,8 @@ func TestNotifyServerError(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
-		GCM:          []byte(`hello`),
+		WebhookURL: "testURL",
+		GCM:        []byte(`hello`),
 	}
 
 	interests := []string{"testInterest"}
@@ -363,8 +360,7 @@ func TestNotifyInvalidPushNotification(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
+		WebhookURL: "testURL",
 	}
 
 	interests := []string{"testInterest"}
@@ -386,8 +382,7 @@ func TestNotifyNoPushNotificationHost(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret", HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	testPN := PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
+		WebhookURL: "testURL",
 	}
 
 	interests := []string{"testInterest"}
