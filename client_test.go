@@ -349,6 +349,7 @@ func TestNotifyServerError(t *testing.T) {
 
 	assert.Nil(t, response, "response should return nil on error")
 	assert.Error(t, err)
+	assert.EqualError(t, err, "Status Code: 500 - ")
 }
 
 func TestNotifyInvalidPushNotification(t *testing.T) {
