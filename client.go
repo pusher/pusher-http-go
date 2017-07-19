@@ -474,6 +474,9 @@ func (c *Client) Notify(interests []string, pushNotification PushNotification) (
 	}
 
 	byteResponse, err := c.request("POST", url, requestBody)
+	if err != nil {
+		return nil, err
+	}
 
 	var response *NotifyResponse
 	err = json.Unmarshal(byteResponse, &response)
