@@ -3,8 +3,6 @@ package pusher
 import "errors"
 
 const (
-	WebhookLvlInfo             = "INFO"
-	WebhookLvlDebug            = "DEBUG"
 	PushNotifHostDefault       = "nativepush-cluster1.pusher.com"
 	PushNotifAPIPrefixDefault  = "server_api"
 	PushNotifAPIVersionDefault = "v1"
@@ -12,11 +10,10 @@ const (
 
 // PushNotification is a type for requesting push notifications
 type PushNotification struct {
-	WebhookURL   string      `json:"webhook_url,omitempty"`
-	WebhookLevel string      `json:"webhook_level,omitempty"`
-	APNS         interface{} `json:"apns,omitempty"`
-	GCM          interface{} `json:"gcm,omitempty"`
-	FCM          interface{} `json:"fcm,omitempty"`
+	WebhookURL string      `json:"webhook_url,omitempty"`
+	APNS       interface{} `json:"apns,omitempty"`
+	GCM        interface{} `json:"gcm,omitempty"`
+	FCM        interface{} `json:"fcm,omitempty"`
 }
 
 type notificationRequest struct {

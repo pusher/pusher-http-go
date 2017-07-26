@@ -4,8 +4,7 @@ import "testing"
 
 func TestNotificationRequestValidate(t *testing.T) {
 	testPayload := PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
+		WebhookURL: "testURL",
 	}
 
 	pNReqNoPayload := notificationRequest{
@@ -19,9 +18,8 @@ func TestNotificationRequestValidate(t *testing.T) {
 	}
 
 	testPayload = PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
-		GCM:          []byte(`hello`),
+		WebhookURL: "testURL",
+		GCM:        []byte(`hello`),
 	}
 
 	pnReqNoInterests := notificationRequest{
@@ -35,9 +33,8 @@ func TestNotificationRequestValidate(t *testing.T) {
 	}
 
 	testPayload = PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
-		GCM:          []byte(`hello`),
+		WebhookURL: "testURL",
+		GCM:        []byte(`hello`),
 	}
 
 	pnReqManyInterests := notificationRequest{
@@ -51,9 +48,8 @@ func TestNotificationRequestValidate(t *testing.T) {
 	}
 
 	testPayload = PushNotification{
-		WebhookURL:   "testURL",
-		WebhookLevel: WebhookLvlDebug,
-		GCM:          []byte(`hello`),
+		WebhookURL: "testURL",
+		GCM:        []byte(`hello`),
 	}
 
 	pnReqValid := notificationRequest{
