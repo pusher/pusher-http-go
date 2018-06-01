@@ -1,6 +1,7 @@
 package pusher
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -49,6 +50,7 @@ type Client struct {
 	Secure               bool // true for HTTPS
 	Cluster              string
 	HttpClient           *http.Client
+	EncryptionKey        string //for E2E
 }
 
 /*
@@ -169,15 +171,22 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 		return nil, errors.New("You cannot trigger on more than 10 channels at once")
 	}
 
+	if len(channels) > 1 && encryptedChannelPresent(channels) {
+		return nil, errors.New("You cannot trigger batch events when using encrypted channels")
+	}
+
 	if !channelsAreValid(channels) {
 		return nil, errors.New("At least one of your channels' names are invalid")
+	}
+	if !validEncryptionKey(c.EncryptionKey) && encryptedChannelPresent(channels) {
+		return nil, errors.New("Your Encryption key is not of the correct format")
 	}
 
 	if err := validateSocketID(socketID); err != nil {
 		return nil, err
 	}
 
-	payload, err := createTriggerPayload(channels, eventName, data, socketID)
+	payload, err := createTriggerPayload(channels, eventName, data, socketID, c.EncryptionKey)
 	if err != nil {
 		return nil, err
 	}
@@ -372,8 +381,8 @@ func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (
 }
 
 func (c *Client) authenticateChannel(params []byte, member *MemberData) (response []byte, err error) {
-	channelName, socketID, err := parseAuthRequestParams(params)
 
+	channelName, socketID, err := parseAuthRequestParams(params)
 	if err != nil {
 		return
 	}
@@ -397,7 +406,15 @@ func (c *Client) authenticateChannel(params []byte, member *MemberData) (respons
 		stringToSign = strings.Join([]string{stringToSign, jsonUserData}, ":")
 	}
 
-	_response := createAuthMap(c.Key, c.Secret, stringToSign)
+	var _response map[string]string
+
+	if isEncryptedChannel(channelName) {
+		sharedSecret := generateSharedSecret(channelName, c.EncryptionKey)
+		sharedSecretB64 := base64.StdEncoding.EncodeToString(sharedSecret[:])
+		_response = createAuthMap(c.Key, c.Secret, stringToSign, sharedSecretB64)
+	} else {
+		_response = createAuthMap(c.Key, c.Secret, stringToSign, "")
+	}
 
 	if member != nil {
 		_response["channel_data"] = jsonUserData
