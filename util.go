@@ -53,7 +53,7 @@ func encryptedChannelPresent(channels []string) bool {
 }
 
 func isEncryptedChannel(channel string) bool {
-	if strings.HasPrefix(channel, "encrypted-") {
+	if strings.HasPrefix(channel, "private-encrypted-") {
 		return true
 	}
 	return false
