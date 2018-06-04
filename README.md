@@ -38,7 +38,10 @@ $ go get github.com/pusher/pusher-http-go
 ```go
 package main
 
-import "github.com/pusher/pusher-http-go"
+import (
+	"fmt"
+	"github.com/pusher/pusher-http-go"
+)
 
 func main(){
 
@@ -53,7 +56,10 @@ func main(){
 	data := map[string]string{"message": "hello world"}
 
 	// trigger an event on a channel, along with a data payload
-	client.Trigger("test_channel", "my_event", data)
+	_, err := client.Trigger("test_channel", "my_event", data)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 }
 ```
