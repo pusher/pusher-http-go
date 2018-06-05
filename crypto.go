@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	// "fmt"
@@ -70,4 +71,39 @@ func generateNonce() [24]byte {
 
 func generateSharedSecret(channel string, encryptionKey string) [32]byte {
 	return sha256.Sum256([]byte(channel + encryptionKey))
+}
+
+func decryptEvents(webhookData Webhook, encryptionKey string) (*Webhook, error) {
+	// TODO: This is nasty as heck, could probably do with some tidying
+	decryptedWebhooks := &Webhook{}
+	decryptedWebhooks.TimeMs = webhookData.TimeMs
+	for _, event := range webhookData.Events {
+
+		if isEncryptedPayload(event.Data) {
+			payload := event.Data
+			splitPayload := strings.Split(payload, ":")
+
+			payloadbytes, err := base64.StdEncoding.DecodeString(splitPayload[2])
+			if err != nil {
+				return decryptedWebhooks, err
+			}
+			box := []byte(payloadbytes)
+
+			var nonce [24]byte
+			nonceBytes, err2 := base64.StdEncoding.DecodeString(splitPayload[1])
+			if err2 != nil {
+				return decryptedWebhooks, err
+			}
+			copy(nonce[:], []byte(nonceBytes[:]))
+
+			sharedSecret := generateSharedSecret(event.Channel, encryptionKey)
+			decryptedBox, ok := secretbox.Open([]byte{}, box, &nonce, &sharedSecret)
+			if !ok {
+				return decryptedWebhooks, errors.New("Failed to decrypt event, possibly wrong key")
+			}
+			event.Data = string(decryptedBox)
+		}
+		decryptedWebhooks.Events = append(decryptedWebhooks.Events, event)
+	}
+	return decryptedWebhooks, nil
 }
