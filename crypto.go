@@ -39,7 +39,7 @@ func createAuthMap(key, secret, stringToSign string, sharedSecret string) map[st
 	authSignature := hmacSignature(stringToSign, secret)
 	authString := strings.Join([]string{key, authSignature}, ":")
 	if sharedSecret != "" {
-		return map[string]string{"auth": authString, "shared-secret": sharedSecret}
+		return map[string]string{"auth": authString, "shared_secret": sharedSecret}
 	}
 	return map[string]string{"auth": authString}
 }
