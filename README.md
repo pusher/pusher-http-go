@@ -52,7 +52,7 @@ func main(){
     data := map[string]string{"message": "hello world"}
 
     // trigger an event on a channel, along with a data payload
-    client.Trigger("test_channel", "my_event", data)
+    client.Trigger("my-channel", "my_event", data)
 }
 ```
 
@@ -164,7 +164,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
         HttpClient: urlfetchClient,
     }
 
-    client.Trigger("test_channel", "my_event", map[string]string{"message": "hello world"})
+    client.Trigger("my-channel", "my_event", map[string]string{"message": "hello world"})
 
     fmt.Fprint(w, "Hello, world!")
 }
