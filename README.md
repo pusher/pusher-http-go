@@ -74,7 +74,7 @@ client := pusher.Client{
 #### Instantiation From URL
 
 ```go
-client := pusher.ClientFromURL("http://key:secret@api.pusherapp.com/apps/app_id")
+client := pusher.ClientFromURL("http://<key>:<secret>@api-<cluster>.pusher.com/apps/app_id")
 ```
 
 Note: the API URL differs depending on the cluster your app was created in:
