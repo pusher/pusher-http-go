@@ -1,8 +1,6 @@
 ---
 language: go
 go:
-  - 1.3
-  - 1.4
   - 1.5
   - 1.6
   - 1.7
@@ -12,6 +10,7 @@ install:
   - go get github.com/stretchr/testify/assert
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
+  - go get golang.org/x/crypto/nacl/secretbox
   - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
   - $HOME/gopath/bin/goveralls -service=travis-ci -repotoken=$COVERALLS_TOKEN
 script:
