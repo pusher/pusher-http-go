@@ -50,11 +50,11 @@ func md5Signature(body []byte) string {
 	return hex.EncodeToString(_bodyMD5.Sum(nil))
 }
 
-func encrypt(channel string, databytes []byte, encryptionKey string) string {
+func encrypt(channel string, data []byte, encryptionKey string) string {
 	sharedSecret := generateSharedSecret(channel, encryptionKey)
 	nonce := generateNonce()
 	nonceB64 := base64.StdEncoding.EncodeToString(nonce[:])
-	cipherText := secretbox.Seal([]byte{}, databytes, &nonce, &sharedSecret)
+	cipherText := secretbox.Seal([]byte{}, data, &nonce, &sharedSecret)
 	cipherTextB64 := base64.StdEncoding.EncodeToString(cipherText)
 	return formatMessage(nonceB64, cipherTextB64)
 }
