@@ -273,7 +273,7 @@ For more information see our [docs](http://pusher.com/docs/authenticating_users)
 func pusherAuth(res http.ResponseWriter, req *http.Request) {
     params, _ := ioutil.ReadAll(req.Body)
     response, err := client.AuthenticatePrivateChannel(params)
-    f err != nil {
+    if err != nil {
         panic(err)
     }
 
