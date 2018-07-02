@@ -7,13 +7,18 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 
 	"golang.org/x/crypto/nacl/secretbox"
 )
+
+type EncryptedMessage struct {
+	Nonce      string `json:"nonce"`
+	Ciphertext string `json:"ciphertext"`
+}
 
 func hmacSignature(toSign, secret string) string {
 	return hex.EncodeToString(hmacBytes([]byte(toSign), []byte(secret)))
@@ -60,7 +65,16 @@ func encrypt(channel string, data []byte, encryptionKey string) string {
 }
 
 func formatMessage(nonce string, cipherText string) string {
-	return fmt.Sprintf("encrypted_data:%s:%s", nonce, cipherText)
+	encryptedMessage := &EncryptedMessage{
+		Nonce:      nonce,
+		Ciphertext: cipherText,
+	}
+	json, err := json.Marshal(encryptedMessage)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(json)
 }
 
 func generateNonce() [24]byte {
@@ -81,15 +95,15 @@ func decryptEvents(webhookData Webhook, encryptionKey string) (*Webhook, error) 
 	decryptedWebhooks.TimeMs = webhookData.TimeMs
 	for _, event := range webhookData.Events {
 
-		if isEncryptedPayload(event.Data) {
-			splitData := strings.Split(event.Data, ":")
-
-			payloadbytes, decodePayloadErr := base64.StdEncoding.DecodeString(splitData[2])
+		if isEncryptedChannel(event.Channel) {
+			var encryptedMessage EncryptedMessage
+			json.Unmarshal([]byte(event.Data), &encryptedMessage)
+			cipherTextBytes, decodePayloadErr := base64.StdEncoding.DecodeString(encryptedMessage.Ciphertext)
 			if decodePayloadErr != nil {
 				return decryptedWebhooks, decodePayloadErr
 			}
 
-			nonceBytes, decodeNonceErr := base64.StdEncoding.DecodeString(splitData[1])
+			nonceBytes, decodeNonceErr := base64.StdEncoding.DecodeString(encryptedMessage.Nonce)
 			if decodeNonceErr != nil {
 				return decryptedWebhooks, decodeNonceErr
 			}
@@ -99,7 +113,7 @@ func decryptEvents(webhookData Webhook, encryptionKey string) (*Webhook, error) 
 			copy(nonce[:], []byte(nonceBytes[:]))
 
 			sharedSecret := generateSharedSecret(event.Channel, encryptionKey)
-			box := []byte(payloadbytes)
+			box := []byte(cipherTextBytes)
 			decryptedBox, ok := secretbox.Open([]byte{}, box, &nonce, &sharedSecret)
 			if !ok {
 				return decryptedWebhooks, errors.New("Failed to decrypt event, possibly wrong key?")

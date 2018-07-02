@@ -2,7 +2,6 @@ package pusher
 
 import (
 	"encoding/hex"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -76,16 +75,15 @@ func TestEncrypt(t *testing.T) {
 	body := []byte("Hello!")
 	encryptionKey := "This is a string that is 32 chars"
 	cipherText := encrypt(channel, body, encryptionKey)
-	t.Log(cipherText)
-	assert.NotNil(t, strings.Split(cipherText, ":")[2])
-	assert.NotEqual(t, strings.Split(cipherText, ":")[2], body)
+	assert.NotNil(t, cipherText)
+	assert.NotEqual(t, cipherText, body)
 }
 
 func TestFormatMessage(t *testing.T) {
 	nonce := "a"
 	cipherText := "b"
 	formatted := formatMessage(nonce, cipherText)
-	assert.Equal(t, formatted, "encrypted_data:a:b")
+	assert.Equal(t, formatted, "{\"nonce\":\"a\",\"ciphertext\":\"b\"}")
 }
 
 func TestGenerateSharedSecret(t *testing.T) {
@@ -100,7 +98,7 @@ func TestGenerateSharedSecret(t *testing.T) {
 func TestDecryptValidKey(t *testing.T) {
 	channel := "private-encrypted-bla"
 	plaintext := "Hello!"
-	cipherText := "encrypted_data:sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T:zoDEe8dA3nDXKsybAWce/hXGW4szJw=="
+	cipherText := "{\"nonce\":\"sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T\",\"ciphertext\":\"zoDEe8dA3nDXKsybAWce/hXGW4szJw==\"}"
 	encryptionKey := "This is a string that is 32 chars"
 
 	encryptedWebhookData := &Webhook{
@@ -129,12 +127,12 @@ func TestDecryptValidKey(t *testing.T) {
 		},
 	}
 	decryptedWebhooks, _ := decryptEvents(*encryptedWebhookData, encryptionKey)
-	assert.Equal(t, decryptedWebhooks, expectedWebhookData)
+	assert.Equal(t, expectedWebhookData, decryptedWebhooks)
 }
 
 func TestDecryptInvalidKey(t *testing.T) {
 	channel := "private-encrypted-bla"
-	cipherText := "encrypted_data:sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T:zoDEe8dA3nDXKsybAWce/hXGW4szJw=="
+	cipherText := "{\"nonce\":\"sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T\",\"ciphertext\":\"zoDEe8dA3nDXKsybAWce/hXGW4szJw==\"}"
 	encryptionKey := "This is an invalid key 32 chars!!"
 
 	encryptedWebhookData := &Webhook{

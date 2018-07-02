@@ -59,13 +59,6 @@ func isEncryptedChannel(channel string) bool {
 	return false
 }
 
-func isEncryptedPayload(payload string) bool {
-	if strings.HasPrefix(payload, "encrypted_data:") {
-		return true
-	}
-	return false
-}
-
 func validEncryptionKey(encryptionKey string) bool {
 	return len(encryptionKey) == 32
 }
