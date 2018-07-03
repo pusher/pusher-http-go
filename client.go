@@ -50,7 +50,7 @@ type Client struct {
 	Secure               bool // true for HTTPS
 	Cluster              string
 	HttpClient           *http.Client
-	EncryptionKey        string //for E2E
+	EncryptionMasterKey  string //for E2E
 }
 
 /*
@@ -178,7 +178,7 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if !channelsAreValid(channels) {
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
-	if !validEncryptionKey(c.EncryptionKey) && encryptedChannelPresent(channels) {
+	if !validEncryptionKey(c.EncryptionMasterKey) && encryptedChannelPresent(channels) {
 		return nil, errors.New("Your Encryption key is not of the correct format")
 	}
 
@@ -186,7 +186,7 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 		return nil, err
 	}
 
-	payload, err := createTriggerPayload(channels, eventName, data, socketID, c.EncryptionKey)
+	payload, err := createTriggerPayload(channels, eventName, data, socketID, c.EncryptionMasterKey)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +409,7 @@ func (c *Client) authenticateChannel(params []byte, member *MemberData) (respons
 	var _response map[string]string
 
 	if isEncryptedChannel(channelName) {
-		sharedSecret := generateSharedSecret(channelName, c.EncryptionKey)
+		sharedSecret := generateSharedSecret(channelName, c.EncryptionMasterKey)
 		sharedSecretB64 := base64.StdEncoding.EncodeToString(sharedSecret[:])
 		_response = createAuthMap(c.Key, c.Secret, stringToSign, sharedSecretB64)
 	} else {
@@ -456,7 +456,7 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 			if err != nil {
 				return unmarshalledWebhooks, err
 			}
-			decryptedWebhooks, err := decryptEvents(*unmarshalledWebhooks, c.EncryptionKey)
+			decryptedWebhooks, err := decryptEvents(*unmarshalledWebhooks, c.EncryptionMasterKey)
 			return decryptedWebhooks, err
 		}
 	}
