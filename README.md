@@ -10,7 +10,7 @@ In order to use this library, you need to have a free account on <http://pusher.
 
 This library requires you to be using at least Go 1.5 or greater. 
 
-### Table of Contents
+## Table of Contents
 
 - [Installation](#installation)
 - [Getting Started](#getting-started)
@@ -31,7 +31,7 @@ This library requires you to be using at least Go 1.5 or greater.
 
 ## Installation
 
-```
+```sh
 $ go get github.com/pusher/pusher-http-go
 ```
 
@@ -43,20 +43,18 @@ package main
 import "github.com/pusher/pusher-http-go"
 
 func main(){
+    // instantiate a client
+    client := pusher.Client{
+        AppId: "your_app_id",
+        Key: "your_app_key",
+        Secret: "your_app_secret",
+        Cluster: "your_app_cluster",
+    }
 
-	// instantiate a client
-	client := pusher.Client{
-	  AppId: "your_app_id",
-	  Key: "your_app_key",
-	  Secret: "your_app_secret",
-	  Cluster: "your_app_cluster",
-	}
+    data := map[string]string{"message": "hello world"}
 
-	data := map[string]string{"message": "hello world"}
-
-	// trigger an event on a channel, along with a data payload
-	client.Trigger("test_channel", "my_event", data)
-
+    // trigger an event on a channel, along with a data payload
+    client.Trigger("my-channel", "my_event", data)
 }
 ```
 
@@ -66,10 +64,10 @@ The easiest way to configure the library is by creating a new `Pusher` instance:
 
 ```go
 client := pusher.Client{
-  AppId: "your_app_id",
-  Key: "your_app_key",
-  Secret: "your_app_secret",
-  Cluster: "your_app_cluster",
+    AppId:   "your_app_id",
+    Key:     "your_app_key",
+    Secret:  "your_app_secret",
+    Cluster: "your_app_cluster",
 }
 ```
 
@@ -78,8 +76,9 @@ client := pusher.Client{
 #### Instantiation From URL
 
 ```go
-client := pusher.ClientFromURL("http://key:secret@api.pusherapp.com/apps/app_id")
+client := pusher.ClientFromURL("http://<key>:<secret>@api-<cluster>.pusher.com/apps/app_id")
 ```
+
 Note: the API URL differs depending on the cluster your app was created in:
 
 ```
@@ -110,7 +109,6 @@ This is `false` by default.
 If you wish to set a time-limit for each HTTP request, create a `http.Client` instance with your specified `Timeout` field and set it as the Pusher instance's `Client`:
 
 ```go
-
 httpClient := &http.Client{Timeout: time.Second * 3}
 
 pusherClient.HttpClient = httpClient
@@ -132,7 +130,7 @@ By default, this is `"api.pusherapp.com"`.
 
 Setting the `pusher.Client`'s `Cluster` property will make sure requests are sent to the cluster where you created your app.
 
-*NOTE! `Host` option has precendece over the `Cluster`, ie. if `Host` is set then `Cluster` will be ignored.
+*NOTE! If `Host` is set then `Cluster` will be ignored.
 
 ```go
 client.Cluster = "eu" // in this case requests will be made to api-eu.pusher.com.
@@ -146,32 +144,31 @@ As of version 1.0.0, this library is compatible with Google App Engine's urlfetc
 package helloworldapp
 
 import (
-	"appengine"
-	"appengine/urlfetch"
-	"fmt"
-	"github.com/pusher/pusher-http-go"
-	"net/http"
+    "appengine"
+    "appengine/urlfetch"
+    "fmt"
+    "github.com/pusher/pusher-http-go"
+    "net/http"
 )
 
 func init() {
-	http.HandleFunc("/", handler)
+    http.HandleFunc("/", handler)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+    c := appengine.NewContext(r)
+    urlfetchClient := urlfetch.Client(c)
 
-	c := appengine.NewContext(r)
-	urlfetchClient := urlfetch.Client(c)
+    client := pusher.Client{
+        AppId:      "app_id",
+        Key:        "key",
+        Secret:     "secret",
+        HttpClient: urlfetchClient,
+    }
 
-	client := pusher.Client{
-		AppId:  "app_id",
-		Key:    "key",
-		Secret: "secret",
-		HttpClient: urlfetchClient,
-	}
+    client.Trigger("my-channel", "my_event", map[string]string{"message": "hello world"})
 
-	client.Trigger("test_channel", "my_event", map[string]string{"message": "hello world"})
-
-	fmt.Fprint(w, "Hello, world!")
+    fmt.Fprint(w, "Hello, world!")
 }
 ```
 
@@ -181,16 +178,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 It is possible to trigger an event on one or more channels. Channel names can contain only characters which are alphanumeric, `_` or `-`` and have to be at most 200 characters long. Event name can be at most 200 characters long too.
 
-
 #### Single channel
 
-#####`func (c *Client) Trigger`
+##### `func (c *Client) Trigger`
 
-|Argument   |Description   |
-|:-:|:-:|
-|channel `string`   |The name of the channel you wish to trigger on.   |
-|event `string` | The name of the event you wish to trigger |
-|data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
+| Argument |Description   |
+| :-: | :-: |
+| channel `string` | The name of the channel you wish to trigger on. |
+| event `string` | The name of the event you wish to trigger |
+| data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
 
 ```go
 data := map[string]string{"hello": "world"}
@@ -199,27 +195,27 @@ client.Trigger("greeting_channel", "say_hello", data)
 
 #### Multiple channels
 
-#####`func (c. *Client) TriggerMulti`
+##### `func (c. *Client) TriggerMulti`
 
-|Argument | Description |
-|:-:|:-:|
-|channels `[]string`| A slice of channel names you wish to send an event on. The maximum length is 10.|
-|event `string` | As above.|
-|data `interface{}` |As above.|
+| Argument | Description |
+| :-: | :-: |
+| channels `[]string` | A slice of channel names you wish to send an event on. The maximum length is 10. |
+| event `string` | As above. |
+| data `interface{}` | As above. |
 
-######Example
+###### Example
 
 ```go
 client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 ```
 
-### Excluding event recipients
+#### Excluding event recipients
 
 `func (c *Client) TriggerExclusive` and `func (c *Client) TriggerMultiExclusive` follow the patterns above, except a `socket_id` is given as the last parameter.
 
 These methods allow you to exclude a recipient whose connection has that `socket_id` from receiving the event. You can read more [here](http://pusher.com/docs/duplicates).
 
-######Examples
+##### Examples
 
 **On one channel**:
 
@@ -235,11 +231,11 @@ client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", 
 
 #### Batches
 
-#####`func (c. *Client) TriggerBatch`
+##### `func (c. *Client) TriggerBatch`
 
-|Argument | Description |
-|:-:|:-:|
-|batch `[]Event`| A list of events to publish|
+| Argument | Description |
+| :-: | :-: |
+| batch `[]Event` | A list of events to publish |
 
 ###### Example
 
@@ -262,36 +258,33 @@ For more information see our [docs](http://pusher.com/docs/authenticating_users)
 
 #### Private channels
 
-
 ##### `func (c *Client) AuthenticatePrivateChannel`
 
-|Argument|Description|
-|:-:|:-:|
-|params `[]byte`| The request body sent by the client|
+| Argument | Description |
+| :-: | :-: |
+| params `[]byte` | The request body sent by the client |
 
-|Return Value|Description|
-|:-:|:-:|
-|response `[]byte` | The response to send back to the client, carrying an authentication signature |
-|err `error` | Any errors generated |
+| Return Value | Description |
+| :-: | :-: |
+| response `[]byte` | The response to send back to the client, carrying an authentication signature |
+| err `error` | Any errors generated |
 
 ###### Example
 
 ```go
 func pusherAuth(res http.ResponseWriter, req *http.Request) {
+    params, _ := ioutil.ReadAll(req.Body)
+    response, err := client.AuthenticatePrivateChannel(params)
+    if err != nil {
+        panic(err)
+    }
 
-	params, _ := ioutil.ReadAll(req.Body)
-	response, err := client.AuthenticatePrivateChannel(params)
-
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Fprintf(res, string(response))
+    fmt.Fprintf(res, string(response))
 }
 
 func main() {
-	http.HandleFunc("/pusher/auth", pusherAuth)
-	http.ListenAndServe(":5000", nil)
+    http.HandleFunc("/pusher/auth", pusherAuth)
+    http.ListenAndServe(":5000", nil)
 }
 ```
 
@@ -299,32 +292,32 @@ func main() {
 
 ```go
 func pusherJsonpAuth(res http.ResponseWriter, req *http.Request) {
-	var (
-		callback, params string
-	)
+    var (
+        callback, params string
+    )
 
-	{
-		q := r.URL.Query()
-		callback = q.Get("callback")
-		if callback == "" {
-			panic("callback missing")
-		}
-		q.Del("callback")
-		params = []byte(q.Encode())
-	}
+    {
+        q := r.URL.Query()
+        callback = q.Get("callback")
+        if callback == "" {
+            panic("callback missing")
+        }
+        q.Del("callback")
+        params = []byte(q.Encode())
+    }
 
-	response, err := client.AuthenticatePrivateChannel(params)
-	if err != nil {
-		panic(err)
-	}
+    response, err := client.AuthenticatePrivateChannel(params)
+    if err != nil {
+        panic(err)
+    }
 
-	res.Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	fmt.Fprintf(res, "%s(%s);", callback, string(response))
+    res.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+    fmt.Fprintf(res, "%s(%s);", callback, string(response))
 }
 
 func main() {
-	http.HandleFunc("/pusher/auth", pusherJsonpAuth)
-	http.ListenAndServe(":5000", nil)
+    http.HandleFunc("/pusher/auth", pusherJsonpAuth)
+    http.ListenAndServe(":5000", nil)
 }
 ```
 
@@ -334,10 +327,10 @@ Using presence channels is similar to private channels, but in order to identify
 
 ##### `func (c *Client) AuthenticatePresenceChannel`
 
-|Argument|Description|
-|:-:|:-:|
-|params `[]byte`| The request body sent by the client |
-|member `pusher.MemberData`| A struct representing what to assign to a channel member, consisting of a `UserId` and any custom `UserInfo`. See below |
+| Argument | Description |
+| :-: | :-: |
+| params `[]byte` | The request body sent by the client |
+| member `pusher.MemberData` | A struct representing what to assign to a channel member, consisting of a `UserId` and any custom `UserInfo`. See below |
 
 ###### Custom Types
 
@@ -356,16 +349,16 @@ type MemberData struct {
 params, _ := ioutil.ReadAll(req.Body)
 
 presenceData := pusher.MemberData{
-	UserId: "1",
-	UserInfo: map[string]string{
-		"twitter": "jamiepatel",
-	},
+    UserId: "1",
+    UserInfo: map[string]string{
+        "twitter": "jamiepatel",
+    },
 }
 
 response, err := client.AuthenticatePresenceChannel(params, presenceData)
 
 if err != nil {
-	panic(err)
+    panic(err)
 }
 
 fmt.Fprintf(res, response)
@@ -379,14 +372,14 @@ This library allows you to query our API to retrieve information about your appl
 
 ##### `func (c *Client) Channels`
 
-|Argument|Description|
-|:-:|:-:|
-|additionalQueries `map[string]string`| A map with query options. A key with `"filter_by_prefix"` will filter the returned channels. To get number of users subscribed to a presence-channel, specify an `"info"` key with value `"user_count"`. <br><br>Pass in `nil` if you do not wish to specify any query attributes.  |
+| Argument | Description |
+| :-: | :-: |
+| additionalQueries `map[string]string` | A map with query options. A key with `"filter_by_prefix"` will filter the returned channels. To get number of users subscribed to a presence-channel, specify an `"info"` key with value `"user_count"`. <br><br>Pass in `nil` if you do not wish to specify any query attributes. |
 
-|Return Value|Description|
-|:-:|:-:|
-|channels `*pusher.ChannelsList`|A struct representing the list of channels. See below. |
-|err `error`|Any errors encountered|
+| Return Value | Description |
+| :-: | :-: |
+| channels `*pusher.ChannelsList` | A struct representing the list of channels. See below. |
+| err `error` | Any errors encountered|
 
 ###### Custom Types
 
@@ -405,7 +398,8 @@ type ChannelListItem struct {
     UserCount int
 }
 ```
-######Example
+
+###### Example
 
 ```go
 channelsParams := map[string]string{
@@ -415,24 +409,24 @@ channelsParams := map[string]string{
 
 channels, err := client.Channels(channelsParams)
 
-//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
+// channels => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 ```
 
 #### Get the state of a single channel
 
 ##### `func (c *Client) Channel`
 
-|Argument|Description|
-|:-:|:-:|
-|name `string`| The name of the channel|
-|additionalQueries `map[string]string` |A map with query options. An `"info"` key can have comma-separated vales of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. Note that the subscription count is not allowed by default. Please [contact us](http://support.pusher.com) if you wish to enable this.<br><br>Pass in `nil` if you do not wish to specify any query attributes.|
+| Argument | Description |
+| :-: | :-: |
+| name `string` | The name of the channel |
+| additionalQueries `map[string]string` | A map with query options. An `"info"` key can have comma-separated vales of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. Note that the subscription count is not allowed by default. Please [contact us](http://support.pusher.com) if you wish to enable this.<br><br>Pass in `nil` if you do not wish to specify any query attributes. |
 
-|Return Value|Description|
-|:-:|:-:|
-|channel `*pusher.Channel` |A struct representing a channel. See below. |
-|err `error` | Any errors encountered |
+| Return Value | Description |
+| :-: | :-: |
+| channel `*pusher.Channel` | A struct representing a channel. See below. |
+| err `error` | Any errors encountered |
 
-######Custom Types
+###### Custom Types
 
 **pusher.Channel**
 
@@ -446,28 +440,29 @@ type Channel struct {
 ```
 
 ###### Example
+
 ```go
 channelParams := map[string]string{
-	"info": "user_count,subscription_count",
+    "info": "user_count,subscription_count",
 }
 
 channel, err := client.Channel("presence-chatroom", channelParams)
 
-//channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
+// channel => &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 ```
 
 #### Get a list of users in a presence channel
 
 ##### `func (c *Client) GetChannelUsers`
 
-|Argument|Description|
-|:-:|:-:|
-|name `string`| The channel name|
+| Argument | Description |
+| :-: | :-: |
+| name `string` | The channel name |
 
-|Return Value|Description|
-|:-:|:-:|
-|users `*pusher.Users`| A struct representing a list of the users subscribed to the presence-channel. See below |
-| err `error` | Any errors encountered.|
+| Return Value | Description |
+| :-: | :-: |
+| users `*pusher.Users` | A struct representing a list of the users subscribed to the presence-channel. See below |
+| err `error` | Any errors encountered. |
 
 ###### Custom Types
 
@@ -492,7 +487,7 @@ type User struct {
 ```go
 users, err := client.GetChannelUsers("presence-chatroom")
 
-//users=> &{List:[{Id:13} {Id:90}]}
+// users => &{List:[{Id:13} {Id:90}]}
 ```
 
 ### Webhook validation
@@ -503,15 +498,15 @@ This library provides a mechanism for checking that these POST requests are inde
 
 ##### `func (c *Client) Webhook`
 
-|Argument|Description|
-|:-:|:-:|
-|header `http.Header` | The header of the request to verify |
-|body `[]byte` | The body of the request |
+| Argument | Description |
+| :-: | :-: |
+| header `http.Header` | The header of the request to verify |
+| body `[]byte` | The body of the request |
 
-|Return Value|Description|
-|:-:|:-:|
-|webhook `*pusher.Webhook`| If the webhook is valid, this method will return a representation of that webhook that includes its timestamp and associated events. If invalid, this value will be `nil`.
-|err `error` | If the webhook is invalid, an error value will be passed.|
+| Return Value | Description |
+| :-: | :-: |
+| webhook `*pusher.Webhook` | If the webhook is valid, this method will return a representation of that webhook that includes its timestamp and associated events. If invalid, this value will be `nil`. |
+| err `error` | If the webhook is invalid, an error value will be passed. |
 
 ###### Custom Types
 
@@ -540,15 +535,13 @@ type WebhookEvent struct {
 
 ```go
 func pusherWebhook(res http.ResponseWriter, req *http.Request) {
-
-	body, _ := ioutil.ReadAll(req.Body)
-	webhook, err := client.Webhook(req.Header, body)
-  	if err != nil {
-      fmt.Println("Webhook is invalid :(")
-  	} else {
-      fmt.Printf("%+v\n", webhook.Events)
-  	}
-
+    body, _ := ioutil.ReadAll(req.Body)
+    webhook, err := client.Webhook(req.Header, body)
+    if err != nil {
+        fmt.Println("Webhook is invalid :(")
+    } else {
+        fmt.Printf("%+v\n", webhook.Events)
+    }
 }
 ```
 
@@ -558,13 +551,13 @@ Send a push notification to native iOS and Android apps even when they are not o
 
 ##### `func (c *Client) Notify`
 
-|Argument|Description|
-|:-:|:-:|
-|PushNotification `pusher.PushNotification` | The struct containing your push notification data |
+| Argument | Description |
+| :-: | :-: |
+| PushNotification `pusher.PushNotification` | The struct containing your push notification data |
 
-|Return Value|Description|
-|:-:|:-:|
-|err `error` | If Notify is unsuccessful, an error value will be passed.|
+| Return Value | Description |
+| :-: | :-: |
+| err `error` | If Notify is unsuccessful, an error value will be passed. |
 
 ###### Custom Types
 
@@ -572,11 +565,11 @@ Send a push notification to native iOS and Android apps even when they are not o
 
 ```go
 type PushNotification struct {
-	Interests    []string    
-	WebhookURL   string      
-	APNS         interface{} 
-	GCM          interface{} 
-	FCM          interface{} 
+    Interests    []string
+    WebhookURL   string
+    APNS         interface{}
+    GCM          interface{}
+    FCM          interface{}
 }
 ```
 
@@ -589,7 +582,7 @@ func sendPushNotification(client pusher.Client, GCMNotification interface{}) err
         GCM: GCMNotification,
     }
 
-    return client.Notify(pn)    
+    return client.Notify(pn)
 }
 ```
 
@@ -616,16 +609,15 @@ HTTPS                                      | *&#10004;*
 HTTP Proxy configuration                   | *&#10008;*
 HTTP KeepAlive                             | *&#10008;*
 
-
-#### Helper Functionality
+## Helper Functionality
 
 These are helpers that have been implemented to to ensure interactions with the HTTP API only occur if they will not be rejected e.g. [channel naming conventions](https://pusher.com/docs/client_api_guide/client_channels#naming-channels).
 
-Helper Functionality                     | Supported
------------------------------------------| :-------:
-Channel name validation 					 | &#10004;
-Limit to 10 channels per trigger         | &#10004;
-Limit event name length to 200 chars     | &#10004;
+Helper Functionality                      | Supported
+----------------------------------------- | :-------:
+Channel name validation                   | &#10004;
+Limit to 10 channels per trigger          | &#10004;
+Limit event name length to 200 chars      | &#10004;
 
 ## Developing the Library
 
@@ -635,7 +627,9 @@ Feel more than free to fork this repo, improve it in any way you'd prefer, and s
 
 Simply type:
 
-    $ go test
+```sh
+$ go test
+```
 
 ## License
 
