@@ -1,3 +1,8 @@
+1.3.0 / 2018-08-13
+==================
+
+* This release adds support for end to end encrypted channels, a new feature for Channels. Read more [in our docs](https://pusher.com/docs/client_api_guide/client_encrypted_channels).
+
 1.2.0 / 2016-05-24
 ==================
 
