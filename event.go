@@ -23,9 +23,10 @@ type BufferedEvents struct {
 	EventIds map[string]string `json:"event_ids,omitempty"`
 }
 
-func createTriggerPayload(channels []string, event string, data interface{}, socketID *string) ([]byte, error) {
+func createTriggerPayload(channels []string, event string, data interface{}, socketID *string, encryptionKey string) ([]byte, error) {
 	var dataBytes []byte
 	var err error
+	var payloadData string
 
 	switch d := data.(type) {
 	case []byte:
@@ -38,15 +39,19 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 			return nil, err
 		}
 	}
-
-	if len(dataBytes) > 10240 {
-		return nil, errors.New("Data must be smaller than 10kb")
+	if isEncryptedChannel(channels[0]) {
+		payloadData = encrypt(channels[0], dataBytes, encryptionKey)
+	} else {
+		payloadData = string(dataBytes)
 	}
 
+	if len(payloadData) > 10240 {
+		return nil, errors.New("Data must be smaller than 10kb")
+	}
 	return json.Marshal(&eventPayload{
 		Name:     event,
 		Channels: channels,
-		Data:     string(dataBytes),
+		Data:     payloadData,
 		SocketId: socketID,
 	})
 }

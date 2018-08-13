@@ -8,6 +8,8 @@ This package lets you trigger events to your client and query the state of your 
 
 In order to use this library, you need to have a free account on <http://pusher.com>. After registering, you will need the application credentials for your app.
 
+This library requires you to be using at least Go 1.5 or greater. 
+
 ## Table of Contents
 
 - [Installation](#installation)
@@ -133,6 +135,28 @@ Setting the `pusher.Client`'s `Cluster` property will make sure requests are sen
 ```go
 client.Cluster = "eu" // in this case requests will be made to api-eu.pusher.com.
 ```
+#### End to End Encryption
+
+This library supports end to end encryption of your private channels. This means that only you and your connected clients will be able to read your messages. Pusher cannot decrypt them. You can enable this feature by following these steps:
+
+1. You should first set up Private channels. This involves [creating an authentication endpoint on your server](https://pusher.com/docs/authenticating_users).
+
+2. Next, Specify your 32 character `EncryptionMasterKey`. This is secret and you should never share this with anyone. Not even Pusher.
+
+```go
+client := pusher.Client{
+    AppId:              "your_app_id",
+    Key:                "your_app_key",
+    Secret:             "your_app_secret",
+    Cluster:            "your_app_cluster",
+    EncryptionMasterKey "abcdefghijklmnopqrstuvwxyzabcdef"
+}
+```
+3. Channels where you wish to use end to end encryption should be prefixed with `private-encrypted-`.
+
+4. Subscribe to these channels in your client, and you're done! You can verify it is working by checking out the debug console on the https://dashboard.pusher.com/ and seeing the scrambled ciphertext.
+
+**Important note: This will not encrypt messages on channels that are not prefixed by private-encrypted-.**
 
 ### Google App Engine
 
