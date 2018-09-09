@@ -132,7 +132,7 @@ be marshallable into JSON.
 	client.Trigger("greeting_channel", "say_hello", data)
 
 */
-func (c *Client) Trigger(channel string, eventName string, data interface{}) (*BufferedEvents, error) {
+func (c *Client) Trigger(channel string, eventName string, data interface{}) error {
 	return c.trigger([]string{channel}, eventName, data, nil)
 }
 
@@ -141,7 +141,7 @@ The same as `client.Trigger`, except one passes in a slice of `channels` as the 
 The maximum length of channels is 10.
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
-func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) (*BufferedEvents, error) {
+func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) error {
 	return c.trigger(channels, eventName, data, nil)
 }
 
@@ -152,7 +152,7 @@ This method allow you to exclude a recipient whose connection has that
 	client.TriggerExclusive("a_channel", "event", data, "123.12")
 
 */
-func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
+func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) error {
 	return c.trigger([]string{channel}, eventName, data, &socketID)
 }
 
@@ -162,69 +162,63 @@ Excluding a recipient on a trigger to multiple channels.
 	client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
 
 */
-func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
+func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) error {
 	return c.trigger(channels, eventName, data, &socketID)
 }
 
-func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
+func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) error {
 	if len(channels) > 10 {
-		return nil, errors.New("You cannot trigger on more than 10 channels at once")
+		return errors.New("You cannot trigger on more than 10 channels at once")
 	}
 
 	if len(channels) > 1 && encryptedChannelPresent(channels) {
-		return nil, errors.New("You cannot trigger batch events when using encrypted channels")
+		return errors.New("You cannot trigger batch events when using encrypted channels")
 	}
 
 	if !channelsAreValid(channels) {
-		return nil, errors.New("At least one of your channels' names are invalid")
+		return errors.New("At least one of your channels' names are invalid")
 	}
 	if !validEncryptionKey(c.EncryptionMasterKey) && encryptedChannelPresent(channels) {
-		return nil, errors.New("Your Encryption key is not of the correct format")
+		return errors.New("Your Encryption key is not of the correct format")
 	}
 
 	if err := validateSocketID(socketID); err != nil {
-		return nil, err
+		return err
 	}
 
 	payload, err := createTriggerPayload(channels, eventName, data, socketID, c.EncryptionMasterKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
 	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	response, err := c.request("POST", u, payload)
-	if err != nil {
-		return nil, err
-	}
+	_, err = c.request("POST", u, payload)
 
-	return unmarshalledBufferedEvents(response)
+	return err
 }
 
 type batchRequest struct {
 	Batch []Event `json:"batch"`
 }
 
-func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
+func (c *Client) TriggerBatch(batch []Event) error {
 	payload, err := json.Marshal(&batchRequest{batch})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	path := fmt.Sprintf("/apps/%s/batch_events", c.AppId)
 	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	response, err := c.request("POST", u, payload)
-	if err != nil {
-		return nil, err
-	}
+	_, err = c.request("POST", u, payload)
 
-	return unmarshalledBufferedEvents(response)
+	return err
 }
 
 /*
