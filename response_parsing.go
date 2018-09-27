@@ -72,14 +72,3 @@ func unmarshalledChannelUsers(response []byte) (*Users, error) {
 
 	return users, nil
 }
-
-func unmarshalledBufferedEvents(response []byte) (*BufferedEvents, error) {
-	bufferedEvents := &BufferedEvents{}
-	err := json.Unmarshal(response, &bufferedEvents)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return bufferedEvents, nil
-}
