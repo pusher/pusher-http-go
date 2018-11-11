@@ -440,7 +440,7 @@ channels, err := client.Channels(channelsParams)
 | Argument | Description |
 | :-: | :-: |
 | name `string` | The name of the channel |
-| additionalQueries `map[string]string` | A map with query options. An `"info"` key can have comma-separated vales of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. Note that the subscription count is not allowed by default. Please [contact us](http://support.pusher.com) if you wish to enable this.<br><br>Pass in `nil` if you do not wish to specify any query attributes. |
+| additionalQueries `map[string]string` | A map with query options. An `"info"` key can have comma-separated values of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. To use the `"subscription_count"` value, first check the "Enable subscription counting" checkbox in your App Settings on [your Pusher Channels dashboard](https://dashboard.pusher.com).<br><br>Pass in `nil` if you do not wish to specify any query attributes. |
 
 | Return Value | Description |
 | :-: | :-: |
