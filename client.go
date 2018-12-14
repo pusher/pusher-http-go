@@ -172,14 +172,16 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	}
 
 	if len(channels) > 1 && encryptedChannelPresent(channels) {
-		return nil, errors.New("You cannot trigger batch events when using encrypted channels")
+		// For rationale, see limitations of end-to-end encryption in the README
+		return nil, errors.New("You cannot trigger to multiple channels when using encrypted channels")
 	}
 
 	if !channelsAreValid(channels) {
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
+
 	if !validEncryptionKey(c.EncryptionMasterKey) && encryptedChannelPresent(channels) {
-		return nil, errors.New("Your Encryption key is not of the correct format")
+		return nil, errors.New("Your encryptionMasterKey is not of the correct format")
 	}
 
 	if err := validateSocketID(socketID); err != nil {
