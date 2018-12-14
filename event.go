@@ -5,6 +5,9 @@ import (
 	"errors"
 )
 
+// maxEventPayloadSize indicates the max size allowed for the data content (payload) of each event
+const maxEventPayloadSize = 10240
+
 type Event struct {
 	Channel  string  `json:"channel"`
 	Name     string  `json:"name"`
@@ -45,7 +48,7 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 		payloadData = string(dataBytes)
 	}
 
-	if len(payloadData) > 10240 {
+	if len(payloadData) > maxEventPayloadSize {
 		return nil, errors.New("Data must be smaller than 10kb")
 	}
 	return json.Marshal(&eventPayload{
