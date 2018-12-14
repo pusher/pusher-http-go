@@ -14,6 +14,7 @@ import (
 )
 
 var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
+var maxTriggerableChannels = 100
 
 /*
 Client to the HTTP API of Pusher.
@@ -138,7 +139,7 @@ func (c *Client) Trigger(channel string, eventName string, data interface{}) (*B
 
 /*
 The same as `client.Trigger`, except one passes in a slice of `channels` as the first parameter.
-The maximum length of channels is 10.
+The maximum length of channels is 100.
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
 func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) (*BufferedEvents, error) {
@@ -167,8 +168,8 @@ func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data
 }
 
 func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
-	if len(channels) > 10 {
-		return nil, errors.New("You cannot trigger on more than 10 channels at once")
+	if len(channels) > maxTriggerableChannels {
+		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
 
 	if len(channels) > 1 && encryptedChannelPresent(channels) {
