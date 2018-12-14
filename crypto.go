@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/nacl/secretbox"
 )
 
+// EncryptedMessage contains an encrypted message
 type EncryptedMessage struct {
 	Nonce      string `json:"nonce"`
 	Ciphertext string `json:"ciphertext"`
