@@ -11,6 +11,7 @@ import (
 
 var channelValidationRegex = regexp.MustCompile("^[-a-zA-Z0-9_=@,.;]+$")
 var socketIDValidationRegex = regexp.MustCompile(`\A\d+\.\d+\z`)
+var maxChannelNameSize = 200
 
 func authTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
@@ -37,7 +38,7 @@ func parseAuthRequestParams(_params []byte) (channelName string, socketID string
 
 func channelsAreValid(channels []string) bool {
 	for _, channel := range channels {
-		if len(channel) > 200 || !channelValidationRegex.MatchString(channel) {
+		if len(channel) > maxChannelNameSize || !channelValidationRegex.MatchString(channel) {
 			return false
 		}
 	}
