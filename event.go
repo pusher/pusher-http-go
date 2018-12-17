@@ -3,6 +3,7 @@ package pusher
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 // maxEventPayloadSize indicates the max size allowed for the data content (payload) of each event
@@ -49,6 +50,30 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 		Data:     payloadData,
 		SocketId: socketID,
 	})
+}
+
+func createTriggerBatchPayload(batch []Event, encryptionKey string) ([]byte, error) {
+
+	for idx, e := range batch {
+
+		dataBytes, err := byteEncodePayload(e.Data)
+		if err != nil {
+			return nil, err
+		}
+
+		if isEncryptedChannel(e.Channel) {
+			batch[idx].Data = encrypt(e.Channel, dataBytes, encryptionKey)
+		} else {
+			batch[idx].Data = string(dataBytes)
+		}
+
+		if len(batch[idx].Data) > maxEventPayloadSize {
+			return nil, fmt.Errorf("Data of the event #%d in batch, must be smaller than 10kb", idx)
+		}
+
+	}
+
+	return json.Marshal(&batchRequest{batch})
 }
 
 func byteEncodePayload(data interface{}) ([]byte, error) {

@@ -219,8 +219,40 @@ type batchRequest struct {
 	Batch []Event `json:"batch"`
 }
 
+/* TriggerBatch triggers multiple events on multiple types of channels in a single call:
+    client.TriggerBatch([]pusher.Event{
+	    { Channel: "donut-1", Name: "ev1", Data: "pippo1" },
+	    { Channel: "private-encrypted-secretdonut", Name: "ev2", Data: "pippo2" },
+    })
+*/
 func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
-	payload, err := json.Marshal(&batchRequest{batch})
+
+	hasEncryptedChannel := false
+	// validate every channel name and every sockedID (if present) in batch
+	for _, event := range batch {
+
+		if len(event.Channel) > maxChannelNameSize || !channelValidationRegex.MatchString(event.Channel) {
+			return nil, fmt.Errorf("The channel named %s has a non-valid name", event.Channel)
+		}
+
+		if err := validateSocketID(event.SocketId); err != nil {
+			return nil, err
+		}
+
+		if isEncryptedChannel(event.Channel) {
+			hasEncryptedChannel = true
+		}
+
+	}
+
+	if hasEncryptedChannel {
+		// validate EncryptionMasterKey
+		if !validEncryptionKey(c.EncryptionMasterKey) {
+			return nil, errors.New("Your encryptionMasterKey is not of the correct format")
+		}
+	}
+
+	payload, err := createTriggerBatchPayload(batch, c.EncryptionMasterKey)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +262,7 @@ func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	response, err := c.request("POST", u, payload)
 	if err != nil {
 		return nil, err
