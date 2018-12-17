@@ -28,7 +28,7 @@ type BufferedEvents struct {
 }
 
 func createTriggerPayload(channels []string, event string, data interface{}, socketID *string, encryptionKey string) ([]byte, error) {
-	dataBytes, err := byteEncodePayload(data)
+	dataBytes, err := encodePayload(data)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 
 func createTriggerBatchPayload(batch []Event, encryptionKey string) ([]byte, error) {
 	for idx, e := range batch {
-		dataBytes, err := byteEncodePayload(e.Data)
+		dataBytes, err := encodePayload(e.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -67,7 +67,7 @@ func createTriggerBatchPayload(batch []Event, encryptionKey string) ([]byte, err
 	return json.Marshal(&batchRequest{batch})
 }
 
-func byteEncodePayload(data interface{}) ([]byte, error) {
+func encodePayload(data interface{}) ([]byte, error) {
 	var dataBytes []byte
 	var err error
 
