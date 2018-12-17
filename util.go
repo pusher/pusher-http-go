@@ -44,14 +44,6 @@ func channelsAreValid(channels []string) bool {
 	}
 	return true
 }
-func encryptedChannelPresent(channels []string) bool {
-	for _, channel := range channels {
-		if isEncryptedChannel(channel) {
-			return true
-		}
-	}
-	return false
-}
 
 func isEncryptedChannel(channel string) bool {
 	if strings.HasPrefix(channel, "private-encrypted-") {

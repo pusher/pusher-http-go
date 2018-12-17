@@ -168,11 +168,19 @@ func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data
 }
 
 func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
+
+	hasEncryptedChannel := false
+	for _, channel := range channels {
+		if isEncryptedChannel(channel) {
+			hasEncryptedChannel = true
+		}
+	}
+
 	if len(channels) > maxTriggerableChannels {
 		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
 
-	if len(channels) > 1 && encryptedChannelPresent(channels) {
+	if hasEncryptedChannel && len(channels) > 1 {
 		// For rationale, see limitations of end-to-end encryption in the README
 		return nil, errors.New("You cannot trigger to multiple channels when using encrypted channels")
 	}
@@ -181,7 +189,7 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
 
-	if !validEncryptionKey(c.EncryptionMasterKey) && encryptedChannelPresent(channels) {
+	if hasEncryptedChannel && !validEncryptionKey(c.EncryptionMasterKey) {
 		return nil, errors.New("Your encryptionMasterKey is not of the correct format")
 	}
 
