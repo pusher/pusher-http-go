@@ -27,21 +27,13 @@ type BufferedEvents struct {
 }
 
 func createTriggerPayload(channels []string, event string, data interface{}, socketID *string, encryptionKey string) ([]byte, error) {
-	var dataBytes []byte
-	var err error
-	var payloadData string
 
-	switch d := data.(type) {
-	case []byte:
-		dataBytes = d
-	case string:
-		dataBytes = []byte(d)
-	default:
-		dataBytes, err = json.Marshal(data)
-		if err != nil {
-			return nil, err
-		}
+	dataBytes, err := byteEncodePayload(data)
+	if err != nil {
+		return nil, err
 	}
+
+	var payloadData string
 	if isEncryptedChannel(channels[0]) {
 		payloadData = encrypt(channels[0], dataBytes, encryptionKey)
 	} else {
@@ -57,4 +49,22 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 		Data:     payloadData,
 		SocketId: socketID,
 	})
+}
+
+func byteEncodePayload(data interface{}) ([]byte, error) {
+	var dataBytes []byte
+	var err error
+
+	switch d := data.(type) {
+	case []byte:
+		dataBytes = d
+	case string:
+		dataBytes = []byte(d)
+	default:
+		dataBytes, err = json.Marshal(data)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return dataBytes, nil
 }
