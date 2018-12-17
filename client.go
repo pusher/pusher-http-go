@@ -14,6 +14,7 @@ import (
 )
 
 var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
+var maxTriggerableChannels = 100
 
 /*
 Client to the HTTP API of Pusher.
@@ -138,7 +139,7 @@ func (c *Client) Trigger(channel string, eventName string, data interface{}) (*B
 
 /*
 The same as `client.Trigger`, except one passes in a slice of `channels` as the first parameter.
-The maximum length of channels is 10.
+The maximum length of channels is 100.
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
 func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) (*BufferedEvents, error) {
@@ -167,30 +168,32 @@ func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data
 }
 
 func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
-	if len(channels) > 10 {
-		return nil, errors.New("You cannot trigger on more than 10 channels at once")
+	hasEncryptedChannel := false
+	for _, channel := range channels {
+		if isEncryptedChannel(channel) {
+			hasEncryptedChannel = true
+		}
 	}
-
-	if len(channels) > 1 && encryptedChannelPresent(channels) {
-		return nil, errors.New("You cannot trigger batch events when using encrypted channels")
+	if len(channels) > maxTriggerableChannels {
+		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
-
+	if hasEncryptedChannel && len(channels) > 1 {
+		// For rationale, see limitations of end-to-end encryption in the README
+		return nil, errors.New("You cannot trigger to multiple channels when using encrypted channels")
+	}
 	if !channelsAreValid(channels) {
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
-	if !validEncryptionKey(c.EncryptionMasterKey) && encryptedChannelPresent(channels) {
-		return nil, errors.New("Your Encryption key is not of the correct format")
+	if hasEncryptedChannel && !validEncryptionKey(c.EncryptionMasterKey) {
+		return nil, errors.New("Your encryptionMasterKey is not of the correct format")
 	}
-
 	if err := validateSocketID(socketID); err != nil {
 		return nil, err
 	}
-
 	payload, err := createTriggerPayload(channels, eventName, data, socketID, c.EncryptionMasterKey)
 	if err != nil {
 		return nil, err
 	}
-
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
 	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
@@ -200,7 +203,6 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if err != nil {
 		return nil, err
 	}
-
 	return unmarshalledBufferedEvents(response)
 }
 
@@ -208,12 +210,36 @@ type batchRequest struct {
 	Batch []Event `json:"batch"`
 }
 
+/* TriggerBatch triggers multiple events on multiple types of channels in a single call:
+    client.TriggerBatch([]pusher.Event{
+	    { Channel: "donut-1", Name: "ev1", Data: "pippo1" },
+	    { Channel: "private-encrypted-secretdonut", Name: "ev2", Data: "pippo2" },
+    })
+*/
 func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
-	payload, err := json.Marshal(&batchRequest{batch})
+	hasEncryptedChannel := false
+	// validate every channel name and every sockedID (if present) in batch
+	for _, event := range batch {
+		if !validChannel(event.Channel) {
+			return nil, fmt.Errorf("The channel named %s has a non-valid name", event.Channel)
+		}
+		if err := validateSocketID(event.SocketId); err != nil {
+			return nil, err
+		}
+		if isEncryptedChannel(event.Channel) {
+			hasEncryptedChannel = true
+		}
+	}
+	if hasEncryptedChannel {
+		// validate EncryptionMasterKey
+		if !validEncryptionKey(c.EncryptionMasterKey) {
+			return nil, errors.New("Your encryptionMasterKey is not of the correct format")
+		}
+	}
+	payload, err := createTriggerBatchPayload(batch, c.EncryptionMasterKey)
 	if err != nil {
 		return nil, err
 	}
-
 	path := fmt.Sprintf("/apps/%s/batch_events", c.AppId)
 	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
@@ -223,7 +249,6 @@ func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return unmarshalledBufferedEvents(response)
 }
 

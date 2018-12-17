@@ -1,8 +1,9 @@
 package pusher
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseAuthRequestParamsNoSock(t *testing.T) {

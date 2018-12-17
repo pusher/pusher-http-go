@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/nacl/secretbox"
 )
 
+// EncryptedMessage contains an encrypted message
 type EncryptedMessage struct {
 	Nonce      string `json:"nonce"`
 	Ciphertext string `json:"ciphertext"`
@@ -33,7 +34,6 @@ func hmacBytes(toSign, secret []byte) []byte {
 func checkSignature(result, secret string, body []byte) bool {
 	expected := hmacBytes(body, []byte(secret))
 	resultBytes, err := hex.DecodeString(result)
-
 	if err != nil {
 		return false
 	}
@@ -94,7 +94,6 @@ func decryptEvents(webhookData Webhook, encryptionKey string) (*Webhook, error) 
 	decryptedWebhooks := &Webhook{}
 	decryptedWebhooks.TimeMs = webhookData.TimeMs
 	for _, event := range webhookData.Events {
-
 		if isEncryptedChannel(event.Channel) {
 			var encryptedMessage EncryptedMessage
 			json.Unmarshal([]byte(event.Data), &encryptedMessage)
@@ -102,12 +101,10 @@ func decryptEvents(webhookData Webhook, encryptionKey string) (*Webhook, error) 
 			if decodePayloadErr != nil {
 				return decryptedWebhooks, decodePayloadErr
 			}
-
 			nonceBytes, decodeNonceErr := base64.StdEncoding.DecodeString(encryptedMessage.Nonce)
 			if decodeNonceErr != nil {
 				return decryptedWebhooks, decodeNonceErr
 			}
-
 			// Convert slice to fixed length array for secretbox
 			var nonce [24]byte
 			copy(nonce[:], []byte(nonceBytes[:]))
