@@ -150,5 +150,4 @@ func TestDecryptInvalidKey(t *testing.T) {
 	decryptedWebhooks, err := decryptEvents(*encryptedWebhookData, encryptionKey)
 	assert.Equal(t, decryptedWebhooks.Events, []WebhookEvent(nil))
 	assert.EqualError(t, err, "Failed to decrypt event, possibly wrong key?")
-
 }

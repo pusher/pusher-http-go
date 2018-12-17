@@ -18,17 +18,14 @@ func request(client *http.Client, method, url string, body []byte) ([]byte, erro
 		return nil, err
 	}
 	defer resp.Body.Close()
-
 	return processResponse(resp)
 }
 
 func processResponse(response *http.Response) ([]byte, error) {
 	responseBody, err := ioutil.ReadAll(response.Body)
-
 	if err != nil {
 		return nil, err
 	}
-
 	if response.StatusCode >= 200 && response.StatusCode < 300 {
 		return responseBody, nil
 	}

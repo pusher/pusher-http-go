@@ -28,19 +28,16 @@ type BufferedEvents struct {
 }
 
 func createTriggerPayload(channels []string, event string, data interface{}, socketID *string, encryptionKey string) ([]byte, error) {
-
 	dataBytes, err := byteEncodePayload(data)
 	if err != nil {
 		return nil, err
 	}
-
 	var payloadData string
 	if isEncryptedChannel(channels[0]) {
 		payloadData = encrypt(channels[0], dataBytes, encryptionKey)
 	} else {
 		payloadData = string(dataBytes)
 	}
-
 	if len(payloadData) > maxEventPayloadSize {
 		return nil, errors.New("Data must be smaller than 10kb")
 	}
@@ -53,26 +50,20 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 }
 
 func createTriggerBatchPayload(batch []Event, encryptionKey string) ([]byte, error) {
-
 	for idx, e := range batch {
-
 		dataBytes, err := byteEncodePayload(e.Data)
 		if err != nil {
 			return nil, err
 		}
-
 		if isEncryptedChannel(e.Channel) {
 			batch[idx].Data = encrypt(e.Channel, dataBytes, encryptionKey)
 		} else {
 			batch[idx].Data = string(dataBytes)
 		}
-
 		if len(batch[idx].Data) > maxEventPayloadSize {
 			return nil, fmt.Errorf("Data of the event #%d in batch, must be smaller than 10kb", idx)
 		}
-
 	}
-
 	return json.Marshal(&batchRequest{batch})
 }
 

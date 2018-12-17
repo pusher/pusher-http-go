@@ -41,12 +41,8 @@ func TestPresenceChannelAuthentication(t *testing.T) {
 
 func TestAuthSocketIdValidation(t *testing.T) {
 	client := setUpAuthClient()
-
 	postParams := []byte("channel_name=private-foobar&socket_id=12341234")
-
 	result, err := client.AuthenticatePrivateChannel(postParams)
-
 	assert.Nil(t, result)
 	assert.Error(t, err)
-
 }

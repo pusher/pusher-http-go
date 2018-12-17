@@ -22,14 +22,16 @@ func TestTriggerSuccessCase(t *testing.T) {
 		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"yolo\"}"
 		actualBody, err := ioutil.ReadAll(req.Body)
 		assert.Equal(t, expectedBody, string(actualBody))
+
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.NoError(t, err)
-
 	}))
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 	_, err := client.Trigger("test_channel", "test", "yolo")
+
 	assert.NoError(t, err)
 }
 
@@ -43,6 +45,7 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 
 	}))
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 	channels, err := client.Channels(nil)
@@ -55,7 +58,6 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG": ChannelListItem{UserCount: 1},
 		},
 	}
-
 	assert.Equal(t, channels, expected)
 }
 
@@ -63,13 +65,12 @@ func TestGetChannelSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		testJSON := "{\"user_count\":1,\"occupied\":true,\"subscription_count\":1}"
-
 		fmt.Fprintf(res, testJSON)
+
 		assert.Equal(t, "GET", req.Method)
-
 	}))
-
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 	channel, err := client.Channel("test_channel", nil)
@@ -81,7 +82,6 @@ func TestGetChannelSuccess(t *testing.T) {
 		UserCount:         1,
 		SubscriptionCount: 1,
 	}
-
 	assert.Equal(t, channel, expected)
 }
 
@@ -89,13 +89,12 @@ func TestGetChannelUserSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		testJSON := "{\"users\":[{\"id\":\"red\"},{\"id\":\"blue\"}]}"
-
 		fmt.Fprintf(res, testJSON)
+
 		assert.Equal(t, "GET", req.Method)
-
 	}))
-
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 	users, err := client.GetChannelUsers("test_channel")
@@ -104,21 +103,19 @@ func TestGetChannelUserSuccess(t *testing.T) {
 	expected := &Users{
 		List: []User{User{Id: "red"}, User{Id: "blue"}},
 	}
-
 	assert.Equal(t, users, expected)
 }
 
 func TestTriggerWithSocketId(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
-
 		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"yolo\",\"socket_id\":\"1234.12\"}"
 		actualBody, err := ioutil.ReadAll(req.Body)
 		assert.Equal(t, expectedBody, string(actualBody))
 		assert.NoError(t, err)
-
 	}))
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
 	client.TriggerExclusive("test_channel", "test", "yolo", "1234.12")
@@ -142,12 +139,11 @@ func TestTriggerBatchSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
 		assert.NoError(t, err)
-
 	}))
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "appid", Key: "key", Secret: "secret", Host: u.Host}
-
 	_, err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"test_channel", "test", "yolo2", nil},
@@ -168,12 +164,11 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
 		assert.NoError(t, err)
-
 	}))
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
-
 	_, err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"test_channel", "test", "yolo2", nil},
@@ -194,12 +189,11 @@ func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T)
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
 		assert.NoError(t, err)
-
 	}))
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "appid", Key: "key", Secret: "secret", Host: u.Host}
-
 	_, err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"private-encrypted-test_channel", "test", "yolo2", nil},
@@ -219,17 +213,15 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
 		assert.NoError(t, err)
-
 	}))
 	defer server.Close()
+
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
-
 	_, err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"private-encrypted-test_channel", "test", "yolo2", nil},
 	})
-
 	assert.NoError(t, err)
 }
 
@@ -239,12 +231,10 @@ func TestErrorResponseHandler(t *testing.T) {
 		fmt.Fprintf(res, "Cannot retrieve the user count unless the channel is a presence channel")
 
 	}))
-
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
-
 	channelParams := map[string]string{"info": "user_count,subscription_count"}
 	channel, err := client.Channel("this_is_not_a_presence_channel", channelParams)
 
@@ -254,22 +244,18 @@ func TestErrorResponseHandler(t *testing.T) {
 }
 
 func TestRequestTimeouts(t *testing.T) {
-
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		time.Sleep(time.Second * 1)
 		// res.WriteHeader(200)
 		fmt.Fprintf(res, "{}")
 	}))
-
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
-
 	_, err := client.Trigger("test_channel", "test", "yolo")
 
 	assert.Error(t, err)
-
 }
 
 func TestChannelLengthValidation(t *testing.T) {
@@ -295,21 +281,16 @@ func TestChannelLengthValidation(t *testing.T) {
 
 func TestChannelFormatValidation(t *testing.T) {
 	channel1 := "w000^$$£@@@"
-
 	var channel2 string
-
 	for i := 0; i <= 202; i++ {
 		channel2 += "a"
 	}
-
 	client := Client{AppId: "id", Key: "key", Secret: "secret"}
 	res1, err1 := client.Trigger(channel1, "yolo", "w00t")
-
 	res2, err2 := client.Trigger(channel2, "yolo", "not 19 forever")
 
 	assert.EqualError(t, err1, "At least one of your channels' names are invalid")
 	assert.Nil(t, res1)
-
 	assert.EqualError(t, err2, "At least one of your channels' names are invalid")
 	assert.Nil(t, res2)
 
@@ -317,14 +298,11 @@ func TestChannelFormatValidation(t *testing.T) {
 
 func TestDataSizeValidation(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret"}
-
 	var data string
-
 	for i := 0; i <= 10242; i++ {
 		data += "a"
 	}
 	res, err := client.Trigger("channel", "event", data)
-
 	assert.EqualError(t, err, "Data must be smaller than 10kb")
 	assert.Nil(t, res)
 
@@ -365,22 +343,18 @@ func TestInitialisationFromENV(t *testing.T) {
 }
 
 func TestNotifySuccess(t *testing.T) {
-
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
 		res.Write([]byte(`{"number_of_subscribers": 10}`))
 	}))
-
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
-
 	testPN := PushNotification{
 		WebhookURL: "testURL",
 		GCM:        []byte(`hello`),
 	}
-
 	interests := []string{"testInterest"}
 	response, err := client.Notify(interests, testPN)
 
@@ -389,22 +363,18 @@ func TestNotifySuccess(t *testing.T) {
 }
 
 func TestNotifySuccessNoSubscribers(t *testing.T) {
-
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusAccepted)
 		res.Write([]byte(`{"number_of_subscribers":0}`))
 	}))
-
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
-
 	testPN := PushNotification{
 		WebhookURL: "testURL",
 		GCM:        []byte(`hello`),
 	}
-
 	interests := []string{"testInterest"}
 	response, err := client.Notify(interests, testPN)
 
@@ -413,23 +383,19 @@ func TestNotifySuccessNoSubscribers(t *testing.T) {
 }
 
 func TestNotifyServerError(t *testing.T) {
-
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusInternalServerError)
 	}))
-
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
-
 	testPN := PushNotification{
 		WebhookURL: "testURL",
 		GCM:        []byte(`hello`),
 	}
 
 	interests := []string{"testInterest"}
-
 	response, err := client.Notify(interests, testPN)
 
 	assert.Nil(t, response, "response should return nil on error")
@@ -438,22 +404,17 @@ func TestNotifyServerError(t *testing.T) {
 }
 
 func TestNotifyInvalidPushNotification(t *testing.T) {
-
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusInternalServerError)
 	}))
-
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", PushNotificationHost: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
-
 	testPN := PushNotification{
 		WebhookURL: "testURL",
 	}
-
 	interests := []string{"testInterest"}
-
 	response, err := client.Notify(interests, testPN)
 
 	assert.Nil(t, response, "response should return nil on error")
@@ -461,21 +422,16 @@ func TestNotifyInvalidPushNotification(t *testing.T) {
 }
 
 func TestNotifyNoPushNotificationHost(t *testing.T) {
-
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusInternalServerError)
 	}))
-
 	defer server.Close()
 
 	client := Client{AppId: "id", Key: "key", Secret: "secret", HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
-
 	testPN := PushNotification{
 		WebhookURL: "testURL",
 	}
-
 	interests := []string{"testInterest"}
-
 	response, err := client.Notify(interests, testPN)
 
 	assert.Nil(t, response, "response should return nil on error")

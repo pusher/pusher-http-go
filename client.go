@@ -168,40 +168,32 @@ func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data
 }
 
 func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
-
 	hasEncryptedChannel := false
 	for _, channel := range channels {
 		if isEncryptedChannel(channel) {
 			hasEncryptedChannel = true
 		}
 	}
-
 	if len(channels) > maxTriggerableChannels {
 		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
-
 	if hasEncryptedChannel && len(channels) > 1 {
 		// For rationale, see limitations of end-to-end encryption in the README
 		return nil, errors.New("You cannot trigger to multiple channels when using encrypted channels")
 	}
-
 	if !channelsAreValid(channels) {
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
-
 	if hasEncryptedChannel && !validEncryptionKey(c.EncryptionMasterKey) {
 		return nil, errors.New("Your encryptionMasterKey is not of the correct format")
 	}
-
 	if err := validateSocketID(socketID); err != nil {
 		return nil, err
 	}
-
 	payload, err := createTriggerPayload(channels, eventName, data, socketID, c.EncryptionMasterKey)
 	if err != nil {
 		return nil, err
 	}
-
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
 	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
@@ -211,7 +203,6 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if err != nil {
 		return nil, err
 	}
-
 	return unmarshalledBufferedEvents(response)
 }
 
@@ -226,48 +217,38 @@ type batchRequest struct {
     })
 */
 func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
-
 	hasEncryptedChannel := false
 	// validate every channel name and every sockedID (if present) in batch
 	for _, event := range batch {
-
-		if len(event.Channel) > maxChannelNameSize || !channelValidationRegex.MatchString(event.Channel) {
+		if !validChannel(event.Channel) {
 			return nil, fmt.Errorf("The channel named %s has a non-valid name", event.Channel)
 		}
-
 		if err := validateSocketID(event.SocketId); err != nil {
 			return nil, err
 		}
-
 		if isEncryptedChannel(event.Channel) {
 			hasEncryptedChannel = true
 		}
-
 	}
-
 	if hasEncryptedChannel {
 		// validate EncryptionMasterKey
 		if !validEncryptionKey(c.EncryptionMasterKey) {
 			return nil, errors.New("Your encryptionMasterKey is not of the correct format")
 		}
 	}
-
 	payload, err := createTriggerBatchPayload(batch, c.EncryptionMasterKey)
 	if err != nil {
 		return nil, err
 	}
-
 	path := fmt.Sprintf("/apps/%s/batch_events", c.AppId)
 	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
 		return nil, err
 	}
-
 	response, err := c.request("POST", u, payload)
 	if err != nil {
 		return nil, err
 	}
-
 	return unmarshalledBufferedEvents(response)
 }
 
