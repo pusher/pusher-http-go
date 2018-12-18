@@ -9,11 +9,14 @@ import (
 // maxEventPayloadSize indicates the max size allowed for the data content (payload) of each event
 const maxEventPayloadSize = 10240
 
-type Event struct {
-	Channel  string      `json:"channel"`
-	Name     string      `json:"name"`
-	Data     interface{} `json:"data"`
-	SocketId *string     `json:"socket_id,omitempty"`
+type batchEvent struct {
+	Channel  string  `json:"channel"`
+	Name     string  `json:"name"`
+	Data     string  `json:"data"`
+	SocketId *string `json:"socket_id,omitempty"`
+}
+type batchPayload struct {
+	Batch []batchEvent `json:"batch"`
 }
 
 type eventPayload struct {
@@ -27,8 +30,8 @@ type BufferedEvents struct {
 	EventIds map[string]string `json:"event_ids,omitempty"`
 }
 
-func createTriggerPayload(channels []string, event string, data interface{}, socketID *string, encryptionKey string) ([]byte, error) {
-	dataBytes, err := encodePayload(data)
+func encodeTriggerBody(channels []string, event string, data interface{}, socketID *string, encryptionKey string) ([]byte, error) {
+	dataBytes, err := encodeEventData(data)
 	if err != nil {
 		return nil, err
 	}
@@ -49,25 +52,34 @@ func createTriggerPayload(channels []string, event string, data interface{}, soc
 	})
 }
 
-func createTriggerBatchPayload(batch []Event, encryptionKey string) ([]byte, error) {
+func encodeTriggerBatchBody(batch []Event, encryptionKey string) ([]byte, error) {
+	var batchEvents []batchEvent
 	for idx, e := range batch {
-		dataBytes, err := encodePayload(e.Data)
+		var stringifyedDataBytes string
+		dataBytes, err := encodeEventData(e.Data)
 		if err != nil {
 			return nil, err
 		}
 		if isEncryptedChannel(e.Channel) {
-			batch[idx].Data = encrypt(e.Channel, dataBytes, encryptionKey)
+			stringifyedDataBytes = encrypt(e.Channel, dataBytes, encryptionKey)
 		} else {
-			batch[idx].Data = string(dataBytes)
+			stringifyedDataBytes = string(dataBytes)
 		}
-		if len(batch[idx].Data.(string)) > maxEventPayloadSize {
+		if len(stringifyedDataBytes) > maxEventPayloadSize {
 			return nil, fmt.Errorf("Data of the event #%d in batch, must be smaller than 10kb", idx)
 		}
+		newBatchEvent := batchEvent{
+			Channel:  e.Channel,
+			Name:     e.Name,
+			Data:     stringifyedDataBytes,
+			SocketId: e.SocketId,
+		}
+		batchEvents = append(batchEvents, newBatchEvent)
 	}
-	return json.Marshal(&batchRequest{batch})
+	return json.Marshal(&batchPayload{batchEvents})
 }
 
-func encodePayload(data interface{}) ([]byte, error) {
+func encodeEventData(data interface{}) ([]byte, error) {
 	var dataBytes []byte
 	var err error
 

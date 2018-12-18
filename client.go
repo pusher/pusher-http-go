@@ -190,7 +190,7 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if err := validateSocketID(socketID); err != nil {
 		return nil, err
 	}
-	payload, err := createTriggerPayload(channels, eventName, data, socketID, c.EncryptionMasterKey)
+	payload, err := encodeTriggerBody(channels, eventName, data, socketID, c.EncryptionMasterKey)
 	if err != nil {
 		return nil, err
 	}
@@ -206,8 +206,11 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	return unmarshalledBufferedEvents(response)
 }
 
-type batchRequest struct {
-	Batch []Event `json:"batch"`
+type Event struct {
+	Channel  string
+	Name     string
+	Data     interface{}
+	SocketId *string
 }
 
 /* TriggerBatch triggers multiple events on multiple types of channels in a single call:
@@ -236,7 +239,7 @@ func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
 			return nil, errors.New("Your encryptionMasterKey is not of the correct format")
 		}
 	}
-	payload, err := createTriggerBatchPayload(batch, c.EncryptionMasterKey)
+	payload, err := encodeTriggerBatchBody(batch, c.EncryptionMasterKey)
 	if err != nil {
 		return nil, err
 	}
