@@ -74,7 +74,7 @@ func encodeTriggerBatchBody(batch []Event, encryptionKey string) ([]byte, error)
 			Data:     stringifyedDataBytes,
 			SocketId: e.SocketId,
 		}
-		batchEvents = append(batchEvents, newBatchEvent)
+		batchEvents[idx] = newBatchEvent
 	}
 	return json.Marshal(&batchPayload{batchEvents})
 }
