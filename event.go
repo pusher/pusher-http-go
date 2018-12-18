@@ -10,10 +10,10 @@ import (
 const maxEventPayloadSize = 10240
 
 type Event struct {
-	Channel  string  `json:"channel"`
-	Name     string  `json:"name"`
-	Data     string  `json:"data"`
-	SocketId *string `json:"socket_id,omitempty"`
+	Channel  string      `json:"channel"`
+	Name     string      `json:"name"`
+	Data     interface{} `json:"data"`
+	SocketId *string     `json:"socket_id,omitempty"`
 }
 
 type eventPayload struct {
@@ -60,7 +60,7 @@ func createTriggerBatchPayload(batch []Event, encryptionKey string) ([]byte, err
 		} else {
 			batch[idx].Data = string(dataBytes)
 		}
-		if len(batch[idx].Data) > maxEventPayloadSize {
+		if len(batch[idx].Data.(string)) > maxEventPayloadSize {
 			return nil, fmt.Errorf("Data of the event #%d in batch, must be smaller than 10kb", idx)
 		}
 	}
