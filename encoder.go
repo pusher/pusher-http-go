@@ -2,12 +2,10 @@ package pusher
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 )
 
 // maxEventPayloadSize indicates the max size allowed for the data content (payload) of each event
-const maxEventPayloadSize = 10240
+const maxEventPayloadSize = 102400
 
 type batchEvent struct {
 	Channel  string  `json:"channel"`
@@ -41,9 +39,9 @@ func encodeTriggerBody(channels []string, event string, data interface{}, socket
 	} else {
 		payloadData = string(dataBytes)
 	}
-	if len(payloadData) > maxEventPayloadSize {
-		return nil, errors.New("Data must be smaller than 10kb")
-	}
+	// if len(payloadData) > maxEventPayloadSize {
+	// 	return nil, errors.New("Data must be smaller than 10kb")
+	// }
 	return json.Marshal(&eventPayload{
 		Name:     event,
 		Channels: channels,
@@ -65,9 +63,9 @@ func encodeTriggerBatchBody(batch []Event, encryptionKey string) ([]byte, error)
 		} else {
 			stringifyedDataBytes = string(dataBytes)
 		}
-		if len(stringifyedDataBytes) > maxEventPayloadSize {
-			return nil, fmt.Errorf("Data of the event #%d in batch, must be smaller than 10kb", idx)
-		}
+		// if len(stringifyedDataBytes) > maxEventPayloadSize {
+		// 	return nil, fmt.Errorf("Data of the event #%d in batch, must be smaller than 10kb", idx)
+		// }
 		newBatchEvent := batchEvent{
 			Channel:  e.Channel,
 			Name:     e.Name,
