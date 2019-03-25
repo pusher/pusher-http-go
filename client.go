@@ -1,10 +1,13 @@
 package pusher
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	u "net/url"
 	"os"
@@ -118,7 +121,11 @@ func (c *Client) requestClient() *http.Client {
 }
 
 func (c *Client) request(method, url string, body []byte) ([]byte, error) {
-	return request(c.requestClient(), method, url, body)
+	return request(c.requestClient(), method, url, body, nil)
+}
+
+func (c *Client) requestWithLog(method, url string, body []byte, logger *zerolog.Logger) ([]byte, error) {
+	return request(c.requestClient(), method, url, body, logger)
 }
 
 /*
@@ -133,8 +140,8 @@ be marshallable into JSON.
 	client.Trigger("greeting_channel", "say_hello", data)
 
 */
-func (c *Client) Trigger(channel string, eventName string, data interface{}) (*BufferedEvents, error) {
-	return c.trigger([]string{channel}, eventName, data, nil)
+func (c *Client) Trigger(ctx context.Context, channel string, eventName string, data interface{}) (*BufferedEvents, error) {
+	return c.trigger(ctx, []string{channel}, eventName, data, nil)
 }
 
 /*
@@ -142,8 +149,8 @@ The same as `client.Trigger`, except one passes in a slice of `channels` as the 
 The maximum length of channels is 100.
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
-func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) (*BufferedEvents, error) {
-	return c.trigger(channels, eventName, data, nil)
+func (c *Client) TriggerMulti(ctx context.Context, channels []string, eventName string, data interface{}) (*BufferedEvents, error) {
+	return c.trigger(ctx, channels, eventName, data, nil)
 }
 
 /*
@@ -153,8 +160,8 @@ This method allow you to exclude a recipient whose connection has that
 	client.TriggerExclusive("a_channel", "event", data, "123.12")
 
 */
-func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
-	return c.trigger([]string{channel}, eventName, data, &socketID)
+func (c *Client) TriggerExclusive(ctx context.Context, channel string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
+	return c.trigger(ctx, []string{channel}, eventName, data, &socketID)
 }
 
 /*
@@ -163,11 +170,14 @@ Excluding a recipient on a trigger to multiple channels.
 	client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
 
 */
-func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
-	return c.trigger(channels, eventName, data, &socketID)
+func (c *Client) TriggerMultiExclusive(ctx context.Context, channels []string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
+	return c.trigger(ctx, channels, eventName, data, &socketID)
 }
 
-func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
+func (c *Client) trigger(ctx context.Context, channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
+	logger := log.Ctx(ctx).With().Logger()
+	logger.Debug().Msgf("Event %s received from %s with socket %v and data %s", eventName, channels, socketID, data)
+
 	hasEncryptedChannel := false
 	for _, channel := range channels {
 		if isEncryptedChannel(channel) {
@@ -175,34 +185,42 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 		}
 	}
 	if len(channels) > maxTriggerableChannels {
+		logger.Error().Msgf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
 	if hasEncryptedChannel && len(channels) > 1 {
 		// For rationale, see limitations of end-to-end encryption in the README
+		logger.Error().Msgf("You cannot trigger to multiple channels when using encrypted channels")
 		return nil, errors.New("You cannot trigger to multiple channels when using encrypted channels")
 	}
 	if !channelsAreValid(channels) {
+		logger.Error().Msgf("At least one of your channels' names are invalid")
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
 	if hasEncryptedChannel && !validEncryptionKey(c.EncryptionMasterKey) {
+		logger.Error().Msgf("Your encryptionMasterKey is not of the correct format")
 		return nil, errors.New("Your encryptionMasterKey is not of the correct format")
 	}
 	if err := validateSocketID(socketID); err != nil {
+		logger.Error().Err(err).Msgf("socket_id %v invalid", socketID)
 		return nil, err
 	}
 	payload, err := encodeTriggerBody(channels, eventName, data, socketID, c.EncryptionMasterKey)
 	if err != nil {
+		logger.Error().Err(err).Msgf("cannot encode TriggerBody from channels %s with eventName %s and socketId %v", channels, eventName, socketID)
 		return nil, err
 	}
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
 	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
-		return nil, err
+		logger.Error().Err(err).Msgf("cannot create RequestURL with host %s, path %s, cluster %s", c.Host, path, c.Cluster)
 	}
-	response, err := c.request("POST", u, payload)
+	response, err := c.requestWithLog("POST", u, payload, &logger)
 	if err != nil {
+		logger.Error().Err(err).Msgf("cannot request payload to %s", u)
 		return nil, err
 	}
+
 	return unmarshalledBufferedEvents(response)
 }
 
