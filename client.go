@@ -55,6 +55,8 @@ type Client struct {
 	Cluster              string
 	HttpClient           *http.Client
 	EncryptionMasterKey  string //for E2E
+	BeforeRequestHandler BeforeRequestHandler
+	AfterRequestHandler  AfterRequestHandler
 }
 
 /*
@@ -121,11 +123,11 @@ func (c *Client) requestClient() *http.Client {
 }
 
 func (c *Client) request(method, url string, body []byte) ([]byte, error) {
-	return request(c.requestClient(), method, url, body, nil)
+	return request(c.requestClient(), method, url, body, nil, c.BeforeRequestHandler, c.AfterRequestHandler)
 }
 
 func (c *Client) requestWithLog(method, url string, body []byte, logger *zerolog.Logger) ([]byte, error) {
-	return request(c.requestClient(), method, url, body, logger)
+	return request(c.requestClient(), method, url, body, logger, c.BeforeRequestHandler, c.AfterRequestHandler)
 }
 
 /*

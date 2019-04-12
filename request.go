@@ -10,12 +10,20 @@ import (
 	"strconv"
 )
 
+type BeforeRequestHandler func(req *http.Request) *http.Request
+type AfterRequestHandler func(req *http.Request, resp *http.Response, err error)
+
 // change timeout to time.Duration
-func request(client *http.Client, method, url string, body []byte, logger *zerolog.Logger) ([]byte, error) {
+func request(client *http.Client, method, url string, body []byte, logger *zerolog.Logger, before BeforeRequestHandler, after AfterRequestHandler) ([]byte, error) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
-
+	if before != nil {
+		req = before(req)
+	}
 	resp, err := client.Do(req)
+	if after != nil {
+		after(req, resp, err)
+	}
 	if err != nil {
 		if logger != nil {
 			logger.Error().Err(err).Msgf("cannot do http request %+v to %s", req, url)
