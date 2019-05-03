@@ -29,7 +29,7 @@ type Users struct {
 
 // Represents a user and contains their ID.
 type User struct {
-	Id string `json:"id"`
+	ID string `json:"id"`
 }
 
 /*

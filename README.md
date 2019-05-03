@@ -499,7 +499,7 @@ type Users struct {
 
 ```go
 type User struct {
-    Id string
+    ID string
 }
 ```
 
@@ -508,7 +508,7 @@ type User struct {
 ```go
 users, err := client.GetChannelUsers("presence-chatroom")
 
-// users => &{List:[{Id:13} {Id:90}]}
+// users => &{List:[{ID:13} {ID:90}]}
 ```
 
 ### Webhook validation

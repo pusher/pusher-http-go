@@ -312,7 +312,7 @@ Get a list of users in a presence-channel by passing to this method the channel 
 
 	users, err := client.GetChannelUsers("presence-chatroom")
 
-	//users=> &{List:[{Id:13} {Id:90}]}
+	//users=> &{List:[{ID:13} {ID:90}]}
 
 */
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
