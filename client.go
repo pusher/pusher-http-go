@@ -381,7 +381,7 @@ In this library, one does this by passing a `pusher.MemberData` instance.
 	params, _ := ioutil.ReadAll(req.Body)
 
 	presenceData := pusher.MemberData{
-		UserId: "1",
+		UserID: "1",
 		UserInfo: map[string]string{
 			"twitter": "jamiepatel",
 		},

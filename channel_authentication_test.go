@@ -32,7 +32,7 @@ func TestPrivateChannelAuthenticationWrongParams(t *testing.T) {
 func TestPresenceChannelAuthentication(t *testing.T) {
 	client := setUpAuthClient()
 	postParams := []byte("channel_name=presence-foobar&socket_id=1234.1234")
-	presenceData := MemberData{UserId: "10", UserInfo: map[string]string{"name": "Mr. Pusher"}}
+	presenceData := MemberData{UserID: "10", UserInfo: map[string]string{"name": "Mr. Pusher"}}
 	expected := "{\"auth\":\"278d425bdf160c739803:48dac51d2d7569e1e9c0f48c227d4b26f238fa68e5c0bb04222c966909c4f7c4\",\"channel_data\":\"{\\\"user_id\\\":\\\"10\\\",\\\"user_info\\\":{\\\"name\\\":\\\"Mr. Pusher\\\"}}\"}"
 	result, err := client.AuthenticatePresenceChannel(postParams, presenceData)
 	assert.Equal(t, expected, string(result))

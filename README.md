@@ -351,7 +351,7 @@ Using presence channels is similar to private channels, but in order to identify
 | Argument | Description |
 | :-: | :-: |
 | params `[]byte` | The request body sent by the client |
-| member `pusher.MemberData` | A struct representing what to assign to a channel member, consisting of a `UserId` and any custom `UserInfo`. See below |
+| member `pusher.MemberData` | A struct representing what to assign to a channel member, consisting of a `UserID` and any custom `UserInfo`. See below |
 
 ###### Custom Types
 
@@ -359,7 +359,7 @@ Using presence channels is similar to private channels, but in order to identify
 
 ```go
 type MemberData struct {
-    UserId   string
+    UserID   string
     UserInfo map[string]string
 }
 ```
@@ -370,7 +370,7 @@ type MemberData struct {
 params, _ := ioutil.ReadAll(req.Body)
 
 presenceData := pusher.MemberData{
-    UserId: "1",
+    UserID: "1",
     UserInfo: map[string]string{
         "twitter": "jamiepatel",
     },

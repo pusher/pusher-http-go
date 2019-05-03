@@ -33,10 +33,10 @@ type User struct {
 }
 
 /*
-A struct representing what to assign to a channel member, consisting of a `UserId` and any custom `UserInfo`.
+A struct representing what to assign to a channel member, consisting of a `UserID` and any custom `UserInfo`.
 */
 type MemberData struct {
-	UserId   string            `json:"user_id"`
+	UserID   string            `json:"user_id"`
 	UserInfo map[string]string `json:"user_info,omitempty"`
 }
 
