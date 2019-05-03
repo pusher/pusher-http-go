@@ -29,7 +29,7 @@ func TestTriggerSuccessCase(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	err := client.Trigger("test_channel", "test", "yolo")
 	assert.NoError(t, err)
 }
@@ -46,7 +46,7 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	channels, err := client.Channels(nil)
 	assert.NoError(t, err)
 
@@ -71,7 +71,7 @@ func TestGetChannelSuccess(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	channel, err := client.Channel("test_channel", nil)
 	assert.NoError(t, err)
 
@@ -95,7 +95,7 @@ func TestGetChannelUserSuccess(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	users, err := client.GetChannelUsers("test_channel")
 	assert.NoError(t, err)
 
@@ -116,12 +116,12 @@ func TestTriggerWithSocketId(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	client.TriggerExclusive("test_channel", "test", "yolo", "1234.12")
 }
 
 func TestTriggerSocketIdValidation(t *testing.T) {
-	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	client := Client{AppID: "id", Key: "key", Secret: "secret"}
 	err := client.TriggerExclusive("test_channel", "test", "yolo", "1234.12:lalala")
 	assert.Error(t, err)
 }
@@ -142,7 +142,7 @@ func TestTriggerBatchSuccess(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "appid", Key: "key", Secret: "secret", Host: u.Host}
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
 	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"test_channel", "test", "yolo2", nil},
@@ -166,7 +166,7 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 	}))
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
 	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"test_channel", "test", "yolo2", nil},
@@ -191,7 +191,7 @@ func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T)
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "appid", Key: "key", Secret: "secret", Host: u.Host}
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
 	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"private-encrypted-test_channel", "test", "yolo2", nil},
@@ -215,7 +215,7 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
 	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"private-encrypted-test_channel", "test", "yolo2", nil},
@@ -232,7 +232,7 @@ func TestErrorResponseHandler(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	channelParams := map[string]string{"info": "user_count,subscription_count"}
 	channel, err := client.Channel("this_is_not_a_presence_channel", channelParams)
 
@@ -250,7 +250,7 @@ func TestRequestTimeouts(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
 
 	err := client.Trigger("test_channel", "test", "yolo")
 
@@ -271,7 +271,7 @@ func TestChannelLengthValidation(t *testing.T) {
 		"92", "93", "94", "95", "96", "97", "98", "99", "100", "101",
 	}
 
-	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	client := Client{AppID: "id", Key: "key", Secret: "secret"}
 	err := client.TriggerMulti(channels, "yolo", "woot")
 
 	assert.EqualError(t, err, "You cannot trigger on more than 100 channels at once")
@@ -283,7 +283,7 @@ func TestChannelFormatValidation(t *testing.T) {
 	for i := 0; i <= 202; i++ {
 		channel2 += "a"
 	}
-	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	client := Client{AppID: "id", Key: "key", Secret: "secret"}
 	err1 := client.Trigger(channel1, "yolo", "w00t")
 
 	err2 := client.Trigger(channel2, "yolo", "not 19 forever")
@@ -295,7 +295,7 @@ func TestChannelFormatValidation(t *testing.T) {
 }
 
 func TestDataSizeValidation(t *testing.T) {
-	client := Client{AppId: "id", Key: "key", Secret: "secret"}
+	client := Client{AppID: "id", Key: "key", Secret: "secret"}
 	var data string
 	for i := 0; i <= 10242; i++ {
 		data += "a"
@@ -309,7 +309,7 @@ func TestDataSizeValidation(t *testing.T) {
 func TestInitialisationFromURL(t *testing.T) {
 	url := "http://feaf18a411d3cb9216ee:fec81108d90e1898e17a@api.pusherapp.com/apps/104060"
 	client, _ := ClientFromURL(url)
-	expectedClient := &Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppId: "104060", Host: "api.pusherapp.com"}
+	expectedClient := &Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppID: "104060", Host: "api.pusherapp.com"}
 	assert.Equal(t, expectedClient, client)
 }
 
@@ -336,6 +336,6 @@ func TestURLInitErrorNoID(t *testing.T) {
 func TestInitialisationFromENV(t *testing.T) {
 	os.Setenv("PUSHER_URL", "http://feaf18a411d3cb9216ee:fec81108d90e1898e17a@api.pusherapp.com/apps/104060")
 	client, _ := ClientFromEnv("PUSHER_URL")
-	expectedClient := &Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppId: "104060", Host: "api.pusherapp.com"}
+	expectedClient := &Client{Key: "feaf18a411d3cb9216ee", Secret: "fec81108d90e1898e17a", AppID: "104060", Host: "api.pusherapp.com"}
 	assert.Equal(t, expectedClient, client)
 }

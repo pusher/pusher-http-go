@@ -44,7 +44,7 @@ import "github.com/pusher/pusher-http-go"
 func main(){
     // instantiate a client
     client := pusher.Client{
-        AppId: "your_app_id",
+        AppID: "your_app_id",
         Key: "your_app_key",
         Secret: "your_app_secret",
         Cluster: "your_app_cluster",
@@ -63,7 +63,7 @@ The easiest way to configure the library is by creating a new `Pusher` instance:
 
 ```go
 client := pusher.Client{
-    AppId:   "your_app_id",
+    AppID:   "your_app_id",
     Key:     "your_app_key",
     Secret:  "your_app_secret",
     Cluster: "your_app_cluster",
@@ -144,7 +144,7 @@ This library supports end to end encryption of your private channels. This means
 
 ```go
 client := pusher.Client{
-    AppId:              "your_app_id",
+    AppID:              "your_app_id",
     Key:                "your_app_key",
     Secret:             "your_app_secret",
     Cluster:            "your_app_cluster",
@@ -181,7 +181,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
     urlfetchClient := urlfetch.Client(c)
 
     client := pusher.Client{
-        AppId:      "app_id",
+        AppID:      "app_id",
         Key:        "key",
         Secret:     "secret",
         HttpClient: urlfetchClient,

@@ -14,7 +14,7 @@ Getting Started
 To create a new client, simply pass in your application credentials to a `pusher.Client` struct:
 
 	client := pusher.Client{
-	  AppId: "your_app_id",
+	  AppID: "your_app_id",
 	  Key: "your_app_key",
 	  Secret: "your_app_secret",
 	}
