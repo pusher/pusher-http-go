@@ -110,7 +110,7 @@ If you wish to set a time-limit for each HTTP request, create a `http.Client` in
 ```go
 httpClient := &http.Client{Timeout: time.Second * 3}
 
-pusherClient.HttpClient = httpClient
+pusherClient.HTTPClient = httpClient
 ```
 
 If you do not specifically set a HTTP client, a default one is created with a timeout of 5 seconds.
@@ -184,7 +184,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
         AppID:      "app_id",
         Key:        "key",
         Secret:     "secret",
-        HttpClient: urlfetchClient,
+        HTTPClient: urlfetchClient,
     }
 
     client.Trigger("my-channel", "my_event", map[string]string{"message": "hello world"})

@@ -46,7 +46,7 @@ type Client struct {
 	Host                string // host or host:port pair
 	Secure              bool   // true for HTTPS
 	Cluster             string
-	HttpClient          *http.Client
+	HTTPClient          *http.Client
 	EncryptionMasterKey string //for E2E
 }
 
@@ -106,11 +106,11 @@ Returns the underlying HTTP client.
 Useful to set custom properties to it.
 */
 func (c *Client) requestClient() *http.Client {
-	if c.HttpClient == nil {
-		c.HttpClient = &http.Client{Timeout: time.Second * 5}
+	if c.HTTPClient == nil {
+		c.HTTPClient = &http.Client{Timeout: time.Second * 5}
 	}
 
-	return c.HttpClient
+	return c.HTTPClient
 }
 
 func (c *Client) request(method, url string, body []byte) ([]byte, error) {
