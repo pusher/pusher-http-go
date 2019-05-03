@@ -68,7 +68,7 @@ func TestWebhookUnmarshalling(t *testing.T) {
 				Channel:  "private-channel",
 				Event:    "client-yolo",
 				Data:     "{\"yolo\":\"woot\"}",
-				SocketId: "44610.7511910",
+				SocketID: "44610.7511910",
 			},
 		},
 	}

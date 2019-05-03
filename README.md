@@ -548,7 +548,7 @@ type WebhookEvent struct {
     Channel  string
     Event    string
     Data     string
-    SocketId string
+    SocketID string
 }
 ```
 

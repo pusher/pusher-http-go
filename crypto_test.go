@@ -109,7 +109,7 @@ func TestDecryptValidKey(t *testing.T) {
 				Channel:  channel,
 				Event:    "event",
 				Data:     cipherText,
-				SocketId: "44610.7511910",
+				SocketID: "44610.7511910",
 			},
 		},
 	}
@@ -122,7 +122,7 @@ func TestDecryptValidKey(t *testing.T) {
 				Channel:  channel,
 				Event:    "event",
 				Data:     plaintext,
-				SocketId: "44610.7511910",
+				SocketID: "44610.7511910",
 			},
 		},
 	}
@@ -143,7 +143,7 @@ func TestDecryptInvalidKey(t *testing.T) {
 				Channel:  channel,
 				Event:    "event",
 				Data:     cipherText,
-				SocketId: "44610.7511910",
+				SocketID: "44610.7511910",
 			},
 		},
 	}

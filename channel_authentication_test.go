@@ -39,7 +39,7 @@ func TestPresenceChannelAuthentication(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestAuthSocketIdValidation(t *testing.T) {
+func TestAuthSocketIDValidation(t *testing.T) {
 	client := setUpAuthClient()
 	postParams := []byte("channel_name=private-foobar&socket_id=12341234")
 	result, err := client.AuthenticatePrivateChannel(postParams)

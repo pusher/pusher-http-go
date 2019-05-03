@@ -15,7 +15,7 @@ type WebhookEvent struct {
 	Channel  string `json:"channel"`             // the channel on which it was sent
 	Event    string `json:"event,omitempty"`     // the name of the event
 	Data     string `json:"data,omitempty"`      // the data associated with the event
-	SocketId string `json:"socket_id,omitempty"` // the socket_id of the sending socket
+	SocketID string `json:"socket_id,omitempty"` // the socket_id of the sending socket
 	UserID   string `json:"user_id,omitempty"`   // the user_id of a member who has joined or vacated a presence-channel
 }
 
