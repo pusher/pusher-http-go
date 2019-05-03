@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// Represents the information received about a channel from the Pusher API.
+// Channel represents the information about a channel from the Pusher API.
 type Channel struct {
 	Name              string
 	Occupied          bool `json:"occupied,omitempty"`
@@ -12,28 +12,29 @@ type Channel struct {
 	SubscriptionCount int  `json:"subscription_count,omitempty"`
 }
 
-// Represents a list of channels received by the Pusher API.
+// ChannelsList represents a list of channels received by the Pusher API.
 type ChannelsList struct {
 	Channels map[string]ChannelListItem `json:"channels"`
 }
 
-// An item of ChannelsList
+// ChannelListItem represents an item within ChannelsList
 type ChannelListItem struct {
 	UserCount int `json:"user_count"`
 }
 
-// Represents a list of users in a presence-channel
+// Users represents a list of users in a presence-channel
 type Users struct {
 	List []User `json:"users"`
 }
 
-// Represents a user and contains their ID.
+// User represents a user and contains their ID.
 type User struct {
 	ID string `json:"id"`
 }
 
 /*
-A struct representing what to assign to a channel member, consisting of a `UserID` and any custom `UserInfo`.
+MemberData represents what to assign to a channel member, consisting of a
+`UserID` and any custom `UserInfo`.
 */
 type MemberData struct {
 	UserID   string            `json:"user_id"`

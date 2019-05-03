@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 )
 
-// This is a parsed form of a valid webhook received by the server.
+// Webhook is the parsed form of a valid webhook received by the server.
 type Webhook struct {
 	TimeMs int            `json:"time_ms"` // the timestamp of the request
 	Events []WebhookEvent `json:"events"`  // the events associated with the webhook
 }
 
+// WebhookEvent is the parsed form of a valid webhook event received by the
+// server.
 type WebhookEvent struct {
 	Name     string `json:"name"`                // the type of the event
 	Channel  string `json:"channel"`             // the channel on which it was sent
