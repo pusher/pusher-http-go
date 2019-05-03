@@ -26,10 +26,6 @@ type eventPayload struct {
 	SocketId *string  `json:"socket_id,omitempty"`
 }
 
-type BufferedEvents struct {
-	EventIds map[string]string `json:"event_ids,omitempty"`
-}
-
 func encodeTriggerBody(channels []string, event string, data interface{}, socketID *string, encryptionKey string) ([]byte, error) {
 	dataBytes, err := encodeEventData(data)
 	if err != nil {
@@ -53,7 +49,7 @@ func encodeTriggerBody(channels []string, event string, data interface{}, socket
 }
 
 func encodeTriggerBatchBody(batch []Event, encryptionKey string) ([]byte, error) {
- 	batchEvents := make([]batchEvent, len(batch))
+	batchEvents := make([]batchEvent, len(batch))
 	for idx, e := range batch {
 		var stringifyedDataBytes string
 		dataBytes, err := encodeEventData(e.Data)

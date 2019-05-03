@@ -30,8 +30,7 @@ func TestTriggerSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host}
-	_, err := client.Trigger("test_channel", "test", "yolo")
-
+	err := client.Trigger("test_channel", "test", "yolo")
 	assert.NoError(t, err)
 }
 
@@ -123,7 +122,7 @@ func TestTriggerWithSocketId(t *testing.T) {
 
 func TestTriggerSocketIdValidation(t *testing.T) {
 	client := Client{AppId: "id", Key: "key", Secret: "secret"}
-	_, err := client.TriggerExclusive("test_channel", "test", "yolo", "1234.12:lalala")
+	err := client.TriggerExclusive("test_channel", "test", "yolo", "1234.12:lalala")
 	assert.Error(t, err)
 }
 
@@ -144,7 +143,7 @@ func TestTriggerBatchSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "appid", Key: "key", Secret: "secret", Host: u.Host}
-	_, err := client.TriggerBatch([]Event{
+	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"test_channel", "test", "yolo2", nil},
 	})
@@ -166,10 +165,9 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 		assert.NoError(t, err)
 	}))
 	defer server.Close()
-
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
-	_, err := client.TriggerBatch([]Event{
+	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"test_channel", "test", "yolo2", nil},
 	})
@@ -194,7 +192,7 @@ func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T)
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "appid", Key: "key", Secret: "secret", Host: u.Host}
-	_, err := client.TriggerBatch([]Event{
+	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"private-encrypted-test_channel", "test", "yolo2", nil},
 	})
@@ -218,7 +216,7 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
-	_, err := client.TriggerBatch([]Event{
+	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"private-encrypted-test_channel", "test", "yolo2", nil},
 	})
@@ -253,7 +251,8 @@ func TestRequestTimeouts(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppId: "id", Key: "key", Secret: "secret", Host: u.Host, HttpClient: &http.Client{Timeout: time.Millisecond * 100}}
-	_, err := client.Trigger("test_channel", "test", "yolo")
+
+	err := client.Trigger("test_channel", "test", "yolo")
 
 	assert.Error(t, err)
 }
@@ -273,10 +272,9 @@ func TestChannelLengthValidation(t *testing.T) {
 	}
 
 	client := Client{AppId: "id", Key: "key", Secret: "secret"}
-	res, err := client.TriggerMulti(channels, "yolo", "woot")
+	err := client.TriggerMulti(channels, "yolo", "woot")
 
 	assert.EqualError(t, err, "You cannot trigger on more than 100 channels at once")
-	assert.Nil(t, res)
 }
 
 func TestChannelFormatValidation(t *testing.T) {
@@ -286,13 +284,13 @@ func TestChannelFormatValidation(t *testing.T) {
 		channel2 += "a"
 	}
 	client := Client{AppId: "id", Key: "key", Secret: "secret"}
-	res1, err1 := client.Trigger(channel1, "yolo", "w00t")
-	res2, err2 := client.Trigger(channel2, "yolo", "not 19 forever")
+	err1 := client.Trigger(channel1, "yolo", "w00t")
+
+	err2 := client.Trigger(channel2, "yolo", "not 19 forever")
 
 	assert.EqualError(t, err1, "At least one of your channels' names are invalid")
-	assert.Nil(t, res1)
+
 	assert.EqualError(t, err2, "At least one of your channels' names are invalid")
-	assert.Nil(t, res2)
 
 }
 
@@ -302,9 +300,9 @@ func TestDataSizeValidation(t *testing.T) {
 	for i := 0; i <= 10242; i++ {
 		data += "a"
 	}
-	res, err := client.Trigger("channel", "event", data)
+	err := client.Trigger("channel", "event", data)
+
 	assert.EqualError(t, err, "Data must be smaller than 10kb")
-	assert.Nil(t, res)
 
 }
 

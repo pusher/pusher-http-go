@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	u "net/url"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -60,8 +60,8 @@ Clients can be instantiated from a specially-crafted Pusher URL. For example:
 	client := pusher.ClientFromURL("http://key:secret@api.pusherapp.com/apps/app_id")
 
 */
-func ClientFromURL(url string) (*Client, error) {
-	url2, err := u.Parse(url)
+func ClientFromURL(serverURL string) (*Client, error) {
+	url2, err := url.Parse(serverURL)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ be marshallable into JSON.
 	client.Trigger("greeting_channel", "say_hello", data)
 
 */
-func (c *Client) Trigger(channel string, eventName string, data interface{}) (*BufferedEvents, error) {
+func (c *Client) Trigger(channel string, eventName string, data interface{}) error {
 	return c.trigger([]string{channel}, eventName, data, nil)
 }
 
@@ -142,7 +142,7 @@ The same as `client.Trigger`, except one passes in a slice of `channels` as the 
 The maximum length of channels is 100.
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
-func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) (*BufferedEvents, error) {
+func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) error {
 	return c.trigger(channels, eventName, data, nil)
 }
 
@@ -153,7 +153,7 @@ This method allow you to exclude a recipient whose connection has that
 	client.TriggerExclusive("a_channel", "event", data, "123.12")
 
 */
-func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
+func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) error {
 	return c.trigger([]string{channel}, eventName, data, &socketID)
 }
 
@@ -163,11 +163,11 @@ Excluding a recipient on a trigger to multiple channels.
 	client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
 
 */
-func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) (*BufferedEvents, error) {
+func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) error {
 	return c.trigger(channels, eventName, data, &socketID)
 }
 
-func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) (*BufferedEvents, error) {
+func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) error {
 	hasEncryptedChannel := false
 	for _, channel := range channels {
 		if isEncryptedChannel(channel) {
@@ -175,35 +175,34 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 		}
 	}
 	if len(channels) > maxTriggerableChannels {
-		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
+		return fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
 	if hasEncryptedChannel && len(channels) > 1 {
 		// For rationale, see limitations of end-to-end encryption in the README
-		return nil, errors.New("You cannot trigger to multiple channels when using encrypted channels")
+		return errors.New("You cannot trigger to multiple channels when using encrypted channels")
+
 	}
 	if !channelsAreValid(channels) {
-		return nil, errors.New("At least one of your channels' names are invalid")
+		return errors.New("At least one of your channels' names are invalid")
 	}
 	if hasEncryptedChannel && !validEncryptionKey(c.EncryptionMasterKey) {
-		return nil, errors.New("Your encryptionMasterKey is not of the correct format")
+		return errors.New("Your encryptionMasterKey is not of the correct format")
 	}
 	if err := validateSocketID(socketID); err != nil {
-		return nil, err
+		return err
 	}
 	payload, err := encodeTriggerBody(channels, eventName, data, socketID, c.EncryptionMasterKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	path := fmt.Sprintf("/apps/%s/events", c.AppId)
-	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	triggerURL, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	response, err := c.request("POST", u, payload)
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalledBufferedEvents(response)
+	_, err = c.request("POST", triggerURL, payload)
+
+	return err
 }
 
 type Event struct {
@@ -219,15 +218,15 @@ type Event struct {
 	    { Channel: "private-encrypted-secretdonut", Name: "ev2", Data: "pippo2" },
     })
 */
-func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
+func (c *Client) TriggerBatch(batch []Event) error {
 	hasEncryptedChannel := false
 	// validate every channel name and every sockedID (if present) in batch
 	for _, event := range batch {
 		if !validChannel(event.Channel) {
-			return nil, fmt.Errorf("The channel named %s has a non-valid name", event.Channel)
+			return fmt.Errorf("The channel named %s has a non-valid name", event.Channel)
 		}
 		if err := validateSocketID(event.SocketId); err != nil {
-			return nil, err
+			return err
 		}
 		if isEncryptedChannel(event.Channel) {
 			hasEncryptedChannel = true
@@ -236,23 +235,20 @@ func (c *Client) TriggerBatch(batch []Event) (*BufferedEvents, error) {
 	if hasEncryptedChannel {
 		// validate EncryptionMasterKey
 		if !validEncryptionKey(c.EncryptionMasterKey) {
-			return nil, errors.New("Your encryptionMasterKey is not of the correct format")
+			return errors.New("Your encryptionMasterKey is not of the correct format")
 		}
 	}
 	payload, err := encodeTriggerBatchBody(batch, c.EncryptionMasterKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	path := fmt.Sprintf("/apps/%s/batch_events", c.AppId)
-	u, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
+	triggerURL, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	response, err := c.request("POST", u, payload)
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalledBufferedEvents(response)
+	_, err = c.request("POST", triggerURL, payload)
+	return err
 }
 
 /*
