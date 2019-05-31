@@ -38,20 +38,16 @@ If you wish to set a time-limit for each HTTP request, set the `Timeout` propert
 Changing the `pusher.Client`'s `Host` property will make sure requests are sent to your specified host.
 
 	client.Host = "foo.bar.com" // by default this is "api.pusherapp.com".
-
-If you wish to use push notifications, you need to define the Client.PushNotificationHost,
-please see Pusher docs for more details: https://pusher.com/docs/push_notifications
 */
 type Client struct {
-	AppId                string
-	Key                  string
-	Secret               string
-	Host                 string // host or host:port pair
-	PushNotificationHost string
-	Secure               bool // true for HTTPS
-	Cluster              string
-	HttpClient           *http.Client
-	EncryptionMasterKey  string //for E2E
+	AppId               string
+	Key                 string
+	Secret              string
+	Host                string // host or host:port pair
+	Secure              bool   // true for HTTPS
+	Cluster             string
+	HttpClient          *http.Client
+	EncryptionMasterKey string //for E2E
 }
 
 /*
@@ -489,49 +485,4 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 		}
 	}
 	return nil, errors.New("Invalid webhook")
-}
-
-/*
-Notify is used to send native push notifications via Apple APNS or Google GCM/FCM systems. Please make sure that
-you have provided a Client.PushNotificationHost, please see Pusher docs for details: https://pusher.com/docs/push_notifications
-*/
-func (c *Client) Notify(interests []string, pushNotification PushNotification) (*NotifyResponse, error) {
-	pNRequest := notificationRequest{
-		interests,
-		&pushNotification,
-	}
-
-	err := pNRequest.validate()
-	if err != nil {
-		return nil, err
-	}
-
-	if c.PushNotificationHost == "" {
-		return nil, errors.New("PushNotificationHost not provided")
-	}
-
-	requestBody, err := json.Marshal(pNRequest)
-	if err != nil {
-		return nil, err
-	}
-
-	path := fmt.Sprintf("/%s/%s/apps/%s/notifications", PushNotifAPIPrefixDefault, PushNotifAPIVersionDefault, c.AppId)
-
-	url, err := createRequestURL("POST", c.PushNotificationHost, path, c.Key, c.Secret, authTimestamp(), c.Secure, requestBody, nil, c.Cluster)
-	if err != nil {
-		return nil, err
-	}
-
-	byteResponse, err := c.request("POST", url, requestBody)
-	if err != nil {
-		return nil, err
-	}
-
-	var response *NotifyResponse
-	err = json.Unmarshal(byteResponse, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, err
 }
