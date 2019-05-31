@@ -53,7 +53,12 @@ func main(){
     data := map[string]string{"message": "hello world"}
 
     // trigger an event on a channel, along with a data payload
-    client.Trigger("my-channel", "my_event", data)
+    err := client.Trigger("my-channel", "my_event", data)
+    
+    // All trigger methods return an error object, it's worth at least logging this!
+    if err != nil {
+        panic(err)
+    }
 }
 ```
 
