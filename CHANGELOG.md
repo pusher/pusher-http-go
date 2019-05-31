@@ -1,3 +1,8 @@
+2.0.0 / 2019-05-31
+==================
+
+* This release removes support for Push Notifications. Check out https://pusher.com/beams for our new, improved Push Notification offering!
+
 1.3.0 / 2018-08-13
 ==================
 
