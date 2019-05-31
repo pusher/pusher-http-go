@@ -1,3 +1,13 @@
+4.0.0 / 2019-05-31
+==================
+* This release modifies the entire repo to respect the go linter. This is a significant API breaking change and will likely require you to correct references to the names that were changed in your code. All future releases will respect the linter. A summary of the changes:
+* Rename AppId > AppID
+* Rename UserId > UserID
+* Rename SocketId > SocketID
+* Rename Id > ID
+* Rename HttpClient > HTTPClient
+* Improved comments and tabbing
+
 3.0.0 / 2019-05-31
 ==================
 
