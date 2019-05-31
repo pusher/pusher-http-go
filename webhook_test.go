@@ -8,7 +8,7 @@ import (
 )
 
 func setUpClient() Client {
-	return Client{AppId: "id", Key: "key", Secret: "secret"}
+	return Client{AppID: "id", Key: "key", Secret: "secret"}
 }
 
 func TestClientWebhookValidation(t *testing.T) {
@@ -68,7 +68,7 @@ func TestWebhookUnmarshalling(t *testing.T) {
 				Channel:  "private-channel",
 				Event:    "client-yolo",
 				Data:     "{\"yolo\":\"woot\"}",
-				SocketId: "44610.7511910",
+				SocketID: "44610.7511910",
 			},
 		},
 	}

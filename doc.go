@@ -1,5 +1,5 @@
 /*
-The Golang library for interacting with the Pusher HTTP API.
+Package pusher is the Golang library for interacting with the Pusher HTTP API.
 
 This package lets you trigger events to your client and query the state
 of your Pusher channels. When used with a server, you can validate Pusher
@@ -14,7 +14,7 @@ Getting Started
 To create a new client, simply pass in your application credentials to a `pusher.Client` struct:
 
 	client := pusher.Client{
-	  AppId: "your_app_id",
+	  AppID: "your_app_id",
 	  Key: "your_app_key",
 	  Secret: "your_app_secret",
 	}

@@ -13,7 +13,7 @@ type batchEvent struct {
 	Channel  string  `json:"channel"`
 	Name     string  `json:"name"`
 	Data     string  `json:"data"`
-	SocketId *string `json:"socket_id,omitempty"`
+	SocketID *string `json:"socket_id,omitempty"`
 }
 type batchPayload struct {
 	Batch []batchEvent `json:"batch"`
@@ -23,7 +23,7 @@ type eventPayload struct {
 	Name     string   `json:"name"`
 	Channels []string `json:"channels"`
 	Data     string   `json:"data"`
-	SocketId *string  `json:"socket_id,omitempty"`
+	SocketID *string  `json:"socket_id,omitempty"`
 }
 
 func encodeTriggerBody(channels []string, event string, data interface{}, socketID *string, encryptionKey string) ([]byte, error) {
@@ -44,7 +44,7 @@ func encodeTriggerBody(channels []string, event string, data interface{}, socket
 		Name:     event,
 		Channels: channels,
 		Data:     payloadData,
-		SocketId: socketID,
+		SocketID: socketID,
 	})
 }
 
@@ -68,7 +68,7 @@ func encodeTriggerBatchBody(batch []Event, encryptionKey string) ([]byte, error)
 			Channel:  e.Channel,
 			Name:     e.Name,
 			Data:     stringifyedDataBytes,
-			SocketId: e.SocketId,
+			SocketID: e.SocketID,
 		}
 		batchEvents[idx] = newBatchEvent
 	}

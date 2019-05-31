@@ -38,7 +38,7 @@ func TestParsingChannel(t *testing.T) {
 func TestParsingChannelUsers(t *testing.T) {
 	testJSON := []byte("{\"users\":[{\"id\":\"red\"},{\"id\":\"blue\"}]}")
 	expected := &Users{
-		List: []User{User{Id: "red"}, User{Id: "blue"}},
+		List: []User{User{ID: "red"}, User{ID: "blue"}},
 	}
 	result, err := unmarshalledChannelUsers(testJSON)
 	assert.Equal(t, expected, result)

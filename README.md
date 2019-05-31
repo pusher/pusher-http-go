@@ -44,7 +44,7 @@ import "github.com/pusher/pusher-http-go"
 func main(){
     // instantiate a client
     client := pusher.Client{
-        AppId: "your_app_id",
+        AppID: "your_app_id",
         Key: "your_app_key",
         Secret: "your_app_secret",
         Cluster: "your_app_cluster",
@@ -63,7 +63,7 @@ The easiest way to configure the library is by creating a new `Pusher` instance:
 
 ```go
 client := pusher.Client{
-    AppId:   "your_app_id",
+    AppID:   "your_app_id",
     Key:     "your_app_key",
     Secret:  "your_app_secret",
     Cluster: "your_app_cluster",
@@ -110,7 +110,7 @@ If you wish to set a time-limit for each HTTP request, create a `http.Client` in
 ```go
 httpClient := &http.Client{Timeout: time.Second * 3}
 
-pusherClient.HttpClient = httpClient
+pusherClient.HTTPClient = httpClient
 ```
 
 If you do not specifically set a HTTP client, a default one is created with a timeout of 5 seconds.
@@ -144,7 +144,7 @@ This library supports end to end encryption of your private channels. This means
 
 ```go
 client := pusher.Client{
-    AppId:              "your_app_id",
+    AppID:              "your_app_id",
     Key:                "your_app_key",
     Secret:             "your_app_secret",
     Cluster:            "your_app_cluster",
@@ -181,10 +181,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
     urlfetchClient := urlfetch.Client(c)
 
     client := pusher.Client{
-        AppId:      "app_id",
+        AppID:      "app_id",
         Key:        "key",
         Secret:     "secret",
-        HttpClient: urlfetchClient,
+        HTTPClient: urlfetchClient,
     }
 
     client.Trigger("my-channel", "my_event", map[string]string{"message": "hello world"})
@@ -351,7 +351,7 @@ Using presence channels is similar to private channels, but in order to identify
 | Argument | Description |
 | :-: | :-: |
 | params `[]byte` | The request body sent by the client |
-| member `pusher.MemberData` | A struct representing what to assign to a channel member, consisting of a `UserId` and any custom `UserInfo`. See below |
+| member `pusher.MemberData` | A struct representing what to assign to a channel member, consisting of a `UserID` and any custom `UserInfo`. See below |
 
 ###### Custom Types
 
@@ -359,7 +359,7 @@ Using presence channels is similar to private channels, but in order to identify
 
 ```go
 type MemberData struct {
-    UserId   string
+    UserID   string
     UserInfo map[string]string
 }
 ```
@@ -370,7 +370,7 @@ type MemberData struct {
 params, _ := ioutil.ReadAll(req.Body)
 
 presenceData := pusher.MemberData{
-    UserId: "1",
+    UserID: "1",
     UserInfo: map[string]string{
         "twitter": "jamiepatel",
     },
@@ -499,7 +499,7 @@ type Users struct {
 
 ```go
 type User struct {
-    Id string
+    ID string
 }
 ```
 
@@ -508,7 +508,7 @@ type User struct {
 ```go
 users, err := client.GetChannelUsers("presence-chatroom")
 
-// users => &{List:[{Id:13} {Id:90}]}
+// users => &{List:[{ID:13} {ID:90}]}
 ```
 
 ### Webhook validation
@@ -548,7 +548,7 @@ type WebhookEvent struct {
     Channel  string
     Event    string
     Data     string
-    SocketId string
+    SocketID string
 }
 ```
 
