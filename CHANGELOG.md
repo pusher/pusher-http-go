@@ -1,3 +1,8 @@
+3.0.0 / 2019-05-31
+==================
+
+* This release removes the `*BufferedEvents` return from calls to `trigger` is it never did anything. Our documentation elsewhere conflicted with this, and it made the library more complex than it needed to be, so we removed it.
+
 2.0.0 / 2019-05-31
 ==================
 
