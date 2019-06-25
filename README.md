@@ -206,7 +206,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 ### Triggering events
 
-It is possible to trigger an event on one or more channels. Channel names can contain only characters which are alphanumeric, `_` or `-`` and have to be at most 200 characters long. Event name can be at most 200 characters long too.
+It is possible to trigger an event on one or more channels. Channel names can contain only characters which are alphanumeric, `_` or `-` and have to be at most 200 characters long. Event name can be at most 200 characters long too.
 
 #### Single channel
 
