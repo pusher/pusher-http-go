@@ -6,7 +6,7 @@ The Golang library for interacting with the Pusher Channels HTTP API.
 
 This package lets you trigger events to your client and query the state of your Pusher channels. When used with a server, you can validate Pusher Channels webhooks and authenticate `private-` or `presence-` channels.
 
-Register for free at <https://pusher.com> and use the application credentials within your app as shown below.
+Register for free at <https://pusher.com/channels> and use the application credentials within your app as shown below.
 
 ## Go Support
 
