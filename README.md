@@ -278,7 +278,7 @@ client.TriggerBatch([]pusher.Event{
 
 ### Authenticating Channels
 
-Application security is very important so Pusher Channels provide a mechanism for authenticating a user’s access to a channel at the point of subscription.
+Application security is very important so Pusher Channels provides a mechanism for authenticating a user’s access to a channel at the point of subscription.
 
 This can be used both to restrict access to private channels, and in the case of presence channels notify subscribers of who else is also subscribed via presence events.
 
