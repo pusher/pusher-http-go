@@ -1,14 +1,16 @@
-# Pusher HTTP Go Library
+# Pusher Channels HTTP Go Library
 
 [![Build Status](https://travis-ci.org/pusher/pusher-http-go.svg?branch=master)](https://travis-ci.org/pusher/pusher-http-go) [![Coverage Status](https://coveralls.io/repos/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/r/pusher/pusher-http-go?branch=master) [![GoDoc](https://godoc.org/github.com/pusher/pusher-http-go?status.svg)](https://godoc.org/github.com/pusher/pusher-http-go)
 
-The Golang library for interacting with the Pusher HTTP API.
+The Golang library for interacting with the Pusher Channels HTTP API.
 
-This package lets you trigger events to your client and query the state of your Pusher channels. When used with a server, you can validate Pusher webhooks and authenticate private- or presence-channels.
+This package lets you trigger events to your client and query the state of your Pusher channels. When used with a server, you can validate Pusher Channels webhooks and authenticate `private-` or `presence-` channels.
 
-In order to use this library, you need to have a free account on <http://pusher.com>. After registering, you will need the application credentials for your app.
+Register for free at <https://pusher.com/channels> and use the application credentials within your app as shown below.
 
-This library requires you to be using at least Go 1.5 or greater. 
+## Go Support
+
+This library supports **Go 1.5 or greater**.
 
 ## Table of Contents
 
@@ -39,22 +41,24 @@ $ go get github.com/pusher/pusher-http-go
 ```go
 package main
 
-import "github.com/pusher/pusher-http-go"
+import (
+  "github.com/pusher/pusher-http-go"
+)
 
 func main(){
     // instantiate a client
     client := pusher.Client{
-        AppID: "your_app_id",
-        Key: "your_app_key",
-        Secret: "your_app_secret",
-        Cluster: "your_app_cluster",
+        AppID:   "APP_ID",
+        Key:     "APP_KEY",
+        Secret:  "APP_SECRET",
+        Cluster: "APP_CLUSTER",
     }
 
     data := map[string]string{"message": "hello world"}
 
     // trigger an event on a channel, along with a data payload
     err := client.Trigger("my-channel", "my_event", data)
-    
+
     // All trigger methods return an error object, it's worth at least logging this!
     if err != nil {
         panic(err)
@@ -68,10 +72,10 @@ The easiest way to configure the library is by creating a new `Pusher` instance:
 
 ```go
 client := pusher.Client{
-    AppID:   "your_app_id",
-    Key:     "your_app_key",
-    Secret:  "your_app_secret",
-    Cluster: "your_app_cluster",
+    AppID:   "APP_ID",
+    Key:     "APP_KEY",
+    Secret:  "APP_SECRET",
+    Cluster: "APP_CLUSTER",
 }
 ```
 
@@ -96,7 +100,7 @@ http://key:secret@api-ap1.pusher.com/apps/app_id
 client := pusher.ClientFromEnv("PUSHER_URL")
 ```
 
-This is particularly relevant if you are using Pusher as a Heroku add-on, which stores credentials in a `"PUSHER_URL"` environment variable.
+This is particularly relevant if you are using Pusher Channels as a Heroku add-on, which stores credentials in a `"PUSHER_URL"` environment variable.
 
 #### HTTPS
 
@@ -110,7 +114,7 @@ This is `false` by default.
 
 #### Request Timeouts
 
-If you wish to set a time-limit for each HTTP request, create a `http.Client` instance with your specified `Timeout` field and set it as the Pusher instance's `Client`:
+If you wish to set a time-limit for each HTTP request, create a `http.Client` instance with your specified `Timeout` field and set it as the Pusher Channels instance's `Client`:
 
 ```go
 httpClient := &http.Client{Timeout: time.Second * 3}
@@ -149,11 +153,11 @@ This library supports end to end encryption of your private channels. This means
 
 ```go
 client := pusher.Client{
-    AppID:              "your_app_id",
-    Key:                "your_app_key",
-    Secret:             "your_app_secret",
-    Cluster:            "your_app_cluster",
-    EncryptionMasterKey "abcdefghijklmnopqrstuvwxyzabcdef"
+    AppID:              "APP_ID",
+    Key:                "APP_KEY",
+    Secret:             "APP_SECRET",
+    Cluster:            "APP_CLUSTER",
+    EncryptionMasterKey "abcdefghijklmnopqrstuvwxyzabcdef",
 }
 ```
 3. Channels where you wish to use end to end encryption should be prefixed with `private-encrypted-`.
@@ -164,7 +168,7 @@ client := pusher.Client{
 
 ### Google App Engine
 
-As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Simply pass in the HTTP client returned by `urlfetch.Client` to your Pusher initialization struct.
+As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Simply pass in the HTTP client returned by `urlfetch.Client` to your Pusher Channels initialization struct.
 
 ```go
 package helloworldapp
@@ -186,9 +190,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
     urlfetchClient := urlfetch.Client(c)
 
     client := pusher.Client{
-        AppID:      "app_id",
-        Key:        "key",
-        Secret:     "secret",
+        AppID:      "APP_ID",
+        Key:        "APP_KEY",
+        Secret:     "APP_SECRET",
         HTTPClient: urlfetchClient,
     }
 
@@ -202,7 +206,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 ### Triggering events
 
-It is possible to trigger an event on one or more channels. Channel names can contain only characters which are alphanumeric, `_` or `-`` and have to be at most 200 characters long. Event name can be at most 200 characters long too.
+It is possible to trigger an event on one or more channels. Channel names can contain only characters which are alphanumeric, `_` or `-` and have to be at most 200 characters long. Event name can be at most 200 characters long too.
 
 #### Single channel
 
@@ -274,7 +278,7 @@ client.TriggerBatch([]pusher.Event{
 
 ### Authenticating Channels
 
-Application security is very important so Pusher provides a mechanism for authenticating a user’s access to a channel at the point of subscription.
+Application security is very important so Pusher Channels provides a mechanism for authenticating a user’s access to a channel at the point of subscription.
 
 This can be used both to restrict access to private channels, and in the case of presence channels notify subscribers of who else is also subscribed via presence events.
 
@@ -595,7 +599,7 @@ HTTP KeepAlive                             | *&#10008;*
 
 ## Helper Functionality
 
-These are helpers that have been implemented to to ensure interactions with the HTTP API only occur if they will not be rejected e.g. [channel naming conventions](https://pusher.com/docs/client_api_guide/client_channels#naming-channels).
+These are helpers that have been implemented to to ensure interactions with the HTTP API only occur if they will not be rejected e.g. [channel naming conventions](https://pusher.com/docs/channels/using_channels/channels#channel-naming-conventions).
 
 Helper Functionality                      | Supported
 ----------------------------------------- | :-------:
