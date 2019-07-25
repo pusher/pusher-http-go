@@ -8,9 +8,9 @@ This package lets you trigger events to your client and query the state of your 
 
 Register for free at <https://pusher.com/channels> and use the application credentials within your app as shown below.
 
-## Go Support
+## Supported Platforms
 
-This library supports **Go 1.5 or greater**.
+* Go - supports *Go 1.5 or greater*.
 
 ## Table of Contents
 
