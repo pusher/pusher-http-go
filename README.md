@@ -47,7 +47,7 @@ import (
 
 func main(){
     // instantiate a client
-    client := pusher.Client{
+    pusherClient := pusher.Client{
         AppID:   "APP_ID",
         Key:     "APP_KEY",
         Secret:  "APP_SECRET",
@@ -57,7 +57,7 @@ func main(){
     data := map[string]string{"message": "hello world"}
 
     // trigger an event on a channel, along with a data payload
-    err := client.Trigger("my-channel", "my_event", data)
+    err := pusherClient.Trigger("my-channel", "my_event", data)
 
     // All trigger methods return an error object, it's worth at least logging this!
     if err != nil {
@@ -71,7 +71,7 @@ func main(){
 The easiest way to configure the library is by creating a new `Pusher` instance:
 
 ```go
-client := pusher.Client{
+pusherClient := pusher.Client{
     AppID:   "APP_ID",
     Key:     "APP_KEY",
     Secret:  "APP_SECRET",
@@ -84,7 +84,7 @@ client := pusher.Client{
 #### Instantiation From URL
 
 ```go
-client := pusher.ClientFromURL("http://<key>:<secret>@api-<cluster>.pusher.com/apps/app_id")
+pusherClient := pusher.ClientFromURL("http://<key>:<secret>@api-<cluster>.pusher.com/apps/app_id")
 ```
 
 Note: the API URL differs depending on the cluster your app was created in:
@@ -97,7 +97,7 @@ http://key:secret@api-ap1.pusher.com/apps/app_id
 #### Instantiation From Environment Variable
 
 ```go
-client := pusher.ClientFromEnv("PUSHER_URL")
+pusherClient := pusher.ClientFromEnv("PUSHER_URL")
 ```
 
 This is particularly relevant if you are using Pusher Channels as a Heroku add-on, which stores credentials in a `"PUSHER_URL"` environment variable.
@@ -107,7 +107,7 @@ This is particularly relevant if you are using Pusher Channels as a Heroku add-o
 To ensure requests occur over HTTPS, set the `Secure` property of a `pusher.Client` to `true`.
 
 ```go
-client.Secure = true
+pusherClient.Secure = true
 ```
 
 This is `false` by default.
@@ -129,7 +129,7 @@ If you do not specifically set a HTTP client, a default one is created with a ti
 Changing the `pusher.Client`'s `Host` property will make sure requests are sent to your specified host.
 
 ```go
-client.Host = "foo.bar.com"
+pusherClient.Host = "foo.bar.com"
 ```
 
 By default, this is `"api.pusherapp.com"`.
@@ -141,7 +141,7 @@ Setting the `pusher.Client`'s `Cluster` property will make sure requests are sen
 *NOTE! If `Host` is set then `Cluster` will be ignored.
 
 ```go
-client.Cluster = "eu" // in this case requests will be made to api-eu.pusher.com.
+pusherClient.Cluster = "eu" // in this case requests will be made to api-eu.pusher.com.
 ```
 #### End to End Encryption
 
@@ -152,7 +152,7 @@ This library supports end to end encryption of your private channels. This means
 2. Next, Specify your 32 character `EncryptionMasterKey`. This is secret and you should never share this with anyone. Not even Pusher.
 
 ```go
-client := pusher.Client{
+pusherClient := pusher.Client{
     AppID:              "APP_ID",
     Key:                "APP_KEY",
     Secret:             "APP_SECRET",
@@ -189,14 +189,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
     c := appengine.NewContext(r)
     urlfetchClient := urlfetch.Client(c)
 
-    client := pusher.Client{
+    pusherClient := pusher.Client{
         AppID:      "APP_ID",
         Key:        "APP_KEY",
         Secret:     "APP_SECRET",
         HTTPClient: urlfetchClient,
     }
 
-    client.Trigger("my-channel", "my_event", map[string]string{"message": "hello world"})
+    pusherClient.Trigger("my-channel", "my_event", map[string]string{"message": "hello world"})
 
     fmt.Fprint(w, "Hello, world!")
 }
@@ -220,7 +220,7 @@ It is possible to trigger an event on one or more channels. Channel names can co
 
 ```go
 data := map[string]string{"hello": "world"}
-client.Trigger("greeting_channel", "say_hello", data)
+pusherClient.Trigger("greeting_channel", "say_hello", data)
 ```
 
 #### Multiple channels
@@ -236,7 +236,7 @@ client.Trigger("greeting_channel", "say_hello", data)
 ###### Example
 
 ```go
-client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
+pusherClient.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 ```
 
 #### Excluding event recipients
@@ -250,13 +250,13 @@ These methods allow you to exclude a recipient whose connection has that `socket
 **On one channel**:
 
 ```go
-client.TriggerExclusive("a_channel", "event", data, "123.12")
+pusherClient.TriggerExclusive("a_channel", "event", data, "123.12")
 ```
 
 **On multiple channels**:
 
 ```go
-client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
+pusherClient.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
 ```
 
 #### Batches
@@ -270,7 +270,7 @@ client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", 
 ###### Example
 
 ```go
-client.TriggerBatch([]pusher.Event{
+pusherClient.TriggerBatch([]pusher.Event{
   { Channel: "a_channel", Name: "event", Data: "hello world", nil },
   { Channel: "a_channel", Name: "event", Data: "hi my name is bob", nil },
 })
@@ -304,7 +304,7 @@ For more information see our [docs](http://pusher.com/docs/authenticating_users)
 ```go
 func pusherAuth(res http.ResponseWriter, req *http.Request) {
     params, _ := ioutil.ReadAll(req.Body)
-    response, err := client.AuthenticatePrivateChannel(params)
+    response, err := pusherClient.AuthenticatePrivateChannel(params)
     if err != nil {
         panic(err)
     }
@@ -336,7 +336,7 @@ func pusherJsonpAuth(res http.ResponseWriter, req *http.Request) {
         params = []byte(q.Encode())
     }
 
-    response, err := client.AuthenticatePrivateChannel(params)
+    response, err := pusherClient.AuthenticatePrivateChannel(params)
     if err != nil {
         panic(err)
     }
@@ -385,7 +385,7 @@ presenceData := pusher.MemberData{
     },
 }
 
-response, err := client.AuthenticatePresenceChannel(params, presenceData)
+response, err := pusherClient.AuthenticatePresenceChannel(params, presenceData)
 
 if err != nil {
     panic(err)
@@ -437,7 +437,7 @@ channelsParams := map[string]string{
     "info":             "user_count",
 }
 
-channels, err := client.Channels(channelsParams)
+channels, err := pusherClient.Channels(channelsParams)
 
 // channels => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 ```
@@ -476,7 +476,7 @@ channelParams := map[string]string{
     "info": "user_count,subscription_count",
 }
 
-channel, err := client.Channel("presence-chatroom", channelParams)
+channel, err := pusherClient.Channel("presence-chatroom", channelParams)
 
 // channel => &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 ```
@@ -515,7 +515,7 @@ type User struct {
 ###### Example
 
 ```go
-users, err := client.GetChannelUsers("presence-chatroom")
+users, err := pusherClient.GetChannelUsers("presence-chatroom")
 
 // users => &{List:[{ID:13} {ID:90}]}
 ```
@@ -566,7 +566,7 @@ type WebhookEvent struct {
 ```go
 func pusherWebhook(res http.ResponseWriter, req *http.Request) {
     body, _ := ioutil.ReadAll(req.Body)
-    webhook, err := client.Webhook(req.Header, body)
+    webhook, err := pusherClient.Webhook(req.Header, body)
     if err != nil {
         fmt.Println("Webhook is invalid :(")
     } else {
