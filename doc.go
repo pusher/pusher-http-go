@@ -13,18 +13,18 @@ Getting Started
 
 To create a new client, simply pass in your application credentials to a `pusher.Client` struct:
 
-	client := pusher.Client{
+	pusherClient := pusher.Client{
 	  AppID: "your_app_id",
 	  Key: "your_app_key",
 	  Secret: "your_app_secret",
 	}
 
-To start triggering events on a channel, we simply call `client.Trigger`:
+To start triggering events on a channel, we simply call `pusherClient.Trigger`:
 
 	data := map[string]string{"message": "hello world"}
 
 	// trigger an event on a channel, along with a data payload
-	client.Trigger("test_channel", "event", data)
+	pusherClient.Trigger("test_channel", "event", data)
 
 Read on to see what more you can do with this library, such as
 authenticating private- and presence-channels, validating Pusher webhooks,
