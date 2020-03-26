@@ -138,7 +138,7 @@ By default, this is `"api.pusherapp.com"`.
 
 Setting the `pusher.Client`'s `Cluster` property will make sure requests are sent to the cluster where you created your app.
 
-*NOTE! If `Host` is set then `Cluster` will be ignored.
+*NOTE! If `Host` is set then `Cluster` will be ignored.*
 
 ```go
 pusherClient.Cluster = "eu" // in this case requests will be made to api-eu.pusher.com.
