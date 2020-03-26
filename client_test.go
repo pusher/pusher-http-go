@@ -34,6 +34,27 @@ func TestTriggerSuccessCase(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestTriggerMultiSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		fmt.Fprintf(res, "{}")
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\",\"other_channel\"],\"data\":\"yolo\"}"
+		actualBody, err := ioutil.ReadAll(req.Body)
+		assert.Equal(t, expectedBody, string(actualBody))
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	err := client.TriggerMulti([]string{"test_channel", "other_channel"}, "test", "yolo")
+	assert.NoError(t, err)
+}
+
 func TestGetChannelsSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
@@ -166,7 +187,7 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 	}))
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
-	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
 	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"test_channel", "test", "yolo2", nil},
@@ -176,17 +197,8 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 }
 
 func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T) {
-	expectedBody := `{"batch":[{"channel":"test_channel","name":"test","data":"yolo1"},{"channel":"private-encrypted-test_channel","name":"test","data":"yolo2"}]}`
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		res.WriteHeader(200)
-		fmt.Fprintf(res, "{}")
-		assert.Equal(t, "POST", req.Method)
-
-		actualBody, err := ioutil.ReadAll(req.Body)
-		assert.Equal(t, expectedBody, string(actualBody))
-		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
-		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
-		assert.NoError(t, err)
+		t.Fatal("No request should have reached the API")
 	}))
 	defer server.Close()
 
@@ -200,8 +212,28 @@ func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T)
 	assert.Error(t, err)
 }
 
-func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
+func TestTriggerWithEncryptedChanSuccess(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		fmt.Fprintf(res, "{}")
+		assert.Equal(t, "POST", req.Method)
 
+		actualBody, err := ioutil.ReadAll(req.Body)
+		assert.Contains(t, string(actualBody), "ciphertext")
+		assert.Contains(t, string(actualBody), "nonce")
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		assert.Equal(t, "/apps/appid/events", req.URL.Path)
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
+	err := client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	assert.NoError(t, err)
+}
+
+func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		fmt.Fprintf(res, "{}")
@@ -215,12 +247,87 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKey: "eHPVWHg7nFGYVBsKjOFDXWRribIR2b0b", Host: u.Host}
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
 	err := client.TriggerBatch([]Event{
 		{"test_channel", "test", "yolo1", nil},
 		{"private-encrypted-test_channel", "test", "yolo2", nil},
 	})
 	assert.NoError(t, err)
+}
+
+func TestTriggerInvalidMasterKey(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		t.Fatal("No HTTP request should have been made")
+	}))
+	defer server.Close()
+	u, _ := url.Parse(server.URL)
+
+	// too short (deprecated)
+	client := Client{
+		AppID:               "appid",
+		Key:                 "key",
+		Secret:              "secret",
+		Host:                u.Host,
+		EncryptionMasterKey: "this is 31 bytes 12345678901234",
+	}
+	err := client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	assert.Error(t, err)
+
+	// too long (deprecated)
+	client = Client{
+		AppID:               "appid",
+		Key:                 "key",
+		Secret:              "secret",
+		Host:                u.Host,
+		EncryptionMasterKey: "this is 33 bytes 1234567890123456",
+	}
+	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	assert.Error(t, err)
+
+	// both provided
+	client = Client{
+		AppID:                     "appid",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKey:       "this is 32 bytes 123456789012345",
+		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU=",
+	}
+	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	assert.Error(t, err)
+
+	// too short
+	client = Client{
+		AppID:                     "appid",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMSBieXRlcyAxMjM0NTY3ODkwMTIzNA==",
+	}
+	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	assert.Error(t, err)
+
+	// too long
+	client = Client{
+		AppID:                     "appid",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU2",
+	}
+	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	assert.Error(t, err)
+
+	// invalid base64
+	client = Client{
+		AppID:                     "appid",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKeyBase64: "dGhp!yBpcyAzMiBieXRlcy#xMjM0NTY3ODkwMTIzNDU=",
+	}
+	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	assert.Error(t, err)
 }
 
 func TestErrorResponseHandler(t *testing.T) {

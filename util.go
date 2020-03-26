@@ -54,10 +54,6 @@ func isEncryptedChannel(channel string) bool {
 	return false
 }
 
-func validEncryptionKey(encryptionKey string) bool {
-	return len(encryptionKey) == 32
-}
-
 func validateSocketID(socketID *string) (err error) {
 	if (socketID == nil) || socketIDValidationRegex.MatchString(*socketID) {
 		return

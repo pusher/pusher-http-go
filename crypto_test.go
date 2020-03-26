@@ -73,7 +73,7 @@ func TestMD5Signature(t *testing.T) {
 func TestEncrypt(t *testing.T) {
 	channel := "private-encrypted-bla"
 	body := []byte("Hello!")
-	encryptionKey := "This is a string that is 32 chars"
+	encryptionKey := []byte("This is a string that is 32 chars")
 	cipherText := encrypt(channel, body, encryptionKey)
 	assert.NotNil(t, cipherText)
 	assert.NotEqual(t, cipherText, body)
@@ -88,7 +88,7 @@ func TestFormatMessage(t *testing.T) {
 
 func TestGenerateSharedSecret(t *testing.T) {
 	channel := "private-encrypted-bla"
-	encryptionKey := "This is a string that is 32 chars"
+	encryptionKey := []byte("This is a string that is 32 chars")
 	sharedSecret := generateSharedSecret(channel, encryptionKey)
 	t.Log(hex.EncodeToString(sharedSecret[:]))
 	expected := "004831f99d2a4e86723e893caded3a2897deeddbed9514fe9497dcddc52bd50b"
@@ -99,7 +99,7 @@ func TestDecryptValidKey(t *testing.T) {
 	channel := "private-encrypted-bla"
 	plaintext := "Hello!"
 	cipherText := "{\"nonce\":\"sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T\",\"ciphertext\":\"zoDEe8dA3nDXKsybAWce/hXGW4szJw==\"}"
-	encryptionKey := "This is a string that is 32 chars"
+	encryptionKey := []byte("This is a string that is 32 chars")
 
 	encryptedWebhookData := &Webhook{
 		TimeMs: 1,
@@ -133,7 +133,7 @@ func TestDecryptValidKey(t *testing.T) {
 func TestDecryptInvalidKey(t *testing.T) {
 	channel := "private-encrypted-bla"
 	cipherText := "{\"nonce\":\"sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T\",\"ciphertext\":\"zoDEe8dA3nDXKsybAWce/hXGW4szJw==\"}"
-	encryptionKey := "This is an invalid key 32 chars!!"
+	encryptionKey := []byte("This is an invalid key 32 chars!!")
 
 	encryptedWebhookData := &Webhook{
 		TimeMs: 1,
