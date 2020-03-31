@@ -357,6 +357,89 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	assert.Contains(t, err.Error(), "valid base64")
 }
 
+func TestAuthenticateInvalidMasterKey(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		t.Fatal("No HTTP request should have been made")
+	}))
+	defer server.Close()
+	u, _ := url.Parse(server.URL)
+
+	params := []byte("channel_name=private-encrypted-test_channel&socket_id=12345.12345")
+
+	// too short (deprecated)
+	client := Client{
+		AppID:               "appid",
+		Key:                 "key",
+		Secret:              "secret",
+		Host:                u.Host,
+		EncryptionMasterKey: "this is 31 bytes 12345678901234",
+	}
+	_, err := client.AuthenticatePrivateChannel(params)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "32 bytes")
+
+	// too long (deprecated)
+	client = Client{
+		AppID:               "appid",
+		Key:                 "key",
+		Secret:              "secret",
+		Host:                u.Host,
+		EncryptionMasterKey: "this is 33 bytes 1234567890123456",
+	}
+	_, err = client.AuthenticatePrivateChannel(params)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "32 bytes")
+
+	// both provided
+	client = Client{
+		AppID:                     "appid",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKey:       "this is 32 bytes 123456789012345",
+		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU=",
+	}
+	_, err = client.AuthenticatePrivateChannel(params)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "both")
+
+	// too short
+	client = Client{
+		AppID:                     "appid",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMSBieXRlcyAxMjM0NTY3ODkwMTIzNA==",
+	}
+	_, err = client.AuthenticatePrivateChannel(params)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "32 bytes")
+
+	// too long
+	client = Client{
+		AppID:                     "appid",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU2",
+	}
+	_, err = client.AuthenticatePrivateChannel(params)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "32 bytes")
+
+	// invalid base64
+	client = Client{
+		AppID:                     "appid",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKeyBase64: "dGhp!yBpcyAzMiBieXRlcy#xMjM0NTY3ODkwMTIzNDU=",
+	}
+	_, err = client.AuthenticatePrivateChannel(params)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "valid base64")
+}
+
 func TestErrorResponseHandler(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(400)
