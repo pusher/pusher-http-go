@@ -55,6 +55,26 @@ func TestTriggerMultiSuccessCase(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestTriggerMultiEncryptedRejected(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		t.Fatal("No request should reach the API")
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{
+		AppID:                     "id",
+		Key:                       "key",
+		Secret:                    "secret",
+		Host:                      u.Host,
+		EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=",
+	}
+	err := client.TriggerMulti([]string{"test_channel", "private-encrypted-other_channel"}, "test", "yolo")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "multiple channels")
+	assert.Contains(t, err.Error(), "encrypted channels")
+}
+
 func TestGetChannelsSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
@@ -210,6 +230,7 @@ func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T)
 	})
 
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "master encryption key")
 }
 
 func TestTriggerWithEncryptedChanSuccess(t *testing.T) {
@@ -272,6 +293,7 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	}
 	err := client.Trigger("private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "32 bytes")
 
 	// too long (deprecated)
 	client = Client{
@@ -283,6 +305,7 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	}
 	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "32 bytes")
 
 	// both provided
 	client = Client{
@@ -295,6 +318,7 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	}
 	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "both")
 
 	// too short
 	client = Client{
@@ -306,6 +330,7 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	}
 	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "32 bytes")
 
 	// too long
 	client = Client{
@@ -317,6 +342,7 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	}
 	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "32 bytes")
 
 	// invalid base64
 	client = Client{
@@ -328,6 +354,7 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	}
 	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "valid base64")
 }
 
 func TestErrorResponseHandler(t *testing.T) {
