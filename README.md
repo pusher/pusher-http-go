@@ -179,7 +179,7 @@ This library supports end to end encryption of your private channels. This means
 
 ### Google App Engine
 
-As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Simply pass in the HTTP client returned by `urlfetch.Client` to your Pusher Channels initialization struct.
+As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Pass in the HTTP client returned by `urlfetch.Client` to your Pusher Channels initialization struct.
 
 ```go
 package helloworldapp
@@ -623,8 +623,6 @@ Limit event name length to 200 chars      | &#10004;
 Feel more than free to fork this repo, improve it in any way you'd prefer, and send us a pull request :)
 
 ### Running the tests
-
-Simply type:
 
 ```sh
 $ go test
