@@ -1,5 +1,5 @@
-next
-====
+4.0.1 / 2020-04-01
+==================
 
 * Added EncryptionMasterKeyBase64 parameter
 * Deprecated EncryptionMasterKey parameter
