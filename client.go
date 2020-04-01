@@ -44,16 +44,16 @@ to your specified host.
 
 */
 type Client struct {
-	AppID                       string
-	Key                         string
-	Secret                      string
-	Host                        string // host or host:port pair
-	Secure                      bool   // true for HTTPS
-	Cluster                     string
-	HTTPClient                  *http.Client
-	EncryptionMasterKey         string  // deprecated
-	EncryptionMasterKeyBase64   string  // for E2E
-	memoisedEncryptionMasterKey *[]byte // parsed key for use
+	AppID                        string
+	Key                          string
+	Secret                       string
+	Host                         string // host or host:port pair
+	Secure                       bool   // true for HTTPS
+	Cluster                      string
+	HTTPClient                   *http.Client
+	EncryptionMasterKey          string  // deprecated
+	EncryptionMasterKeyBase64    string  // for E2E
+	validatedEncryptionMasterKey *[]byte // parsed key for use
 }
 
 /*
@@ -507,8 +507,8 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 }
 
 func (c *Client) encryptionMasterKey() ([]byte, error) {
-	if c.memoisedEncryptionMasterKey != nil {
-		return *(c.memoisedEncryptionMasterKey), nil
+	if c.validatedEncryptionMasterKey != nil {
+		return *(c.validatedEncryptionMasterKey), nil
 	}
 
 	if c.EncryptionMasterKey != "" && c.EncryptionMasterKeyBase64 != "" {
@@ -521,7 +521,7 @@ func (c *Client) encryptionMasterKey() ([]byte, error) {
 		}
 
 		keyBytes := []byte(c.EncryptionMasterKey)
-		c.memoisedEncryptionMasterKey = &keyBytes
+		c.validatedEncryptionMasterKey = &keyBytes
 		return keyBytes, nil
 	}
 
@@ -534,7 +534,7 @@ func (c *Client) encryptionMasterKey() ([]byte, error) {
 			return nil, errors.New("EncryptionMasterKeyBase64 must encode 32 bytes")
 		}
 
-		c.memoisedEncryptionMasterKey = &keyBytes
+		c.validatedEncryptionMasterKey = &keyBytes
 		return keyBytes, nil
 	}
 
