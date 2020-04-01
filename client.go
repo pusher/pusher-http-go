@@ -27,7 +27,7 @@ There easiest way to configure the library is by creating a `Pusher` instance:
       Secret: "your_app_secret",
     }
 
-To ensure requests occur over HTTPS, set the `Encrypted` property of a
+To ensure requests occur over HTTPS, set the `Secure` property of a
 `pusher.Client` to `true`.
 
     client.Secure = true // false by default
@@ -44,14 +44,16 @@ to your specified host.
 
 */
 type Client struct {
-	AppID               string
-	Key                 string
-	Secret              string
-	Host                string // host or host:port pair
-	Secure              bool   // true for HTTPS
-	Cluster             string
-	HTTPClient          *http.Client
-	EncryptionMasterKey string //for E2E
+	AppID                        string
+	Key                          string
+	Secret                       string
+	Host                         string // host or host:port pair
+	Secure                       bool   // true for HTTPS
+	Cluster                      string
+	HTTPClient                   *http.Client
+	EncryptionMasterKey          string  // deprecated
+	EncryptionMasterKeyBase64    string  // for E2E
+	validatedEncryptionMasterKey *[]byte // parsed key for use
 }
 
 /*
@@ -168,30 +170,32 @@ func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data
 }
 
 func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) error {
+	if len(channels) > maxTriggerableChannels {
+		return fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
+	}
+	if !channelsAreValid(channels) {
+		return errors.New("At least one of your channels' names are invalid")
+	}
+
 	hasEncryptedChannel := false
 	for _, channel := range channels {
 		if isEncryptedChannel(channel) {
 			hasEncryptedChannel = true
 		}
 	}
-	if len(channels) > maxTriggerableChannels {
-		return fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
-	}
 	if hasEncryptedChannel && len(channels) > 1 {
 		// For rationale, see limitations of end-to-end encryption in the README
 		return errors.New("You cannot trigger to multiple channels when using encrypted channels")
-
 	}
-	if !channelsAreValid(channels) {
-		return errors.New("At least one of your channels' names are invalid")
-	}
-	if hasEncryptedChannel && !validEncryptionKey(c.EncryptionMasterKey) {
-		return errors.New("Your encryptionMasterKey is not of the correct format")
+	masterKey, keyErr := c.encryptionMasterKey()
+	if hasEncryptedChannel && keyErr != nil {
+		return keyErr
 	}
 	if err := validateSocketID(socketID); err != nil {
 		return err
 	}
-	payload, err := encodeTriggerBody(channels, eventName, data, socketID, c.EncryptionMasterKey)
+
+	payload, err := encodeTriggerBody(channels, eventName, data, socketID, masterKey)
 	if err != nil {
 		return err
 	}
@@ -236,13 +240,12 @@ func (c *Client) TriggerBatch(batch []Event) error {
 			hasEncryptedChannel = true
 		}
 	}
-	if hasEncryptedChannel {
-		// validate EncryptionMasterKey
-		if !validEncryptionKey(c.EncryptionMasterKey) {
-			return errors.New("Your encryptionMasterKey is not of the correct format")
-		}
+	masterKey, keyErr := c.encryptionMasterKey()
+	if hasEncryptedChannel && keyErr != nil {
+		return keyErr
 	}
-	payload, err := encodeTriggerBatchBody(batch, c.EncryptionMasterKey)
+
+	payload, err := encodeTriggerBatchBody(batch, masterKey)
 	if err != nil {
 		return err
 	}
@@ -405,7 +408,6 @@ func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (
 }
 
 func (c *Client) authenticateChannel(params []byte, member *MemberData) (response []byte, err error) {
-
 	channelName, socketID, err := parseAuthRequestParams(params)
 	if err != nil {
 		return
@@ -433,7 +435,11 @@ func (c *Client) authenticateChannel(params []byte, member *MemberData) (respons
 	var _response map[string]string
 
 	if isEncryptedChannel(channelName) {
-		sharedSecret := generateSharedSecret(channelName, c.EncryptionMasterKey)
+		masterKey, err := c.encryptionMasterKey()
+		if err != nil {
+			return nil, err
+		}
+		sharedSecret := generateSharedSecret(channelName, masterKey)
 		sharedSecretB64 := base64.StdEncoding.EncodeToString(sharedSecret[:])
 		_response = createAuthMap(c.Key, c.Secret, stringToSign, sharedSecretB64)
 	} else {
@@ -480,11 +486,57 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 		if token == c.Key && checkSignature(header.Get("X-Pusher-Signature"), c.Secret, body) {
 			unmarshalledWebhooks, err := unmarshalledWebhook(body)
 			if err != nil {
-				return unmarshalledWebhooks, err
+				return nil, err
 			}
-			decryptedWebhooks, err := decryptEvents(*unmarshalledWebhooks, c.EncryptionMasterKey)
-			return decryptedWebhooks, err
+
+			hasEncryptedChannel := false
+			for _, event := range unmarshalledWebhooks.Events {
+				if isEncryptedChannel(event.Channel) {
+					hasEncryptedChannel = true
+				}
+			}
+			masterKey, keyErr := c.encryptionMasterKey()
+			if hasEncryptedChannel && keyErr != nil {
+				return nil, keyErr
+			}
+
+			return decryptEvents(*unmarshalledWebhooks, masterKey)
 		}
 	}
 	return nil, errors.New("Invalid webhook")
+}
+
+func (c *Client) encryptionMasterKey() ([]byte, error) {
+	if c.validatedEncryptionMasterKey != nil {
+		return *(c.validatedEncryptionMasterKey), nil
+	}
+
+	if c.EncryptionMasterKey != "" && c.EncryptionMasterKeyBase64 != "" {
+		return nil, errors.New("Do not specify both EncryptionMasterKey and EncryptionMasterKeyBase64. EncryptionMasterKey is deprecated, specify only EncryptionMasterKeyBase64")
+	}
+
+	if c.EncryptionMasterKey != "" {
+		if len(c.EncryptionMasterKey) != 32 {
+			return nil, errors.New("EncryptionMasterKey must be 32 bytes. It is also deprecated, use EncryptionMasterKeyBase64")
+		}
+
+		keyBytes := []byte(c.EncryptionMasterKey)
+		c.validatedEncryptionMasterKey = &keyBytes
+		return keyBytes, nil
+	}
+
+	if c.EncryptionMasterKeyBase64 != "" {
+		keyBytes, err := base64.StdEncoding.DecodeString(c.EncryptionMasterKeyBase64)
+		if err != nil {
+			return nil, errors.New("EncryptionMasterKeyBase64 must be valid base64")
+		}
+		if len(keyBytes) != 32 {
+			return nil, errors.New("EncryptionMasterKeyBase64 must encode 32 bytes")
+		}
+
+		c.validatedEncryptionMasterKey = &keyBytes
+		return keyBytes, nil
+	}
+
+	return nil, errors.New("No master encryption key supplied")
 }

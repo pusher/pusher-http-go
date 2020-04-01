@@ -55,7 +55,7 @@ func md5Signature(body []byte) string {
 	return hex.EncodeToString(_bodyMD5.Sum(nil))
 }
 
-func encrypt(channel string, data []byte, encryptionKey string) string {
+func encrypt(channel string, data []byte, encryptionKey []byte) string {
 	sharedSecret := generateSharedSecret(channel, encryptionKey)
 	nonce := generateNonce()
 	nonceB64 := base64.StdEncoding.EncodeToString(nonce[:])
@@ -86,11 +86,11 @@ func generateNonce() [24]byte {
 	return nonce
 }
 
-func generateSharedSecret(channel string, encryptionKey string) [32]byte {
-	return sha256.Sum256([]byte(channel + encryptionKey))
+func generateSharedSecret(channel string, encryptionKey []byte) [32]byte {
+	return sha256.Sum256(append([]byte(channel), encryptionKey...))
 }
 
-func decryptEvents(webhookData Webhook, encryptionKey string) (*Webhook, error) {
+func decryptEvents(webhookData Webhook, encryptionKey []byte) (*Webhook, error) {
 	decryptedWebhooks := &Webhook{}
 	decryptedWebhooks.TimeMs = webhookData.TimeMs
 	for _, event := range webhookData.Events {

@@ -138,7 +138,7 @@ By default, this is `"api.pusherapp.com"`.
 
 Setting the `pusher.Client`'s `Cluster` property will make sure requests are sent to the cluster where you created your app.
 
-*NOTE! If `Host` is set then `Cluster` will be ignored.
+*NOTE! If `Host` is set then `Cluster` will be ignored.*
 
 ```go
 pusherClient.Cluster = "eu" // in this case requests will be made to api-eu.pusher.com.
@@ -149,26 +149,37 @@ This library supports end to end encryption of your private channels. This means
 
 1. You should first set up Private channels. This involves [creating an authentication endpoint on your server](https://pusher.com/docs/authenticating_users).
 
-2. Next, Specify your 32 character `EncryptionMasterKey`. This is secret and you should never share this with anyone. Not even Pusher.
+2. Next, generate a 32 byte master encryption key, base64 encode it and store
+   it securely.
 
-```go
-pusherClient := pusher.Client{
-    AppID:              "APP_ID",
-    Key:                "APP_KEY",
-    Secret:             "APP_SECRET",
-    Cluster:            "APP_CLUSTER",
-    EncryptionMasterKey "abcdefghijklmnopqrstuvwxyzabcdef",
-}
-```
-3. Channels where you wish to use end to end encryption should be prefixed with `private-encrypted-`.
+   This is secret and you should never share this with anyone. Not even Pusher.
 
-4. Subscribe to these channels in your client, and you're done! You can verify it is working by checking out the debug console on the https://dashboard.pusher.com/ and seeing the scrambled ciphertext.
+   To generate a suitable key from a secure random source, you could use:
+
+   ```bash
+   openssl rand -base64 32
+   ```
+
+3. Pass the encoded key when constructing your pusher.Client
+
+   ```go
+   pusherClient := pusher.Client{
+       AppID:                    "APP_ID",
+       Key:                      "APP_KEY",
+       Secret:                   "APP_SECRET",
+       Cluster:                  "APP_CLUSTER",
+       EncryptionMasterKeyBase64 "<output from command above>",
+   }
+   ```
+4. Channels where you wish to use end to end encryption should be prefixed with `private-encrypted-`.
+
+5. Subscribe to these channels in your client, and you're done! You can verify it is working by checking out the debug console on the https://dashboard.pusher.com/ and seeing the scrambled ciphertext.
 
 **Important note: This will not encrypt messages on channels that are not prefixed by private-encrypted-.**
 
 ### Google App Engine
 
-As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Simply pass in the HTTP client returned by `urlfetch.Client` to your Pusher Channels initialization struct.
+As of version 1.0.0, this library is compatible with Google App Engine's urlfetch library. Pass in the HTTP client returned by `urlfetch.Client` to your Pusher Channels initialization struct.
 
 ```go
 package helloworldapp
@@ -612,8 +623,6 @@ Limit event name length to 200 chars      | &#10004;
 Feel more than free to fork this repo, improve it in any way you'd prefer, and send us a pull request :)
 
 ### Running the tests
-
-Simply type:
 
 ```sh
 $ go test

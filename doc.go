@@ -11,7 +11,7 @@ credentials for your app.
 
 Getting Started
 
-To create a new client, simply pass in your application credentials to a `pusher.Client` struct:
+To create a new client, pass in your application credentials to a `pusher.Client` struct:
 
 	pusherClient := pusher.Client{
 	  AppID: "your_app_id",
@@ -19,7 +19,7 @@ To create a new client, simply pass in your application credentials to a `pusher
 	  Secret: "your_app_secret",
 	}
 
-To start triggering events on a channel, we simply call `pusherClient.Trigger`:
+To start triggering events on a channel, we call `pusherClient.Trigger`:
 
 	data := map[string]string{"message": "hello world"}
 
