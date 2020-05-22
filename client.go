@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
@@ -452,6 +454,61 @@ func (c *Client) authenticateChannel(params []byte, member *MemberData) (respons
 
 	response, err = json.Marshal(_response)
 	return
+}
+
+type jwtClaimsChannel struct {
+	Name string `json:"name"`
+}
+
+type jwtClaims struct {
+	jwt.StandardClaims
+	UserInfo interface{}        `json:"user_info,omitempty"`
+	Channels []jwtClaimsChannel `json:"channels"`
+}
+
+/*
+AuthenticateSession authenticates a session. (TODO obviously.)
+*/
+func (c *Client) AuthenticateSession(
+	userID string,
+	userInfo interface{},
+	channelNames []string,
+) ([]byte, error) {
+	return c.authenticateSession(userID, userInfo, channelNames, time.Now())
+}
+
+func (c *Client) authenticateSession(
+	userID string,
+	userInfo interface{},
+	channelNames []string,
+	now time.Time,
+) ([]byte, error) {
+	claimsChannels := make([]jwtClaimsChannel, len(channelNames))
+	for i, channelName := range channelNames {
+		claimsChannels[i] = jwtClaimsChannel{channelName}
+	}
+	claims := jwtClaims{
+		UserInfo: userInfo,
+		Channels: claimsChannels,
+		StandardClaims: jwt.StandardClaims{
+			Subject:   userID,
+			Issuer:    c.Key,
+			IssuedAt:  now.Unix(),
+			ExpiresAt: now.Add(time.Minute).Unix(),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	s, err := token.SignedString([]byte(c.Secret))
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign jwt: %w", err)
+	}
+	b, err := json.Marshal(struct {
+		Auth string `json:"auth"`
+	}{s})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal json: %w", err)
+	}
+	return b, nil
 }
 
 /*
