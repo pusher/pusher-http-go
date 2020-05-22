@@ -470,17 +470,26 @@ type jwtClaims struct {
 AuthenticateSession authenticates a session. (TODO obviously.)
 */
 func (c *Client) AuthenticateSession(
-	userID string,
-	userInfo interface{},
 	channelNames []string,
 ) ([]byte, error) {
-	return c.authenticateSession(userID, userInfo, channelNames, time.Now())
+	return c.authenticateSession(channelNames, "", nil, time.Now())
+}
+
+/*
+AuthenticateUserSession authenticates a user's session. (TODO obviously.)
+*/
+func (c *Client) AuthenticateUserSession(
+	channelNames []string,
+	userID string,
+	userInfo interface{},
+) ([]byte, error) {
+	return c.authenticateSession(channelNames, userID, userInfo, time.Now())
 }
 
 func (c *Client) authenticateSession(
+	channelNames []string,
 	userID string,
 	userInfo interface{},
-	channelNames []string,
 	now time.Time,
 ) ([]byte, error) {
 	claimsChannels := make([]jwtClaimsChannel, len(channelNames))
