@@ -49,9 +49,7 @@ func TestUserSessionAuthentication(t *testing.T) {
 	client := setUpAuthClient()
 
 	userID := "callum"
-	userInfo := struct {
-		Foo string `json:"foo"`
-	}{"bar"}
+	userInfo := map[string]string{"foo": "bar"}
 	channelNames := []string{"private-foo", "private-bar", "presence-foobar"}
 
 	expected := fmt.Sprintf(`{"auth":"%s"}`, expectedJWTWithUserID)

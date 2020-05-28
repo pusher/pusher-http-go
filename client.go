@@ -462,7 +462,7 @@ type jwtClaimsChannel struct {
 
 type jwtClaims struct {
 	jwt.StandardClaims
-	UserInfo interface{}        `json:"user_info,omitempty"`
+	UserInfo map[string]string  `json:"user_info,omitempty"`
 	Channels []jwtClaimsChannel `json:"channels"`
 }
 
@@ -481,7 +481,7 @@ AuthenticateUserSession authenticates a user's session. (TODO obviously.)
 func (c *Client) AuthenticateUserSession(
 	channelNames []string,
 	userID string,
-	userInfo interface{},
+	userInfo map[string]string, // TODO map[string]interface{}
 ) ([]byte, error) {
 	return c.authenticateSession(channelNames, userID, userInfo, time.Now())
 }
@@ -489,7 +489,7 @@ func (c *Client) AuthenticateUserSession(
 func (c *Client) authenticateSession(
 	channelNames []string,
 	userID string,
-	userInfo interface{},
+	userInfo map[string]string, // TODO map[string]interface{}
 	now time.Time,
 ) ([]byte, error) {
 	claimsChannels := make([]jwtClaimsChannel, len(channelNames))
