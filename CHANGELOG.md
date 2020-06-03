@@ -1,3 +1,8 @@
+4.0.2 / 2020-06-03
+==================
+
+* Allow larger requests for dedicate cluster customers
+
 4.0.1 / 2020-04-01
 ==================
 
