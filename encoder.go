@@ -7,7 +7,7 @@ import (
 )
 
 // maxEventPayloadSize indicates the max size allowed for the data content (payload) of each event
-const maxEventPayloadSize = 10240
+const maxEventPayloadSize = 20480 // on dedicated clusters we may allow 2x the usual limit
 
 type batchEvent struct {
 	Channel  string  `json:"channel"`
@@ -38,7 +38,7 @@ func encodeTriggerBody(channels []string, event string, data interface{}, socket
 		payloadData = string(dataBytes)
 	}
 	if len(payloadData) > maxEventPayloadSize {
-		return nil, errors.New("Data must be smaller than 10kb")
+		return nil, errors.New("Event payload exceeded maximum size")
 	}
 	return json.Marshal(&eventPayload{
 		Name:     event,
