@@ -516,8 +516,7 @@ func TestDataSizeValidation(t *testing.T) {
 	data := strings.Repeat("a", 20481)
 	err := client.Trigger("channel", "event", data)
 
-	assert.EqualError(t, err, "Event payload exceeded maximum size")
-
+	assert.EqualError(t, err, "Event payload exceeded maximum size (20481 bytes is too much)")
 }
 
 func TestInitialisationFromURL(t *testing.T) {
