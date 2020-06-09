@@ -38,7 +38,7 @@ func encodeTriggerBody(channels []string, event string, data interface{}, socket
 		payloadData = string(dataBytes)
 	}
 	if len(payloadData) > maxEventPayloadSize {
-		return nil, errors.New("Event payload exceeded maximum size")
+		return nil, errors.New(fmt.Sprintf("Event payload exceeded maximum size (%d bytes is too much)", len(payloadData)))
 	}
 	return json.Marshal(&eventPayload{
 		Name:     event,
