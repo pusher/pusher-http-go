@@ -38,7 +38,7 @@ MemberData represents what to assign to a channel member, consisting of a
 */
 type MemberData struct {
 	UserID   string            `json:"user_id"`
-	UserInfo map[string]string `json:"user_info,omitempty"`
+	UserInfo map[string]string `json:"user_info"`
 }
 
 func unmarshalledChannelsList(response []byte) (*ChannelsList, error) {
