@@ -11,7 +11,7 @@ go:
   - 1.12
   - tip
 install:
-  - go get github.com/stretchr/testify/assert
+  - go get gopkg.in/stretchr/testify.v1/assert
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - go get golang.org/x/crypto/nacl/secretbox

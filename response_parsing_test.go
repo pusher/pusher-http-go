@@ -3,7 +3,7 @@ package pusher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"gopkg.in/stretchr/testify.v1/assert"
 )
 
 func TestParsingChannelsList(t *testing.T) {
