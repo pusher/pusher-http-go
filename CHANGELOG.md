@@ -1,3 +1,8 @@
+4.0.2 / 2020-07-28
+==================
+* Added `go.mod` for managing the library as a Go module
+* Changed `github.com/stretchr/testify/assert` with a stable `gopkg.in/stretchr/testify.v1/assert`
+
 4.0.1 / 2020-04-01
 ==================
 
