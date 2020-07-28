@@ -10,12 +10,8 @@ go:
   - 1.11
   - 1.12
   - tip
-install:
-  - go get github.com/stretchr/testify/assert
-  - go get github.com/axw/gocov/gocov
+before_script:
   - go get github.com/mattn/goveralls
-  - go get golang.org/x/crypto/nacl/secretbox
-  - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
-  - $HOME/gopath/bin/goveralls -service=travis-ci -repotoken=$COVERALLS_TOKEN
+  - PATH=$PATH:$HOME/gopath/bin goveralls -service=travis-ci -repotoken=$COVERALLS_TOKEN
 script:
   - go test
