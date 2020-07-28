@@ -25,6 +25,8 @@ func TestTriggerSuccessCase(t *testing.T) {
 		assert.Equal(t, expectedBody, string(actualBody))
 
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
 		assert.NoError(t, err)
 	}))
 	defer server.Close()

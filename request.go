@@ -9,10 +9,24 @@ import (
 	"strconv"
 )
 
+const (
+	contentTypeHeaderKey   = "Content-Type"
+	contentTypeHeaderValue = "application/json"
+)
+
+var headers = map[string]string{
+	"Content-Type":     "application/json",
+	"X-Pusher-Library": fmt.Sprintf("%s %s", libraryName, libraryVersion),
+}
+
 // change timeout to time.Duration
 func request(client *http.Client, method, url string, body []byte) ([]byte, error) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
+
+	for key, val := range headers {
+		req.Header.Set(http.CanonicalHeaderKey(key), val)
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
