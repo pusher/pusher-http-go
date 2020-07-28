@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -512,14 +513,10 @@ func TestChannelFormatValidation(t *testing.T) {
 
 func TestDataSizeValidation(t *testing.T) {
 	client := Client{AppID: "id", Key: "key", Secret: "secret"}
-	var data string
-	for i := 0; i <= 10242; i++ {
-		data += "a"
-	}
+	data := strings.Repeat("a", 20481)
 	err := client.Trigger("channel", "event", data)
 
-	assert.EqualError(t, err, "Data must be smaller than 10kb")
-
+	assert.EqualError(t, err, "Event payload exceeded maximum size (20481 bytes is too much)")
 }
 
 func TestInitialisationFromURL(t *testing.T) {
