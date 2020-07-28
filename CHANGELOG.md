@@ -1,3 +1,8 @@
+4.0.3 / 2020-07-28
+==================
+* Added library name and version in HTTP Header (PR [#62](https://github.com/pusher/pusher-http-go/pull/62))
+* Changed: allow larger (10KB -> 20KB) requests as we sometimes do on dedicated clusters (PR [#66](https://github.com/pusher/pusher-http-go/pull/66))
+
 4.0.2 / 2020-07-28
 ==================
 * Added `go.mod` for managing the library as a Go module
