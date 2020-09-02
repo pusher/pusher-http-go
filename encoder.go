@@ -6,8 +6,9 @@ import (
 	"fmt"
 )
 
-// maxEventPayloadSize indicates the max size allowed for the data content (payload) of each event
-const maxEventPayloadSize = 20480 // on dedicated clusters we may allow 2x the usual limit
+// defaultMaxEventPayloadSizeKB indicates the max size allowed for the data content
+// (payload) of each event, unless an override is present in the client
+const defaultMaxEventPayloadSizeKB = 10
 
 type batchEvent struct {
 	Channel  string  `json:"channel"`
@@ -26,7 +27,14 @@ type eventPayload struct {
 	SocketID *string  `json:"socket_id,omitempty"`
 }
 
-func encodeTriggerBody(channels []string, event string, data interface{}, socketID *string, encryptionKey []byte) ([]byte, error) {
+func encodeTriggerBody(
+	channels []string,
+	event string,
+	data interface{},
+	socketID *string,
+	encryptionKey []byte,
+	overrideMaxMessagePayloadKB int,
+) ([]byte, error) {
 	dataBytes, err := encodeEventData(data)
 	if err != nil {
 		return nil, err
@@ -37,7 +45,14 @@ func encodeTriggerBody(channels []string, event string, data interface{}, socket
 	} else {
 		payloadData = string(dataBytes)
 	}
-	if len(payloadData) > maxEventPayloadSize {
+
+	eventExceedsMaximumSize := false
+	if overrideMaxMessagePayloadKB == 0 {
+		eventExceedsMaximumSize = len(payloadData) > defaultMaxEventPayloadSizeKB*1024
+	} else {
+		eventExceedsMaximumSize = len(payloadData) > overrideMaxMessagePayloadKB*1024
+	}
+	if eventExceedsMaximumSize {
 		return nil, errors.New(fmt.Sprintf("Event payload exceeded maximum size (%d bytes is too much)", len(payloadData)))
 	}
 	return json.Marshal(&eventPayload{
@@ -48,7 +63,11 @@ func encodeTriggerBody(channels []string, event string, data interface{}, socket
 	})
 }
 
-func encodeTriggerBatchBody(batch []Event, encryptionKey []byte) ([]byte, error) {
+func encodeTriggerBatchBody(
+	batch []Event,
+	encryptionKey []byte,
+	overrideMaxMessagePayloadKB int,
+) ([]byte, error) {
 	batchEvents := make([]batchEvent, len(batch))
 	for idx, e := range batch {
 		var stringifyedDataBytes string
@@ -61,8 +80,14 @@ func encodeTriggerBatchBody(batch []Event, encryptionKey []byte) ([]byte, error)
 		} else {
 			stringifyedDataBytes = string(dataBytes)
 		}
-		if len(stringifyedDataBytes) > maxEventPayloadSize {
-			return nil, fmt.Errorf("Data of the event #%d in batch, must be smaller than 10kb", idx)
+		eventExceedsMaximumSize := false
+		if overrideMaxMessagePayloadKB == 0 {
+			eventExceedsMaximumSize = len(stringifyedDataBytes) > defaultMaxEventPayloadSizeKB*1024
+		} else {
+			eventExceedsMaximumSize = len(stringifyedDataBytes) > overrideMaxMessagePayloadKB*1024
+		}
+		if eventExceedsMaximumSize {
+			return nil, fmt.Errorf("Data of the event #%d in batch, exceeded maximum size (%d bytes is too much)", idx, len(stringifyedDataBytes))
 		}
 		newBatchEvent := batchEvent{
 			Channel:  e.Channel,

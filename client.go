@@ -17,7 +17,7 @@ var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 var maxTriggerableChannels = 100
 
 const (
-	libraryVersion = "4.0.3"
+	libraryVersion = "4.0.4"
 	libraryName    = "pusher-http-go"
 )
 
@@ -58,6 +58,7 @@ type Client struct {
 	HTTPClient                   *http.Client
 	EncryptionMasterKey          string  // deprecated
 	EncryptionMasterKeyBase64    string  // for E2E
+	OverrideMaxMessagePayloadKB  int     // set the agreed Pusher message limit increase
 	validatedEncryptionMasterKey *[]byte // parsed key for use
 }
 
@@ -200,7 +201,7 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 		return err
 	}
 
-	payload, err := encodeTriggerBody(channels, eventName, data, socketID, masterKey)
+	payload, err := encodeTriggerBody(channels, eventName, data, socketID, masterKey, c.OverrideMaxMessagePayloadKB)
 	if err != nil {
 		return err
 	}
@@ -250,7 +251,7 @@ func (c *Client) TriggerBatch(batch []Event) error {
 		return keyErr
 	}
 
-	payload, err := encodeTriggerBatchBody(batch, masterKey)
+	payload, err := encodeTriggerBatchBody(batch, masterKey, c.OverrideMaxMessagePayloadKB)
 	if err != nil {
 		return err
 	}

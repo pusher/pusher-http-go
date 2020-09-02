@@ -521,6 +521,17 @@ func TestDataSizeValidation(t *testing.T) {
 	assert.EqualError(t, err, "Event payload exceeded maximum size (20481 bytes is too much)")
 }
 
+func TestDataSizeOverridenValidation(t *testing.T) {
+	client := Client{AppID: "id", Key: "key", Secret: "secret", OverrideMaxMessagePayloadKB: 80}
+	data := strings.Repeat("a", 81920)
+	err := client.Trigger("channel", "event", data)
+	assert.NotContains(t, err.Error(), "\"Event payload exceeded maximum size (81921 bytes is too much)")
+
+	data = strings.Repeat("a", 81921)
+	err = client.Trigger("channel", "event", data)
+	assert.EqualError(t, err, "Event payload exceeded maximum size (81921 bytes is too much)")
+}
+
 func TestInitialisationFromURL(t *testing.T) {
 	url := "http://feaf18a411d3cb9216ee:fec81108d90e1898e17a@api.pusherapp.com/apps/104060"
 	client, _ := ClientFromURL(url)
