@@ -1,3 +1,7 @@
+4.0.4 / 2020-09-02
+==================
+* Allow message size to be overridden for dedicate cluster customers (PR [#63](https://github.com/pusher/pusher-http-go/pull/71))
+
 4.0.3 / 2020-07-28
 ==================
 * Added library name and version in HTTP Header (PR [#62](https://github.com/pusher/pusher-http-go/pull/62))

@@ -519,6 +519,31 @@ func TestDataSizeValidation(t *testing.T) {
 	err := client.Trigger("channel", "event", data)
 
 	assert.EqualError(t, err, "Event payload exceeded maximum size (20481 bytes is too much)")
+
+	err = client.TriggerBatch([]Event{
+		{"channel", "event", data, nil},
+	})
+	assert.EqualError(t, err, "Data of the event #0 in batch, exceeded maximum size (20481 bytes is too much)")
+}
+
+func TestDataSizeOverridenValidation(t *testing.T) {
+	client := Client{AppID: "id", Key: "key", Secret: "secret", OverrideMaxMessagePayloadKB: 80}
+	data := strings.Repeat("a", 81920)
+	err := client.Trigger("channel", "event", data)
+	assert.NotContains(t, err.Error(), "\"Event payload exceeded maximum size (81920 bytes is too much)")
+	err = client.TriggerBatch([]Event{
+		{"channel", "event", data, nil},
+	})
+	assert.NotContains(t, err.Error(), "Data of the event #0 in batch, exceeded maximum size (81920 bytes is too much)")
+
+	data = strings.Repeat("a", 81921)
+	err = client.Trigger("channel", "event", data)
+	assert.EqualError(t, err, "Event payload exceeded maximum size (81921 bytes is too much)")
+
+	err = client.TriggerBatch([]Event{
+		{"channel", "event", data, nil},
+	})
+	assert.EqualError(t, err, "Data of the event #0 in batch, exceeded maximum size (81921 bytes is too much)")
 }
 
 func TestInitialisationFromURL(t *testing.T) {
