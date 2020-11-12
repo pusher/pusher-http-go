@@ -41,27 +41,33 @@ func TestCheckInvalidSignature(t *testing.T) {
 }
 
 func TestCreateAuthMapNoE2E(t *testing.T) {
-	signature := "64e3f44166575febbc5de88c9476325ea7d4b3684752158d9fdb31fce34b980d"
+	ac := &AuthenticatedChannel{}
+	expected := &AuthenticatedChannel{
+		Auth: "64e3f44166575febbc5de88c9476325ea7d4b3684752158d9fdb31fce34b980d",
+	}
+
 	key := "key"
 	secret := "supersecret"
 	stringToSign := "Hello!"
 	sharedSecret := ""
-	authMap := createAuthMap(key, secret, stringToSign, sharedSecret)
+	ac.createAuthSignature(key, secret, stringToSign, sharedSecret)
 	// The [4:] here removes the prefix of key: from the string.
-	assert.Equal(t, authMap["auth"][4:], signature)
-	assert.Equal(t, authMap["shared_secret"], "")
+	assert.Equal(t, ac.Auth[4:], expected.Auth)
+	assert.Equal(t, ac.SharedSecret, expected.SharedSecret)
 }
 
 func TestCreateAuthMapE2E(t *testing.T) {
+	ac := &AuthenticatedChannel{}
+
 	signature := "64e3f44166575febbc5de88c9476325ea7d4b3684752158d9fdb31fce34b980d"
 	key := "key"
 	secret := "supersecret"
 	stringToSign := "Hello!"
 	sharedSecret := "This is a string that is 32 chars"
-	authMap := createAuthMap(key, secret, stringToSign, sharedSecret)
+	ac.createAuthSignature(key, secret, stringToSign, sharedSecret)
 	// The [4:] here removes the prefix of key: from the string.
-	assert.Equal(t, authMap["auth"][4:], signature)
-	assert.Equal(t, authMap["shared_secret"], sharedSecret)
+	assert.Equal(t, ac.Auth[4:], signature)
+	assert.Equal(t, *ac.SharedSecret, sharedSecret)
 }
 
 func TestMD5Signature(t *testing.T) {

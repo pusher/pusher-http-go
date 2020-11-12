@@ -40,13 +40,15 @@ func checkSignature(result, secret string, body []byte) bool {
 	return hmac.Equal(expected, resultBytes)
 }
 
-func createAuthMap(key, secret, stringToSign string, sharedSecret string) map[string]string {
-	authSignature := hmacSignature(stringToSign, secret)
-	authString := strings.Join([]string{key, authSignature}, ":")
+func (a *AuthenticatedChannel) createAuthSignature(key, secret, stringToSign string, sharedSecret string) {
+	a.Auth = strings.Join([]string{
+		key,
+		hmacSignature(stringToSign, secret),
+	}, ":")
+
 	if sharedSecret != "" {
-		return map[string]string{"auth": authString, "shared_secret": sharedSecret}
+		a.SharedSecret = &sharedSecret
 	}
-	return map[string]string{"auth": authString}
 }
 
 func md5Signature(body []byte) string {

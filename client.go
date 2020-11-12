@@ -346,6 +346,12 @@ func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	return unmarshalledChannelUsers(response)
 }
 
+// AuthenticationParams provides a struct authenticate the socket and channel
+type AuthenticationParams struct {
+	SocketID string
+	Channel  string
+}
+
 /*
 AuthenticatePrivateChannel allows you to authenticate a users subscription to a
 private channel. It returns authentication signature to send back to the client
@@ -379,7 +385,7 @@ to send back to the client.
     }
 
 */
-func (c *Client) AuthenticatePrivateChannel(params []byte) (response []byte, err error) {
+func (c *Client) AuthenticatePrivateChannel(params AuthenticationParams) (response *AuthenticatedChannel, err error) {
 	return c.authenticateChannel(params, nil)
 }
 
@@ -409,21 +415,24 @@ In this library, one does this by passing a `pusher.MemberData` instance.
 	fmt.Fprintf(res, response)
 
 */
-func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (response []byte, err error) {
+func (c *Client) AuthenticatePresenceChannel(params AuthenticationParams, member MemberData) (response *AuthenticatedChannel, err error) {
 	return c.authenticateChannel(params, &member)
 }
 
-func (c *Client) authenticateChannel(params []byte, member *MemberData) (response []byte, err error) {
-	channelName, socketID, err := parseAuthRequestParams(params)
-	if err != nil {
+// AuthenticatedChannel holds authentication information for upstream providers
+// to relay to clients
+type AuthenticatedChannel struct {
+	Auth         string
+	SharedSecret *string
+	Data         *string
+}
+
+func (c *Client) authenticateChannel(params AuthenticationParams, member *MemberData) (response *AuthenticatedChannel, err error) {
+	if err = validateSocketID(&params.SocketID); err != nil {
 		return
 	}
 
-	if err = validateSocketID(&socketID); err != nil {
-		return
-	}
-
-	stringToSign := strings.Join([]string{socketID, channelName}, ":")
+	stringToSign := strings.Join([]string{params.SocketID, params.Channel}, ":")
 
 	var jsonUserData string
 
@@ -438,26 +447,25 @@ func (c *Client) authenticateChannel(params []byte, member *MemberData) (respons
 		stringToSign = strings.Join([]string{stringToSign, jsonUserData}, ":")
 	}
 
-	var _response map[string]string
+	response = &AuthenticatedChannel{}
 
-	if isEncryptedChannel(channelName) {
+	if isEncryptedChannel(params.Channel) {
 		masterKey, err := c.encryptionMasterKey()
 		if err != nil {
 			return nil, err
 		}
-		sharedSecret := generateSharedSecret(channelName, masterKey)
+		sharedSecret := generateSharedSecret(params.Channel, masterKey)
 		sharedSecretB64 := base64.StdEncoding.EncodeToString(sharedSecret[:])
-		_response = createAuthMap(c.Key, c.Secret, stringToSign, sharedSecretB64)
+		response.createAuthSignature(c.Key, c.Secret, stringToSign, sharedSecretB64)
 	} else {
-		_response = createAuthMap(c.Key, c.Secret, stringToSign, "")
+		response.createAuthSignature(c.Key, c.Secret, stringToSign, "")
 	}
 
 	if member != nil {
-		_response["channel_data"] = jsonUserData
+		response.Data = &jsonUserData
 	}
 
-	response, err = json.Marshal(_response)
-	return
+	return response, nil
 }
 
 /*

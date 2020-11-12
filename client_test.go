@@ -367,7 +367,10 @@ func TestAuthenticateInvalidMasterKey(t *testing.T) {
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
 
-	params := []byte("channel_name=private-encrypted-test_channel&socket_id=12345.12345")
+	params := AuthenticationParams{
+		Channel:  "private-encrypted-test_channel",
+		SocketID: "12345.12345",
+	}
 
 	// too short (deprecated)
 	client := Client{
