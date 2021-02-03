@@ -303,12 +303,52 @@ func TestTriggerBatchSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.TriggerBatch([]Event{
-		{"test_channel", "test", "yolo1", nil},
-		{"test_channel", "test", "yolo2", nil},
+	response, err := client.TriggerBatch([]Event{
+		{Channel: "test_channel", Name: "test", Data: "yolo1"},
+		{Channel: "test_channel", Name: "test", Data: "yolo2"},
 	})
 
 	assert.NoError(t, err)
+	assert.Equal(t, &TriggerChannelsList{}, response)
+}
+
+func TestTriggerBatchInfoSuccess(t *testing.T) {
+	expectedBody := `{"batch":[{"channel":"presence-test_channel","name":"test","data":"yolo1","info":"user_count,subscription_count"},{"channel":"test_channel","name":"test","data":"yolo2","info":"subscription_count"}]}`
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"channels\":{\"presence-test_channel\":{\"subscription_count\":2,\"user_count\":1},\"test_channel\":{\"subscription_count\":3}}}"
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "POST", req.Method)
+
+		actualBody, err := ioutil.ReadAll(req.Body)
+		assert.Equal(t, expectedBody, string(actualBody))
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
+	presenceChannelInfo := "user_count,subscription_count"
+	channelInfo := "subscription_count"
+	channels, err := client.TriggerBatch([]Event{
+		{Channel: "presence-test_channel", Name: "test", Data: "yolo1", Info: &presenceChannelInfo},
+		{Channel: "test_channel", Name: "test", Data: "yolo2", Info: &channelInfo},
+	})
+
+	assert.NoError(t, err)
+
+	presenceExpectedUserCount := 1
+	presenceExpectedSubscriptionCount := 2
+	expectedSubscriptionCount := 3
+	expected := &TriggerChannelsList{
+		Channels: map[string]TriggerChannelListItem{
+			"presence-test_channel": {UserCount: &presenceExpectedUserCount, SubscriptionCount: &presenceExpectedSubscriptionCount},
+			"test_channel":          {SubscriptionCount: &expectedSubscriptionCount},
+		},
+	}
+	assert.Equal(t, expected, channels)
 }
 
 func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T) {
@@ -327,12 +367,13 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
-	err := client.TriggerBatch([]Event{
-		{"test_channel", "test", "yolo1", nil},
-		{"test_channel", "test", "yolo2", nil},
+	response, err := client.TriggerBatch([]Event{
+		{Channel: "test_channel", Name: "test", Data: "yolo1"},
+		{Channel: "test_channel", Name: "test", Data: "yolo2"},
 	})
 
 	assert.NoError(t, err)
+	assert.Equal(t, &TriggerChannelsList{}, response)
 }
 
 func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T) {
@@ -343,9 +384,9 @@ func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T)
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.TriggerBatch([]Event{
-		{"test_channel", "test", "yolo1", nil},
-		{"private-encrypted-test_channel", "test", "yolo2", nil},
+	_, err := client.TriggerBatch([]Event{
+		{Channel: "test_channel", Name: "test", Data: "yolo1"},
+		{Channel: "private-encrypted-test_channel", Name: "test", Data: "yolo2"},
 	})
 
 	assert.Error(t, err)
@@ -388,11 +429,12 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
-	err := client.TriggerBatch([]Event{
-		{"test_channel", "test", "yolo1", nil},
-		{"private-encrypted-test_channel", "test", "yolo2", nil},
+	response, err := client.TriggerBatch([]Event{
+		{Channel: "test_channel", Name: "test", Data: "yolo1"},
+		{Channel: "private-encrypted-test_channel", Name: "test", Data: "yolo2"},
 	})
 	assert.NoError(t, err)
+	assert.Equal(t, &TriggerChannelsList{}, response)
 }
 
 func TestTriggerInvalidMasterKey(t *testing.T) {
@@ -636,8 +678,8 @@ func TestDataSizeValidation(t *testing.T) {
 
 	assert.EqualError(t, err, "Event payload exceeded maximum size (20481 bytes is too much)")
 
-	err = client.TriggerBatch([]Event{
-		{"channel", "event", data, nil},
+	_, err = client.TriggerBatch([]Event{
+		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.EqualError(t, err, "Data of the event #0 in batch, exceeded maximum size (20481 bytes is too much)")
 }
@@ -647,8 +689,8 @@ func TestDataSizeOverridenValidation(t *testing.T) {
 	data := strings.Repeat("a", 81920)
 	err := client.Trigger("channel", "event", data)
 	assert.NotContains(t, err.Error(), "\"Event payload exceeded maximum size (81920 bytes is too much)")
-	err = client.TriggerBatch([]Event{
-		{"channel", "event", data, nil},
+	_, err = client.TriggerBatch([]Event{
+		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.NotContains(t, err.Error(), "Data of the event #0 in batch, exceeded maximum size (81920 bytes is too much)")
 
@@ -656,8 +698,8 @@ func TestDataSizeOverridenValidation(t *testing.T) {
 	err = client.Trigger("channel", "event", data)
 	assert.EqualError(t, err, "Event payload exceeded maximum size (81921 bytes is too much)")
 
-	err = client.TriggerBatch([]Event{
-		{"channel", "event", data, nil},
+	_, err = client.TriggerBatch([]Event{
+		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.EqualError(t, err, "Data of the event #0 in batch, exceeded maximum size (81921 bytes is too much)")
 }

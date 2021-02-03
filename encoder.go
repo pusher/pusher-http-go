@@ -15,6 +15,7 @@ type batchEvent struct {
 	Name     string  `json:"name"`
 	Data     string  `json:"data"`
 	SocketID *string `json:"socket_id,omitempty"`
+	Info     *string `json:"info,omitempty"`
 }
 type batchPayload struct {
 	Batch []batchEvent `json:"batch"`
@@ -90,6 +91,7 @@ func encodeTriggerBatchBody(
 			Name:     e.Name,
 			Data:     stringifyedDataBytes,
 			SocketID: e.SocketID,
+			Info:     e.Info,
 		}
 		batchEvents[idx] = newBatchEvent
 	}

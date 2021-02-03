@@ -274,24 +274,28 @@ type Event struct {
 	Name     string
 	Data     interface{}
 	SocketID *string
+	Info     *string
 }
 
 /*
 TriggerBatch triggers multiple events on multiple channels in a single call:
-    client.TriggerBatch([]pusher.Event{
-	    { Channel: "donut-1", Name: "ev1", Data: "d1" },
-	    { Channel: "private-encrypted-secretdonut", Name: "ev2", Data: "d2" },
-    })
+
+	info := "subscription_count"
+	socketID := "1234.12"
+	client.TriggerBatch([]pusher.Event{
+		{ Channel: "donut-1", Name: "ev1", Data: "d1", SocketID: socketID, Info: &info },
+		{ Channel: "private-encrypted-secretdonut", Name: "ev2", Data: "d2", SocketID: socketID, Info: &info },
+	})
 */
-func (c *Client) TriggerBatch(batch []Event) error {
+func (c *Client) TriggerBatch(batch []Event) (*TriggerChannelsList, error) {
 	hasEncryptedChannel := false
 	// validate every channel name and every sockedID (if present) in batch
 	for _, event := range batch {
 		if !validChannel(event.Channel) {
-			return fmt.Errorf("The channel named %s has a non-valid name", event.Channel)
+			return nil, fmt.Errorf("The channel named %s has a non-valid name", event.Channel)
 		}
 		if err := validateSocketID(event.SocketID); err != nil {
-			return err
+			return nil, err
 		}
 		if isEncryptedChannel(event.Channel) {
 			hasEncryptedChannel = true
@@ -299,20 +303,24 @@ func (c *Client) TriggerBatch(batch []Event) error {
 	}
 	masterKey, keyErr := c.encryptionMasterKey()
 	if hasEncryptedChannel && keyErr != nil {
-		return keyErr
+		return nil, keyErr
 	}
 
 	payload, err := encodeTriggerBatchBody(batch, masterKey, c.OverrideMaxMessagePayloadKB)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	path := fmt.Sprintf("/apps/%s/batch_events", c.AppID)
 	triggerURL, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = c.request("POST", triggerURL, payload)
-	return err
+	response, err := c.request("POST", triggerURL, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalledTriggerChannelsList(response)
 }
 
 /*
