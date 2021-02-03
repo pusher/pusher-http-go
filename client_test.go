@@ -1,6 +1,7 @@
 package pusher
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -20,9 +21,12 @@ func TestTriggerSuccessCase(t *testing.T) {
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"yolo\"}"
-		actualBody, err := ioutil.ReadAll(req.Body)
-		assert.Equal(t, expectedBody, string(actualBody))
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo"}
+		bodyDeoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDeoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
 
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
@@ -37,15 +41,87 @@ func TestTriggerSuccessCase(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// Tests that when the "info" param is not specified, we get a nil Channels map in the returned TriggerChannelsList
+func TestTriggerWithParamsSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{}"
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo"}
+		bodyDeoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDeoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	// Empty parameters
+	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", map[string]string{})
+	assert.NoError(t, err)
+
+	expected := &TriggerChannelsList{
+		Channels: nil,
+	}
+	assert.Equal(t, expected, channels)
+}
+
+func TestTriggerWithParamsInfoSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"channels\":{\"test_channel\":{\"subscription_count\":1}}}"
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo", "info": "subscription_count"}
+		bodyDeoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDeoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", map[string]string{"info": "subscription_count"})
+	assert.NoError(t, err)
+
+	expectedSubscriptionCount := 1
+	expected := &TriggerChannelsList{
+		Channels: map[string]TriggerChannelListItem{
+			"test_channel": {SubscriptionCount: &expectedSubscriptionCount},
+		},
+	}
+	assert.Equal(t, expected, channels)
+}
+
 func TestTriggerMultiSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\",\"other_channel\"],\"data\":\"yolo\"}"
-		actualBody, err := ioutil.ReadAll(req.Body)
-		assert.Equal(t, expectedBody, string(actualBody))
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel", "other_channel"}, "data": "yolo"}
+		bodyDeoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDeoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
 
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.NoError(t, err)
@@ -76,6 +152,44 @@ func TestTriggerMultiEncryptedRejected(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "multiple channels")
 	assert.Contains(t, err.Error(), "encrypted channels")
+}
+
+func TestTriggerMultiWithParamsInfoSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"channels\":{\"presence-test_channel\":{\"subscription_count\":2,\"user_count\":1},\"test_channel\":{\"subscription_count\":3}}}"
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"presence-test_channel", "test_channel"}, "data": "yolo", "info": "user_count,subscription_count"}
+		bodyDeoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDeoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	channels, err := client.TriggerMultiWithParams([]string{"presence-test_channel", "test_channel"}, "test", "yolo", map[string]string{"info": "user_count,subscription_count"})
+	assert.NoError(t, err)
+
+	presenceExpectedUserCount := 1
+	presenceExpectedSubscriptionCount := 2
+	expectedSubscriptionCount := 3
+	expected := &TriggerChannelsList{
+		Channels: map[string]TriggerChannelListItem{
+			"presence-test_channel": {UserCount: &presenceExpectedUserCount, SubscriptionCount: &presenceExpectedSubscriptionCount},
+			"test_channel":          {SubscriptionCount: &expectedSubscriptionCount},
+		},
+	}
+	assert.Equal(t, expected, channels)
 }
 
 func TestGetChannelsSuccessCase(t *testing.T) {
@@ -152,10 +266,12 @@ func TestGetChannelUserSuccess(t *testing.T) {
 func TestTriggerWithSocketID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
-		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"yolo\",\"socket_id\":\"1234.12\"}"
-		actualBody, err := ioutil.ReadAll(req.Body)
-		assert.Equal(t, expectedBody, string(actualBody))
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo", "socket_id": "1234.12"}
+		bodyDeoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDeoder.Decode(&actualBody)
 		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
 	}))
 	defer server.Close()
 

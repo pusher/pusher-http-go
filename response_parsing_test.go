@@ -6,6 +6,23 @@ import (
 	"gopkg.in/stretchr/testify.v1/assert"
 )
 
+func TestParsingTriggerChannelsList(t *testing.T) {
+	testJSON := []byte("{\"channels\":{\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-5cbTiUiPNGI\":{},\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-PbZ5E1pP8uF\":{\"user_count\":1},\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG\":{\"user_count\":2,\"subscription_count\":3}}}")
+	expectedUserCount1 := 1
+	expectedUserCount2 := 2
+	expectedSubscriptionCount2 := 3
+	expected := &TriggerChannelsList{
+		Channels: map[string]TriggerChannelListItem{
+			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-5cbTiUiPNGI": TriggerChannelListItem{},
+			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-PbZ5E1pP8uF": TriggerChannelListItem{UserCount: &expectedUserCount1},
+			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG": TriggerChannelListItem{UserCount: &expectedUserCount2, SubscriptionCount: &expectedSubscriptionCount2},
+		},
+	}
+	result, err := unmarshalledTriggerChannelsList(testJSON)
+	assert.Equal(t, expected, result)
+	assert.NoError(t, err)
+}
+
 func TestParsingChannelsList(t *testing.T) {
 	testJSON := []byte("{\"channels\":{\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-5cbTiUiPNGI\":{\"user_count\":1},\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-PbZ5E1pP8uF\":{\"user_count\":1},\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG\":{\"user_count\":1}}}")
 	expected := &ChannelsList{

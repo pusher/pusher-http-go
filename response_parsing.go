@@ -22,6 +22,15 @@ type ChannelListItem struct {
 	UserCount int `json:"user_count"`
 }
 
+type TriggerChannelsList struct {
+	Channels map[string]TriggerChannelListItem `json:"channels"`
+}
+
+type TriggerChannelListItem struct {
+	UserCount         *int `json:"user_count,omitempty"`
+	SubscriptionCount *int `json:"subscription_count,omitempty"`
+}
+
 // Users represents a list of users in a presence-channel
 type Users struct {
 	List []User `json:"users"`
@@ -39,6 +48,17 @@ MemberData represents what to assign to a channel member, consisting of a
 type MemberData struct {
 	UserID   string            `json:"user_id"`
 	UserInfo map[string]string `json:"user_info,omitempty"`
+}
+
+func unmarshalledTriggerChannelsList(response []byte) (*TriggerChannelsList, error) {
+	channels := &TriggerChannelsList{}
+	err := json.Unmarshal(response, &channels)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return channels, nil
 }
 
 func unmarshalledChannelsList(response []byte) (*ChannelsList, error) {

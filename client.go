@@ -143,7 +143,29 @@ be marshallable into JSON.
 
 */
 func (c *Client) Trigger(channel string, eventName string, data interface{}) error {
-	return c.trigger([]string{channel}, eventName, data, nil)
+	_, err := c.trigger([]string{channel}, eventName, data, nil)
+	return err
+}
+
+/*
+TriggerWithParams is the same as `client.Trigger`, except it allows additional
+parameters to be passed in. See:
+https://pusher.com/docs/channels/library_auth_reference/rest-api#request
+for a complete list.
+
+	data := map[string]string{"hello": "world"}
+	parameters := map[string]string{"socket_id": "1234.12", "info": "user_count"}
+	channels, err := client.Trigger("greeting_channel", "say_hello", data, parameters)
+
+	//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
+*/
+func (c *Client) TriggerWithParams(
+	channel string,
+	eventName string,
+	data interface{},
+	parameters map[string]string,
+) (*TriggerChannelsList, error) {
+	return c.trigger([]string{channel}, eventName, data, parameters)
 }
 
 /*
@@ -152,7 +174,22 @@ TriggerMulti is the same as `client.Trigger`, except one passes in a slice of
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
 func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) error {
-	return c.trigger(channels, eventName, data, nil)
+	_, err := c.trigger(channels, eventName, data, nil)
+	return err
+}
+
+/*
+TriggerMultiWithParams is the same as `client.TriggerMulti`, except it
+allows additional parameters to be specified in the same way as
+`client.TriggerWithParams`.
+*/
+func (c *Client) TriggerMultiWithParams(
+	channels []string,
+	eventName string,
+	data interface{},
+	parameters map[string]string,
+) (*TriggerChannelsList, error) {
+	return c.trigger(channels, eventName, data, parameters)
 }
 
 /*
@@ -160,9 +197,13 @@ TriggerExclusive triggers an event excluding a recipient whose connection has
 the `socket_id` you specify here from receiving the event.
 You can read more here: http://pusher.com/docs/duplicates.
 	client.TriggerExclusive("a_channel", "event", data, "123.12")
+
+Deprecated: use TriggerWithParams instead.
 */
 func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) error {
-	return c.trigger([]string{channel}, eventName, data, &socketID)
+	parameters := map[string]string{"socket_id": socketID}
+	_, err := c.trigger([]string{channel}, eventName, data, parameters)
+	return err
 }
 
 /*
@@ -170,17 +211,21 @@ TriggerMultiExclusive triggers an event to multiple channels excluding a
 recipient whose connection has the `socket_id` you specify here from receiving
 the event on any of the channels.
 	client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
+
+Deprecated: use TriggerMultiWithParams instead.
 */
 func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) error {
-	return c.trigger(channels, eventName, data, &socketID)
+	parameters := map[string]string{"socket_id": socketID}
+	_, err := c.trigger(channels, eventName, data, parameters)
+	return err
 }
 
-func (c *Client) trigger(channels []string, eventName string, data interface{}, socketID *string) error {
+func (c *Client) trigger(channels []string, eventName string, data interface{}, parameters map[string]string) (*TriggerChannelsList, error) {
 	if len(channels) > maxTriggerableChannels {
-		return fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
+		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
 	if !channelsAreValid(channels) {
-		return errors.New("At least one of your channels' names are invalid")
+		return nil, errors.New("At least one of your channels' names are invalid")
 	}
 
 	hasEncryptedChannel := false
@@ -191,28 +236,34 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	}
 	if hasEncryptedChannel && len(channels) > 1 {
 		// For rationale, see limitations of end-to-end encryption in the README
-		return errors.New("You cannot trigger to multiple channels when using encrypted channels")
+		return nil, errors.New("You cannot trigger to multiple channels when using encrypted channels")
 	}
 	masterKey, keyErr := c.encryptionMasterKey()
 	if hasEncryptedChannel && keyErr != nil {
-		return keyErr
+		return nil, keyErr
 	}
-	if err := validateSocketID(socketID); err != nil {
-		return err
+	socketID, ok := parameters["socket_id"]
+	if ok {
+		if err := validateSocketID(&socketID); err != nil {
+			return nil, err
+		}
 	}
 
-	payload, err := encodeTriggerBody(channels, eventName, data, socketID, masterKey, c.OverrideMaxMessagePayloadKB)
+	payload, err := encodeTriggerBody(channels, eventName, data, parameters, masterKey, c.OverrideMaxMessagePayloadKB)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	path := fmt.Sprintf("/apps/%s/events", c.AppID)
 	triggerURL, err := createRequestURL("POST", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, payload, nil, c.Cluster)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = c.request("POST", triggerURL, payload)
+	response, err := c.request("POST", triggerURL, payload)
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	return unmarshalledTriggerChannelsList(response)
 }
 
 /*
