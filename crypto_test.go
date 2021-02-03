@@ -12,7 +12,7 @@ func TestHmacSignature(t *testing.T) {
 	toSign := "Hello!"
 	secret := "supersecret"
 	hmac := hmacSignature(toSign, secret)
-	assert.Equal(t, hmac, expected)
+	assert.Equal(t, expected, hmac)
 }
 
 func TestHmacBytes(t *testing.T) {
@@ -21,7 +21,7 @@ func TestHmacBytes(t *testing.T) {
 	toSign := "Hello!"
 	secret := "supersecret"
 	hmacBytes := hmacBytes([]byte(toSign), []byte(secret))
-	assert.Equal(t, hmacBytes, expectedBytes)
+	assert.Equal(t, expectedBytes, hmacBytes)
 }
 
 func TestCheckValidSignature(t *testing.T) {
@@ -29,7 +29,7 @@ func TestCheckValidSignature(t *testing.T) {
 	secret := "supersecret"
 	body := "Hello!"
 	validSignature := checkSignature(signature, secret, []byte(body))
-	assert.Equal(t, validSignature, true)
+	assert.Equal(t, true, validSignature)
 }
 
 func TestCheckInvalidSignature(t *testing.T) {
@@ -37,7 +37,7 @@ func TestCheckInvalidSignature(t *testing.T) {
 	secret := "supersecret"
 	body := "Hello!"
 	validSignature := checkSignature(signature, secret, []byte(body))
-	assert.Equal(t, validSignature, false)
+	assert.Equal(t, false, validSignature)
 }
 
 func TestCreateAuthMapNoE2E(t *testing.T) {
@@ -48,8 +48,8 @@ func TestCreateAuthMapNoE2E(t *testing.T) {
 	sharedSecret := ""
 	authMap := createAuthMap(key, secret, stringToSign, sharedSecret)
 	// The [4:] here removes the prefix of key: from the string.
-	assert.Equal(t, authMap["auth"][4:], signature)
-	assert.Equal(t, authMap["shared_secret"], "")
+	assert.Equal(t, signature, authMap["auth"][4:])
+	assert.Equal(t, "", authMap["shared_secret"])
 }
 
 func TestCreateAuthMapE2E(t *testing.T) {
@@ -60,8 +60,8 @@ func TestCreateAuthMapE2E(t *testing.T) {
 	sharedSecret := "This is a string that is 32 chars"
 	authMap := createAuthMap(key, secret, stringToSign, sharedSecret)
 	// The [4:] here removes the prefix of key: from the string.
-	assert.Equal(t, authMap["auth"][4:], signature)
-	assert.Equal(t, authMap["shared_secret"], sharedSecret)
+	assert.Equal(t, signature, authMap["auth"][4:])
+	assert.Equal(t, sharedSecret, authMap["shared_secret"])
 }
 
 func TestMD5Signature(t *testing.T) {
@@ -76,14 +76,14 @@ func TestEncrypt(t *testing.T) {
 	encryptionKey := []byte("This is a string that is 32 chars")
 	cipherText := encrypt(channel, body, encryptionKey)
 	assert.NotNil(t, cipherText)
-	assert.NotEqual(t, cipherText, body)
+	assert.NotEqual(t, body, cipherText)
 }
 
 func TestFormatMessage(t *testing.T) {
 	nonce := "a"
 	cipherText := "b"
 	formatted := formatMessage(nonce, cipherText)
-	assert.Equal(t, formatted, "{\"nonce\":\"a\",\"ciphertext\":\"b\"}")
+	assert.Equal(t, "{\"nonce\":\"a\",\"ciphertext\":\"b\"}", formatted)
 }
 
 func TestGenerateSharedSecret(t *testing.T) {
@@ -92,7 +92,7 @@ func TestGenerateSharedSecret(t *testing.T) {
 	sharedSecret := generateSharedSecret(channel, encryptionKey)
 	t.Log(hex.EncodeToString(sharedSecret[:]))
 	expected := "004831f99d2a4e86723e893caded3a2897deeddbed9514fe9497dcddc52bd50b"
-	assert.Equal(t, hex.EncodeToString(sharedSecret[:]), expected)
+	assert.Equal(t, expected, hex.EncodeToString(sharedSecret[:]))
 }
 
 func TestDecryptValidKey(t *testing.T) {
@@ -148,6 +148,6 @@ func TestDecryptInvalidKey(t *testing.T) {
 		},
 	}
 	decryptedWebhooks, err := decryptEvents(*encryptedWebhookData, encryptionKey)
-	assert.Equal(t, decryptedWebhooks.Events, []WebhookEvent(nil))
+	assert.Equal(t, []WebhookEvent(nil), decryptedWebhooks.Events)
 	assert.EqualError(t, err, "Failed to decrypt event, possibly wrong key?")
 }

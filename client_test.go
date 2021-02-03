@@ -101,7 +101,7 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG": ChannelListItem{UserCount: 1},
 		},
 	}
-	assert.Equal(t, channels, expected)
+	assert.Equal(t, expected, channels)
 }
 
 func TestGetChannelSuccess(t *testing.T) {
@@ -125,7 +125,7 @@ func TestGetChannelSuccess(t *testing.T) {
 		UserCount:         1,
 		SubscriptionCount: 1,
 	}
-	assert.Equal(t, channel, expected)
+	assert.Equal(t, expected, channel)
 }
 
 func TestGetChannelUserSuccess(t *testing.T) {
@@ -146,7 +146,7 @@ func TestGetChannelUserSuccess(t *testing.T) {
 	expected := &Users{
 		List: []User{User{ID: "red"}, User{ID: "blue"}},
 	}
-	assert.Equal(t, users, expected)
+	assert.Equal(t, expected, users)
 }
 
 func TestTriggerWithSocketID(t *testing.T) {
