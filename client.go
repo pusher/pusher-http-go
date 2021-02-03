@@ -317,7 +317,7 @@ func (c *Client) TriggerBatch(batch []Event) error {
 
 /*
 Channels returns a list of all the channels in an application. The parameter
-`additionalQueries` is a map with query options. A key with `"filter_by_prefix"`
+`parameters` is a map with query options. A key with `"filter_by_prefix"`
 will filter the returned channels. To get number of users subscribed to a
 presence-channel, specify an `"info"` key with value `"user_count"`. Pass in
 `nil` if you do not wish to specify any query attributes
@@ -332,9 +332,9 @@ presence-channel, specify an `"info"` key with value `"user_count"`. Pass in
     //channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
 
 */
-func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, error) {
+func (c *Client) Channels(parameters map[string]string) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppID)
-	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, parameters, c.Cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +347,7 @@ func (c *Client) Channels(additionalQueries map[string]string) (*ChannelsList, e
 
 /*
 Channel allows you to get the state of a single channel. The parameter
-`additionalQueries` is a map with query options. An `"info"` key can have
+`parameters` is a map with query options. An `"info"` key can have
 comma-separated vales of `"user_count"`, for presence-channels, and
 `"subscription_count"`, for all-channels. Note that the subscription count is
 not allowed by default. Please contact us at http://support.pusher.com if you
@@ -362,9 +362,9 @@ attributes.
 
     //channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 */
-func (c *Client) Channel(name string, additionalQueries map[string]string) (*Channel, error) {
+func (c *Client) Channel(name string, parameters map[string]string) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppID, name)
-	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, additionalQueries, c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, parameters, c.Cluster)
 	if err != nil {
 		return nil, err
 	}
