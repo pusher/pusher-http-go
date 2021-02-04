@@ -66,7 +66,7 @@ func TestTriggerWithParamsSuccessCase(t *testing.T) {
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	// Empty parameters
-	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", map[string]string{})
+	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", TriggerParams{})
 	assert.NoError(t, err)
 
 	expected := &TriggerChannelsList{
@@ -98,7 +98,8 @@ func TestTriggerWithParamsInfoSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", map[string]string{"info": "subscription_count"})
+	attributes := "subscription_count"
+	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", TriggerParams{Info: &attributes})
 	assert.NoError(t, err)
 
 	expectedSubscriptionCount := 1
@@ -177,7 +178,8 @@ func TestTriggerMultiWithParamsInfoSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channels, err := client.TriggerMultiWithParams([]string{"presence-test_channel", "test_channel"}, "test", "yolo", map[string]string{"info": "user_count,subscription_count"})
+	attributes := "user_count,subscription_count"
+	channels, err := client.TriggerMultiWithParams([]string{"presence-test_channel", "test_channel"}, "test", "yolo", TriggerParams{Info: &attributes})
 	assert.NoError(t, err)
 
 	presenceExpectedUserCount := 1
@@ -205,7 +207,7 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channels, err := client.Channels(nil)
+	channels, err := client.Channels(ChannelsParams{})
 	assert.NoError(t, err)
 
 	expected := &ChannelsList{
@@ -230,7 +232,7 @@ func TestGetChannelSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channel, err := client.Channel("test_channel", nil)
+	channel, err := client.Channel("test_channel", ChannelParams{})
 	assert.NoError(t, err)
 
 	expected := &Channel{
@@ -611,8 +613,8 @@ func TestErrorResponseHandler(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channelParams := map[string]string{"info": "user_count,subscription_count"}
-	channel, err := client.Channel("this_is_not_a_presence_channel", channelParams)
+	attributes := "user_count,subscription_count"
+	channel, err := client.Channel("this_is_not_a_presence_channel", ChannelParams{Info: &attributes})
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, "Status Code: 400 - Cannot retrieve the user count unless the channel is a presence channel")

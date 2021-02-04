@@ -143,8 +143,36 @@ be marshallable into JSON.
 
 */
 func (c *Client) Trigger(channel string, eventName string, data interface{}) error {
-	_, err := c.trigger([]string{channel}, eventName, data, nil)
+	_, err := c.trigger([]string{channel}, eventName, data, TriggerParams{})
 	return err
+}
+
+/*
+ChannelsParams are any parameters than can be sent with a
+TriggerWithParams or TriggerMultiWithParams requests.
+*/
+type TriggerParams struct {
+	// SocketID excludes a recipient whose connection has the `socket_id`
+	// specified here. You can read more here:
+	// http://pusher.com/docs/duplicates.
+	SocketID *string
+	// Info is comma-separated vales of `"user_count"`, for
+	// presence-channels, and `"subscription_count"`, for all-channels.
+	// Note that the subscription count is not allowed by default. Please
+	// contact us at http://support.pusher.com if you wish to enable this.
+	// Pass in `nil` if you do not wish to specify any query attributes.
+	Info *string
+}
+
+func (parameters TriggerParams) toMap() map[string]string {
+	m := make(map[string]string)
+	if parameters.SocketID != nil {
+		m["socket_id"] = *parameters.SocketID
+	}
+	if parameters.Info != nil {
+		m["info"] = *parameters.Info
+	}
+	return m
 }
 
 /*
@@ -154,7 +182,9 @@ https://pusher.com/docs/channels/library_auth_reference/rest-api#request
 for a complete list.
 
 	data := map[string]string{"hello": "world"}
-	parameters := map[string]string{"socket_id": "1234.12", "info": "user_count"}
+	socketID := "1234.12"
+	attributes := "user_count"
+	parameters := TriggerParams{SocketID: &socketID, Info: &attributes}
 	channels, err := client.Trigger("greeting_channel", "say_hello", data, parameters)
 
 	//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
@@ -163,7 +193,7 @@ func (c *Client) TriggerWithParams(
 	channel string,
 	eventName string,
 	data interface{},
-	parameters map[string]string,
+	parameters TriggerParams,
 ) (*TriggerChannelsList, error) {
 	return c.trigger([]string{channel}, eventName, data, parameters)
 }
@@ -174,7 +204,7 @@ TriggerMulti is the same as `client.Trigger`, except one passes in a slice of
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
 func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) error {
-	_, err := c.trigger(channels, eventName, data, nil)
+	_, err := c.trigger(channels, eventName, data, TriggerParams{})
 	return err
 }
 
@@ -187,7 +217,7 @@ func (c *Client) TriggerMultiWithParams(
 	channels []string,
 	eventName string,
 	data interface{},
-	parameters map[string]string,
+	parameters TriggerParams,
 ) (*TriggerChannelsList, error) {
 	return c.trigger(channels, eventName, data, parameters)
 }
@@ -201,7 +231,7 @@ You can read more here: http://pusher.com/docs/duplicates.
 Deprecated: use TriggerWithParams instead.
 */
 func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) error {
-	parameters := map[string]string{"socket_id": socketID}
+	parameters := TriggerParams{SocketID: &socketID}
 	_, err := c.trigger([]string{channel}, eventName, data, parameters)
 	return err
 }
@@ -215,12 +245,12 @@ the event on any of the channels.
 Deprecated: use TriggerMultiWithParams instead.
 */
 func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) error {
-	parameters := map[string]string{"socket_id": socketID}
+	parameters := TriggerParams{SocketID: &socketID}
 	_, err := c.trigger(channels, eventName, data, parameters)
 	return err
 }
 
-func (c *Client) trigger(channels []string, eventName string, data interface{}, parameters map[string]string) (*TriggerChannelsList, error) {
+func (c *Client) trigger(channels []string, eventName string, data interface{}, parameters TriggerParams) (*TriggerChannelsList, error) {
 	if len(channels) > maxTriggerableChannels {
 		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
@@ -242,14 +272,11 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if hasEncryptedChannel && keyErr != nil {
 		return nil, keyErr
 	}
-	socketID, ok := parameters["socket_id"]
-	if ok {
-		if err := validateSocketID(&socketID); err != nil {
-			return nil, err
-		}
+	if err := validateSocketID(parameters.SocketID); err != nil {
+		return nil, err
 	}
 
-	payload, err := encodeTriggerBody(channels, eventName, data, parameters, masterKey, c.OverrideMaxMessagePayloadKB)
+	payload, err := encodeTriggerBody(channels, eventName, data, parameters.toMap(), masterKey, c.OverrideMaxMessagePayloadKB)
 	if err != nil {
 		return nil, err
 	}
@@ -324,25 +351,41 @@ func (c *Client) TriggerBatch(batch []Event) (*TriggerChannelsList, error) {
 }
 
 /*
-Channels returns a list of all the channels in an application. The parameter
-`parameters` is a map with query options. A key with `"filter_by_prefix"`
-will filter the returned channels. To get number of users subscribed to a
-presence-channel, specify an `"info"` key with value `"user_count"`. Pass in
-`nil` if you do not wish to specify any query attributes
+ChannelsParams are any parameters than can be sent with a Channels request.
+*/
+type ChannelsParams struct {
+	// FilterByPrefix will filter the returned channels.
+	FilterByPrefix *string
+	// Info should be specified with a value of "user_count" to get number
+	// of users subscribed to a presence-channel. Pass in `nil` if you do
+	// not wish to specify any query attributes.
+	Info *string
+}
 
-    channelsParams := map[string]string{
-        "filter_by_prefix": "presence-",
-        "info":             "user_count",
-    }
+func (parameters ChannelsParams) toMap() map[string]string {
+	m := make(map[string]string)
+	if parameters.FilterByPrefix != nil {
+		m["filter_by_prefix"] = *parameters.FilterByPrefix
+	}
+	if parameters.Info != nil {
+		m["info"] = *parameters.Info
+	}
+	return m
+}
 
-    channels, err := client.Channels(channelsParams)
+/*
+Channels returns a list of all the channels in an application.
+
+    prefixFilter := "presence-"
+		attributes := "user_count"
+		parameters := ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
+    channels, err := client.Channels(parameters)
 
     //channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
-
 */
-func (c *Client) Channels(parameters map[string]string) (*ChannelsList, error) {
+func (c *Client) Channels(parameters ChannelsParams) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppID)
-	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, parameters, c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, parameters.toMap(), c.Cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -354,25 +397,36 @@ func (c *Client) Channels(parameters map[string]string) (*ChannelsList, error) {
 }
 
 /*
-Channel allows you to get the state of a single channel. The parameter
-`parameters` is a map with query options. An `"info"` key can have
-comma-separated vales of `"user_count"`, for presence-channels, and
-`"subscription_count"`, for all-channels. Note that the subscription count is
-not allowed by default. Please contact us at http://support.pusher.com if you
-wish to enable this. Pass in `nil` if you do not wish to specify any query
-attributes.
+ChannelParams are any parameters than can be sent with a Channel request.
+*/
+type ChannelParams struct {
+	// Info is comma-separated vales of `"user_count"`, for
+	// presence-channels, and `"subscription_count"`, for all-channels.
+	// Note that the subscription count is not allowed by default. Please
+	// contact us at http://support.pusher.com if you wish to enable this.
+	// Pass in `nil` if you do not wish to specify any query attributes.
+	Info *string
+}
 
-    channelParams := map[string]string{
-        "info": "user_count,subscription_count",
-    }
+func (parameters ChannelParams) toMap() map[string]string {
+	m := make(map[string]string)
+	if parameters.Info != nil {
+		m["info"] = *parameters.Info
+	}
+	return m
+}
 
-    channel, err := client.Channel("presence-chatroom", channelParams)
+/*
+Channel allows you to get the state of a single channel.
+
+    attributes := "user_count,subscription_count"
+    channel, err := client.Channel("presence-chatroom", &ChannelParams{Info: &attributes})
 
     //channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 */
-func (c *Client) Channel(name string, parameters map[string]string) (*Channel, error) {
+func (c *Client) Channel(name string, parameters ChannelParams) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppID, name)
-	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, parameters, c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, parameters.toMap(), c.Cluster)
 	if err != nil {
 		return nil, err
 	}
