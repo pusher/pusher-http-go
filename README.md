@@ -10,7 +10,7 @@ Register for free at <https://pusher.com/channels> and use the application crede
 
 ## Supported Platforms
 
-* Go - supports **Go 1.5 or greater**.
+* Go - supports **Go 1.11 or greater**.
 
 ## Table of Contents
 
