@@ -226,12 +226,43 @@ It is possible to trigger an event on one or more channels. Channel names can co
 | Argument |Description   |
 | :-: | :-: |
 | channel `string` | The name of the channel you wish to trigger on. |
-| event `string` | The name of the event you wish to trigger |
+| event `string` | The name of the event you wish to trigger. |
 | data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
+
+###### Example
 
 ```go
 data := map[string]string{"hello": "world"}
 pusherClient.Trigger("greeting_channel", "say_hello", data)
+```
+
+##### `func (c *Client) TriggerWithParams`
+
+Allows additional parameters to be included as part of the request body.
+The complete list of parameters are documented [here](https://pusher.com/docs/channels/library_auth_reference/rest-api#request).
+
+| Argument |Description   |
+| :-: | :-: |
+| channel `string` | The name of the channel you wish to trigger on. |
+| event `string` | The name of the event you wish to trigger. |
+| data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
+| parameters `TriggerParams` | Any additional parameters. |
+
+| Return Value | Description |
+| :-: | :-: |
+| channels `TriggerChannelsList` | A struct representing channel attributes for the requested `TriggerParams.Info` |
+| err `error` | Any errors encountered|
+
+###### Example
+
+```go
+data := map[string]string{"hello": "world"}
+socketID := "1234.12"
+attributes := "user_count"
+parameters := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
+channels, err := pusherClient.TriggerWithParams("presence-chatroom", "say_hello", data, parameters)
+
+// channels => &{Channels:map[presence-chatroom:{UserCount:4}]}
 ```
 
 #### Multiple channels
@@ -250,24 +281,30 @@ pusherClient.Trigger("greeting_channel", "say_hello", data)
 pusherClient.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 ```
 
-#### Excluding event recipients
+##### `func (c. *Client) TriggerMultiWithParams`
 
-`func (c *Client) TriggerExclusive` and `func (c *Client) TriggerMultiExclusive` follow the patterns above, except a `socket_id` is given as the last parameter.
+| Argument | Description |
+| :-: | :-: |
+| channels `[]string` | A slice of channel names you wish to send an event on. The maximum length is 10. |
+| event `string` | As above. |
+| data `interface{}` | As above. |
+| parameters `TriggerParams` | As above. |
 
-These methods allow you to exclude a recipient whose connection has that `socket_id` from receiving the event. You can read more [here](http://pusher.com/docs/duplicates).
+| Return Value | Description |
+| :-: | :-: |
+| channels `TriggerChannelsList` | A struct representing channel attributes for the requested `TriggerParams.Info` |
+| err `error` | Any errors encountered|
 
-##### Examples
-
-**On one channel**:
+###### Example
 
 ```go
-pusherClient.TriggerExclusive("a_channel", "event", data, "123.12")
-```
+data := map[string]string{"hello": "world"}
+socketID := "1234.12"
+attributes := "user_count"
+parameters := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
+channels, err := pusherClient.TriggerMultiWithParams([]string{"presence-chatroom", "presence-notifications"}, "event", data, parameters)
 
-**On multiple channels**:
-
-```go
-pusherClient.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
+// channels => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 ```
 
 #### Batches
@@ -278,13 +315,22 @@ pusherClient.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "ev
 | :-: | :-: |
 | batch `[]Event` | A list of events to publish |
 
+| Return Value | Description |
+| :-: | :-: |
+| channels `TriggerChannelsList` | A struct representing channel attributes for the requested `TriggerParams.Info` |
+| err `error` | Any errors encountered|
+
 ###### Example
 
 ```go
-pusherClient.TriggerBatch([]pusher.Event{
-  { Channel: "a_channel", Name: "event", Data: "hello world", nil },
-  { Channel: "a_channel", Name: "event", Data: "hi my name is bob", nil },
+socketID := "1234.12"
+attributes := "user_count"
+channels, err := pusherClient.TriggerBatch([]pusher.Event{
+  { Channel: "a-channel", Name: "event", Data: "hello world", nil },
+  { Channel: "presence-b-channel", Name: "event", Data: "hi my name is bob", SocketID: &socketID, Info: &attributes },
 })
+
+// channels => &{Channels:map[presence-b-channel:{UserCount:4} a-channel:{}]}
 ```
 
 ### Authenticating Channels
@@ -415,11 +461,11 @@ This library allows you to query our API to retrieve information about your appl
 
 | Argument | Description |
 | :-: | :-: |
-| additionalQueries `map[string]string` | A map with query options. A key with `"filter_by_prefix"` will filter the returned channels. To get number of users subscribed to a presence-channel, specify an `"info"` key with value `"user_count"`. <br><br>Pass in `nil` if you do not wish to specify any query attributes. |
+| parameters `ChannelsParams` | The query options. The field `FilterByPrefix` will filter the returned channels. To get the number of users subscribed to a presence-channel, specify an the `Info` field with value `"user_count"`. Pass in `nil` if you do not wish to specify any query attributes. |
 
 | Return Value | Description |
 | :-: | :-: |
-| channels `*pusher.ChannelsList` | A struct representing the list of channels. See below. |
+| channels `ChannelsList` | A struct representing the list of channels. See below. |
 | err `error` | Any errors encountered|
 
 ###### Custom Types
@@ -443,12 +489,10 @@ type ChannelListItem struct {
 ###### Example
 
 ```go
-channelsParams := map[string]string{
-    "filter_by_prefix": "presence-",
-    "info":             "user_count",
-}
-
-channels, err := pusherClient.Channels(channelsParams)
+prefixFilter := "presence-"
+attributes := "user_count"
+parameters := pusher.ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
+channels, err := pusherClient.Channels(parameters)
 
 // channels => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 ```
@@ -460,11 +504,11 @@ channels, err := pusherClient.Channels(channelsParams)
 | Argument | Description |
 | :-: | :-: |
 | name `string` | The name of the channel |
-| additionalQueries `map[string]string` | A map with query options. An `"info"` key can have comma-separated values of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. To use the `"subscription_count"` value, first check the "Enable subscription counting" checkbox in your App Settings on [your Pusher Channels dashboard](https://dashboard.pusher.com).<br><br>Pass in `nil` if you do not wish to specify any query attributes. |
+| parameters `ChannelParams` | The query options. The field `Info` can have comma-separated values of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. To use the `"subscription_count"` value, first check the "Enable subscription counting" checkbox in your App Settings on [your Pusher Channels dashboard](https://dashboard.pusher.com). Pass in `nil` if you do not wish to specify any query attributes. |
 
 | Return Value | Description |
 | :-: | :-: |
-| channel `*pusher.Channel` | A struct representing a channel. See below. |
+| channel `Channel` | A struct representing a channel. See below. |
 | err `error` | Any errors encountered |
 
 ###### Custom Types
@@ -483,11 +527,8 @@ type Channel struct {
 ###### Example
 
 ```go
-channelParams := map[string]string{
-    "info": "user_count,subscription_count",
-}
-
-channel, err := pusherClient.Channel("presence-chatroom", channelParams)
+attributes := "user_count,subscription_count"
+channel, err := client.Channel("presence-chatroom", &ChannelParams{Info: &attributes})
 
 // channel => &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 ```
@@ -502,7 +543,7 @@ channel, err := pusherClient.Channel("presence-chatroom", channelParams)
 
 | Return Value | Description |
 | :-: | :-: |
-| users `*pusher.Users` | A struct representing a list of the users subscribed to the presence-channel. See below |
+| users `Users` | A struct representing a list of the users subscribed to the presence-channel. See below |
 | err `error` | Any errors encountered. |
 
 ###### Custom Types
