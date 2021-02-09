@@ -26,27 +26,26 @@ Client to the HTTP API of Pusher.
 
 There easiest way to configure the library is by creating a `Pusher` instance:
 
-    client := pusher.Client{
-      AppID: "your_app_id",
-      Key: "your_app_key",
-      Secret: "your_app_secret",
-    }
+	client := pusher.Client{
+		AppID: "your_app_id",
+		Key: "your_app_key",
+		Secret: "your_app_secret",
+	}
 
 To ensure requests occur over HTTPS, set the `Secure` property of a
 `pusher.Client` to `true`.
 
-    client.Secure = true // false by default
+	client.Secure = true // false by default
 
 If you wish to set a time-limit for each HTTP request, set the `Timeout`
 property to an instance of `time.Duration`, for example:
 
-    client.Timeout = time.Second * 3 // 5 seconds by default
+	client.Timeout = time.Second * 3 // 5 seconds by default
 
 Changing the `pusher.Client`'s `Host` property will make sure requests are sent
 to your specified host.
 
-    client.Host = "foo.bar.com" // by default this is "api.pusherapp.com".
-
+	client.Host = "foo.bar.com" // by default this is "api.pusherapp.com".
 */
 type Client struct {
 	AppID                        string
@@ -376,10 +375,10 @@ func (parameters ChannelsParams) toMap() map[string]string {
 /*
 Channels returns a list of all the channels in an application.
 
-    prefixFilter := "presence-"
-		attributes := "user_count"
-		parameters := ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
-    channels, err := client.Channels(parameters)
+	prefixFilter := "presence-"
+	attributes := "user_count"
+	parameters := ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
+	channels, err := client.Channels(parameters)
 
     //channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
 */
@@ -419,10 +418,10 @@ func (parameters ChannelParams) toMap() map[string]string {
 /*
 Channel allows you to get the state of a single channel.
 
-    attributes := "user_count,subscription_count"
-    channel, err := client.Channel("presence-chatroom", &ChannelParams{Info: &attributes})
+	attributes := "user_count,subscription_count"
+	channel, err := client.Channel("presence-chatroom", &ChannelParams{Info: &attributes})
 
-    //channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
+	//channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 */
 func (c *Client) Channel(name string, parameters ChannelParams) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppID, name)
@@ -441,9 +440,9 @@ func (c *Client) Channel(name string, parameters ChannelParams) (*Channel, error
 GetChannelUsers returns a list of users in a presence-channel by passing to this
 method the channel name.
 
-    users, err := client.GetChannelUsers("presence-chatroom")
+	users, err := client.GetChannelUsers("presence-chatroom")
 
-    //users=> &{List:[{ID:13} {ID:90}]}
+	//users=> &{List:[{ID:13} {ID:90}]}
 
 */
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
@@ -473,24 +472,21 @@ In order to authorize a client, one must read the response into type `[]byte`
 and pass it in. This will return a signature in the form of a `[]byte` for you
 to send back to the client.
 
-    func pusherAuth(res http.ResponseWriter, req *http.Request) {
+	func pusherAuth(res http.ResponseWriter, req *http.Request) {
 
-        params, _ := ioutil.ReadAll(req.Body)
-        response, err := client.AuthenticatePrivateChannel(params)
+		params, _ := ioutil.ReadAll(req.Body)
+		response, err := client.AuthenticatePrivateChannel(params)
+		if err != nil {
+			panic(err)
+		}
 
-        if err != nil {
-            panic(err)
-        }
+		fmt.Fprintf(res, string(response))
+	}
 
-        fmt.Fprintf(res, string(response))
-
-    }
-
-    func main() {
-        http.HandleFunc("/pusher/auth", pusherAuth)
-        http.ListenAndServe(":5000", nil)
-    }
-
+	func main() {
+		http.HandleFunc("/pusher/auth", pusherAuth)
+		http.ListenAndServe(":5000", nil)
+	}
 */
 func (c *Client) AuthenticatePrivateChannel(params []byte) (response []byte, err error) {
 	return c.authenticateChannel(params, nil)
@@ -514,13 +510,11 @@ In this library, one does this by passing a `pusher.MemberData` instance.
 	}
 
 	response, err := client.AuthenticatePresenceChannel(params, presenceData)
-
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Fprintf(res, response)
-
 */
 func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (response []byte, err error) {
 	return c.authenticateChannel(params, &member)
@@ -588,17 +582,17 @@ If the webhook is valid, a `*pusher.Webhook* will be returned, and the `err`
 value will be nil. If it is invalid, the first return value will be nil, and an
 error will be passed.
 
-    func pusherWebhook(res http.ResponseWriter, req *http.Request) {
+	func pusherWebhook(res http.ResponseWriter, req *http.Request) {
 
-        body, _ := ioutil.ReadAll(req.Body)
-        webhook, err := client.Webhook(req.Header, body)
-        if err != nil {
-          fmt.Println("Webhook is invalid :(")
-        } else {
-          fmt.Printf("%+v\n", webhook.Events)
-        }
+		body, _ := ioutil.ReadAll(req.Body)
+		webhook, err := client.Webhook(req.Header, body)
+		if err != nil {
+			fmt.Println("Webhook is invalid :(")
+		} else {
+			fmt.Printf("%+v\n", webhook.Events)
+		}
 
-    }
+	}
 */
 func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 	for _, token := range header["X-Pusher-Key"] {
