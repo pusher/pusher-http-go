@@ -183,7 +183,7 @@ for a complete list.
 	data := map[string]string{"hello": "world"}
 	socketID := "1234.12"
 	attributes := "user_count"
-	parameters := TriggerParams{SocketID: &socketID, Info: &attributes}
+	parameters := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
 	channels, err := client.Trigger("greeting_channel", "say_hello", data, parameters)
 
 	//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
@@ -377,10 +377,10 @@ Channels returns a list of all the channels in an application.
 
 	prefixFilter := "presence-"
 	attributes := "user_count"
-	parameters := ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
+	parameters := pusher.ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
 	channels, err := client.Channels(parameters)
 
-    //channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
+	//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
 */
 func (c *Client) Channels(parameters ChannelsParams) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppID)
@@ -419,7 +419,8 @@ func (parameters ChannelParams) toMap() map[string]string {
 Channel allows you to get the state of a single channel.
 
 	attributes := "user_count,subscription_count"
-	channel, err := client.Channel("presence-chatroom", &ChannelParams{Info: &attributes})
+	parameters := pusher.ChannelParams{Info: &attributes}
+	channel, err := client.Channel("presence-chatroom", parameters)
 
 	//channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 */

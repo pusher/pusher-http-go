@@ -528,7 +528,8 @@ type Channel struct {
 
 ```go
 attributes := "user_count,subscription_count"
-channel, err := client.Channel("presence-chatroom", &ChannelParams{Info: &attributes})
+parameters := pusher.ChannelParams{Info: &attributes}
+channel, err := client.Channel("presence-chatroom", parameters)
 
 // channel => &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 ```
