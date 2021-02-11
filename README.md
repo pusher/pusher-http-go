@@ -219,6 +219,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 It is possible to trigger an event on one or more channels. Channel names can contain only characters which are alphanumeric, `_` or `-` and have to be at most 200 characters long. Event name can be at most 200 characters long too.
 
+#### Custom Types
+
+**pusher.Event**
+
+```go
+type TriggerParams struct {
+    SocketID *string
+    Info     *string
+}
+```
+
 #### Single channel
 
 ##### `func (c *Client) Trigger`
@@ -319,6 +330,20 @@ channels, err := pusherClient.TriggerMultiWithParams([]string{"presence-chatroom
 | :-: | :-: |
 | channels `TriggerChannelsList` | A struct representing channel attributes for the requested `TriggerParams.Info` |
 | err `error` | Any errors encountered|
+
+###### Custom Types
+
+**pusher.Event**
+
+```go
+type Event struct {
+    Channel  string
+    Name     string
+    Data     interface{}
+    SocketID *string
+    Info     *string
+}
+```
 
 ###### Example
 
@@ -470,6 +495,15 @@ This library allows you to query our API to retrieve information about your appl
 
 ###### Custom Types
 
+**pusher.ChannelsParams**
+
+```go
+type ChannelsParams struct {
+    FilterByPrefix *string
+    Info           *string
+}
+```
+
 **pusher.ChannelsList**
 
 ```go
@@ -512,6 +546,14 @@ channels, err := pusherClient.Channels(parameters)
 | err `error` | Any errors encountered |
 
 ###### Custom Types
+
+**pusher.ChannelParams**
+
+```go
+type Channel struct {
+    Info *string
+}
+```
 
 **pusher.Channel**
 
