@@ -257,7 +257,7 @@ The complete list of parameters are documented [here](https://pusher.com/docs/ch
 | channel `string` | The name of the channel you wish to trigger on. |
 | event `string` | The name of the event you wish to trigger. |
 | data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
-| parameters `TriggerParams` | Any additional parameters. |
+| params `TriggerParams` | Any additional parameters. |
 
 | Return Value | Description |
 | :-: | :-: |
@@ -270,8 +270,8 @@ The complete list of parameters are documented [here](https://pusher.com/docs/ch
 data := map[string]string{"hello": "world"}
 socketID := "1234.12"
 attributes := "user_count"
-parameters := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
-channels, err := pusherClient.TriggerWithParams("presence-chatroom", "say_hello", data, parameters)
+params := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
+channels, err := pusherClient.TriggerWithParams("presence-chatroom", "say_hello", data, params)
 
 // channels => &{Channels:map[presence-chatroom:{UserCount:4}]}
 ```
@@ -299,7 +299,7 @@ pusherClient.TriggerMulti([]string{"a_channel", "another_channel"}, "event", dat
 | channels `[]string` | A slice of channel names you wish to send an event on. The maximum length is 10. |
 | event `string` | As above. |
 | data `interface{}` | As above. |
-| parameters `TriggerParams` | As above. |
+| params `TriggerParams` | As above. |
 
 | Return Value | Description |
 | :-: | :-: |
@@ -312,8 +312,8 @@ pusherClient.TriggerMulti([]string{"a_channel", "another_channel"}, "event", dat
 data := map[string]string{"hello": "world"}
 socketID := "1234.12"
 attributes := "user_count"
-parameters := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
-channels, err := pusherClient.TriggerMultiWithParams([]string{"presence-chatroom", "presence-notifications"}, "event", data, parameters)
+params := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
+channels, err := pusherClient.TriggerMultiWithParams([]string{"presence-chatroom", "presence-notifications"}, "event", data, params)
 
 // channels => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 ```
@@ -486,7 +486,7 @@ This library allows you to query our API to retrieve information about your appl
 
 | Argument | Description |
 | :-: | :-: |
-| parameters `ChannelsParams` | The query options. The field `FilterByPrefix` will filter the returned channels. To get the number of users subscribed to a presence-channel, specify an the `Info` field with value `"user_count"`. Pass in `nil` if you do not wish to specify any query attributes. |
+| params `ChannelsParams` | The query options. The field `FilterByPrefix` will filter the returned channels. To get the number of users subscribed to a presence-channel, specify an the `Info` field with value `"user_count"`. Pass in `nil` if you do not wish to specify any query attributes. |
 
 | Return Value | Description |
 | :-: | :-: |
@@ -525,8 +525,8 @@ type ChannelListItem struct {
 ```go
 prefixFilter := "presence-"
 attributes := "user_count"
-parameters := pusher.ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
-channels, err := pusherClient.Channels(parameters)
+params := pusher.ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
+channels, err := pusherClient.Channels(params)
 
 // channels => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 ```
@@ -538,7 +538,7 @@ channels, err := pusherClient.Channels(parameters)
 | Argument | Description |
 | :-: | :-: |
 | name `string` | The name of the channel |
-| parameters `ChannelParams` | The query options. The field `Info` can have comma-separated values of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. To use the `"subscription_count"` value, first check the "Enable subscription counting" checkbox in your App Settings on [your Pusher Channels dashboard](https://dashboard.pusher.com). Pass in `nil` if you do not wish to specify any query attributes. |
+| params `ChannelParams` | The query options. The field `Info` can have comma-separated values of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. To use the `"subscription_count"` value, first check the "Enable subscription counting" checkbox in your App Settings on [your Pusher Channels dashboard](https://dashboard.pusher.com). Pass in `nil` if you do not wish to specify any query attributes. |
 
 | Return Value | Description |
 | :-: | :-: |
@@ -570,8 +570,8 @@ type Channel struct {
 
 ```go
 attributes := "user_count,subscription_count"
-parameters := pusher.ChannelParams{Info: &attributes}
-channel, err := client.Channel("presence-chatroom", parameters)
+params := pusher.ChannelParams{Info: &attributes}
+channel, err := client.Channel("presence-chatroom", params)
 
 // channel => &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 ```

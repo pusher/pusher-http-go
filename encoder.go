@@ -25,7 +25,7 @@ func encodeTriggerBody(
 	channels []string,
 	event string,
 	data interface{},
-	parameters map[string]string,
+	params map[string]string,
 	encryptionKey []byte,
 	overrideMaxMessagePayloadKB int,
 ) ([]byte, error) {
@@ -54,7 +54,7 @@ func encodeTriggerBody(
 		"channels": channels,
 		"data":     payloadData,
 	}
-	for k, v := range parameters {
+	for k, v := range params {
 		eventPayload[k] = v
 	}
 	return json.Marshal(eventPayload)

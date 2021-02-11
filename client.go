@@ -163,13 +163,13 @@ type TriggerParams struct {
 	Info *string
 }
 
-func (parameters TriggerParams) toMap() map[string]string {
+func (params TriggerParams) toMap() map[string]string {
 	m := make(map[string]string)
-	if parameters.SocketID != nil {
-		m["socket_id"] = *parameters.SocketID
+	if params.SocketID != nil {
+		m["socket_id"] = *params.SocketID
 	}
-	if parameters.Info != nil {
-		m["info"] = *parameters.Info
+	if params.Info != nil {
+		m["info"] = *params.Info
 	}
 	return m
 }
@@ -183,8 +183,8 @@ for a complete list.
 	data := map[string]string{"hello": "world"}
 	socketID := "1234.12"
 	attributes := "user_count"
-	parameters := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
-	channels, err := client.Trigger("greeting_channel", "say_hello", data, parameters)
+	params := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
+	channels, err := client.Trigger("greeting_channel", "say_hello", data, params)
 
 	//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 */
@@ -192,9 +192,9 @@ func (c *Client) TriggerWithParams(
 	channel string,
 	eventName string,
 	data interface{},
-	parameters TriggerParams,
+	params TriggerParams,
 ) (*TriggerChannelsList, error) {
-	return c.trigger([]string{channel}, eventName, data, parameters)
+	return c.trigger([]string{channel}, eventName, data, params)
 }
 
 /*
@@ -216,9 +216,9 @@ func (c *Client) TriggerMultiWithParams(
 	channels []string,
 	eventName string,
 	data interface{},
-	parameters TriggerParams,
+	params TriggerParams,
 ) (*TriggerChannelsList, error) {
-	return c.trigger(channels, eventName, data, parameters)
+	return c.trigger(channels, eventName, data, params)
 }
 
 /*
@@ -230,8 +230,8 @@ You can read more here: http://pusher.com/docs/duplicates.
 Deprecated: use TriggerWithParams instead.
 */
 func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) error {
-	parameters := TriggerParams{SocketID: &socketID}
-	_, err := c.trigger([]string{channel}, eventName, data, parameters)
+	params := TriggerParams{SocketID: &socketID}
+	_, err := c.trigger([]string{channel}, eventName, data, params)
 	return err
 }
 
@@ -244,12 +244,12 @@ the event on any of the channels.
 Deprecated: use TriggerMultiWithParams instead.
 */
 func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) error {
-	parameters := TriggerParams{SocketID: &socketID}
-	_, err := c.trigger(channels, eventName, data, parameters)
+	params := TriggerParams{SocketID: &socketID}
+	_, err := c.trigger(channels, eventName, data, params)
 	return err
 }
 
-func (c *Client) trigger(channels []string, eventName string, data interface{}, parameters TriggerParams) (*TriggerChannelsList, error) {
+func (c *Client) trigger(channels []string, eventName string, data interface{}, params TriggerParams) (*TriggerChannelsList, error) {
 	if len(channels) > maxTriggerableChannels {
 		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
@@ -271,11 +271,11 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if hasEncryptedChannel && keyErr != nil {
 		return nil, keyErr
 	}
-	if err := validateSocketID(parameters.SocketID); err != nil {
+	if err := validateSocketID(params.SocketID); err != nil {
 		return nil, err
 	}
 
-	payload, err := encodeTriggerBody(channels, eventName, data, parameters.toMap(), masterKey, c.OverrideMaxMessagePayloadKB)
+	payload, err := encodeTriggerBody(channels, eventName, data, params.toMap(), masterKey, c.OverrideMaxMessagePayloadKB)
 	if err != nil {
 		return nil, err
 	}
@@ -361,13 +361,13 @@ type ChannelsParams struct {
 	Info *string
 }
 
-func (parameters ChannelsParams) toMap() map[string]string {
+func (params ChannelsParams) toMap() map[string]string {
 	m := make(map[string]string)
-	if parameters.FilterByPrefix != nil {
-		m["filter_by_prefix"] = *parameters.FilterByPrefix
+	if params.FilterByPrefix != nil {
+		m["filter_by_prefix"] = *params.FilterByPrefix
 	}
-	if parameters.Info != nil {
-		m["info"] = *parameters.Info
+	if params.Info != nil {
+		m["info"] = *params.Info
 	}
 	return m
 }
@@ -377,14 +377,14 @@ Channels returns a list of all the channels in an application.
 
 	prefixFilter := "presence-"
 	attributes := "user_count"
-	parameters := pusher.ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
-	channels, err := client.Channels(parameters)
+	params := pusher.ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
+	channels, err := client.Channels(params)
 
 	//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
 */
-func (c *Client) Channels(parameters ChannelsParams) (*ChannelsList, error) {
+func (c *Client) Channels(params ChannelsParams) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppID)
-	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, parameters.toMap(), c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, params.toMap(), c.Cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -407,10 +407,10 @@ type ChannelParams struct {
 	Info *string
 }
 
-func (parameters ChannelParams) toMap() map[string]string {
+func (params ChannelParams) toMap() map[string]string {
 	m := make(map[string]string)
-	if parameters.Info != nil {
-		m["info"] = *parameters.Info
+	if params.Info != nil {
+		m["info"] = *params.Info
 	}
 	return m
 }
@@ -419,14 +419,14 @@ func (parameters ChannelParams) toMap() map[string]string {
 Channel allows you to get the state of a single channel.
 
 	attributes := "user_count,subscription_count"
-	parameters := pusher.ChannelParams{Info: &attributes}
-	channel, err := client.Channel("presence-chatroom", parameters)
+	params := pusher.ChannelParams{Info: &attributes}
+	channel, err := client.Channel("presence-chatroom", params)
 
 	//channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 */
-func (c *Client) Channel(name string, parameters ChannelParams) (*Channel, error) {
+func (c *Client) Channel(name string, params ChannelParams) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppID, name)
-	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, parameters.toMap(), c.Cluster)
+	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, params.toMap(), c.Cluster)
 	if err != nil {
 		return nil, err
 	}
