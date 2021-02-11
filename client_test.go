@@ -22,9 +22,9 @@ func TestTriggerSuccessCase(t *testing.T) {
 		assert.Equal(t, "POST", req.Method)
 
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo"}
-		bodyDeoder := json.NewDecoder(req.Body)
+		bodyDecoder := json.NewDecoder(req.Body)
 		var actualBody map[string]interface{}
-		err := bodyDeoder.Decode(&actualBody)
+		err := bodyDecoder.Decode(&actualBody)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedBody, actualBody)
 
@@ -50,9 +50,9 @@ func TestTriggerWithParamsSuccessCase(t *testing.T) {
 		assert.Equal(t, "POST", req.Method)
 
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo"}
-		bodyDeoder := json.NewDecoder(req.Body)
+		bodyDecoder := json.NewDecoder(req.Body)
 		var actualBody map[string]interface{}
-		err := bodyDeoder.Decode(&actualBody)
+		err := bodyDecoder.Decode(&actualBody)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedBody, actualBody)
 
@@ -83,9 +83,9 @@ func TestTriggerWithParamsInfoSuccessCase(t *testing.T) {
 		assert.Equal(t, "POST", req.Method)
 
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo", "info": "subscription_count"}
-		bodyDeoder := json.NewDecoder(req.Body)
+		bodyDecoder := json.NewDecoder(req.Body)
 		var actualBody map[string]interface{}
-		err := bodyDeoder.Decode(&actualBody)
+		err := bodyDecoder.Decode(&actualBody)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedBody, actualBody)
 
@@ -118,9 +118,9 @@ func TestTriggerMultiSuccessCase(t *testing.T) {
 		assert.Equal(t, "POST", req.Method)
 
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel", "other_channel"}, "data": "yolo"}
-		bodyDeoder := json.NewDecoder(req.Body)
+		bodyDecoder := json.NewDecoder(req.Body)
 		var actualBody map[string]interface{}
-		err := bodyDeoder.Decode(&actualBody)
+		err := bodyDecoder.Decode(&actualBody)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedBody, actualBody)
 
@@ -163,9 +163,9 @@ func TestTriggerMultiWithParamsInfoSuccessCase(t *testing.T) {
 		assert.Equal(t, "POST", req.Method)
 
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"presence-test_channel", "test_channel"}, "data": "yolo", "info": "user_count,subscription_count"}
-		bodyDeoder := json.NewDecoder(req.Body)
+		bodyDecoder := json.NewDecoder(req.Body)
 		var actualBody map[string]interface{}
-		err := bodyDeoder.Decode(&actualBody)
+		err := bodyDecoder.Decode(&actualBody)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedBody, actualBody)
 
@@ -269,9 +269,9 @@ func TestTriggerWithSocketID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo", "socket_id": "1234.12"}
-		bodyDeoder := json.NewDecoder(req.Body)
+		bodyDecoder := json.NewDecoder(req.Body)
 		var actualBody map[string]interface{}
-		err := bodyDeoder.Decode(&actualBody)
+		err := bodyDecoder.Decode(&actualBody)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedBody, actualBody)
 	}))
