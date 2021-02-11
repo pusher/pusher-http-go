@@ -55,6 +55,9 @@ func encodeTriggerBody(
 		"data":     payloadData,
 	}
 	for k, v := range params {
+		if _, ok := eventPayload[k]; ok {
+			return nil, errors.New(fmt.Sprintf("Paramater %s specified multiple times", k))
+		}
 		eventPayload[k] = v
 	}
 	return json.Marshal(eventPayload)
