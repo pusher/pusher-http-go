@@ -52,7 +52,7 @@ type MemberData struct {
 
 func unmarshalledTriggerChannelsList(response []byte) (*TriggerChannelsList, error) {
 	channels := &TriggerChannelsList{}
-	err := json.Unmarshal(response, &channels)
+	err := json.Unmarshal(response, channels)
 
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func unmarshalledTriggerChannelsList(response []byte) (*TriggerChannelsList, err
 
 func unmarshalledChannelsList(response []byte) (*ChannelsList, error) {
 	channels := &ChannelsList{}
-	err := json.Unmarshal(response, &channels)
+	err := json.Unmarshal(response, channels)
 
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func unmarshalledChannelsList(response []byte) (*ChannelsList, error) {
 
 func unmarshalledChannel(response []byte, name string) (*Channel, error) {
 	channel := &Channel{Name: name}
-	err := json.Unmarshal(response, &channel)
+	err := json.Unmarshal(response, channel)
 
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func unmarshalledChannel(response []byte, name string) (*Channel, error) {
 
 func unmarshalledChannelUsers(response []byte) (*Users, error) {
 	users := &Users{}
-	err := json.Unmarshal(response, &users)
+	err := json.Unmarshal(response, users)
 
 	if err != nil {
 		return nil, err
