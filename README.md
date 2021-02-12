@@ -21,7 +21,6 @@ Register for free at <https://pusher.com/channels> and use the application crede
   - [Google App Engine](#google-app-engine)
 - [Usage](#usage)
   - [Triggering events](#triggering-events)
-  - [Excluding event recipients](#excluding-event-recipients)
   - [Authenticating Channels](#authenticating-channels)
   - [Application state](#application-state)
   - [Webhook validation](#webhook-validation)
