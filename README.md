@@ -677,6 +677,7 @@ Trigger event on single channel            | *&#10004;*
 Trigger event on multiple channels         | *&#10004;*
 Trigger events in batches                  | *&#10004;*
 Excluding recipients from events           | *&#10004;*
+Fetching info on trigger                   | *&#10004;*
 Authenticating private channels            | *&#10004;*
 Authenticating presence channels           | *&#10004;*
 Get the list of channels in an application | *&#10004;*
