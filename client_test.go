@@ -41,6 +41,32 @@ func TestTriggerSuccessCase(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestTriggerWithStructSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		fmt.Fprintf(res, "{}")
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "{\"Key\":\"value\"}"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	err := client.Trigger("test_channel", "test", struct{ Key string }{Key: "value"})
+	assert.NoError(t, err)
+}
+
 // Tests that when the "info" param is not specified, we get a nil Channels map in the returned TriggerChannelsList
 func TestTriggerWithParamsSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
