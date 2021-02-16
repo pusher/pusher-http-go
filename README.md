@@ -327,7 +327,7 @@ channels, err := pusherClient.TriggerMultiWithParams([]string{"presence-chatroom
 
 | Return Value | Description |
 | :-: | :-: |
-| channels `TriggerChannelsList` | A struct representing channel attributes for the requested `TriggerParams.Info` |
+| batch `TriggerBatchChannelsList` | A struct representing channel attributes for the requested `TriggerParams.Info` |
 | err `error` | Any errors encountered|
 
 ###### Custom Types
@@ -349,12 +349,22 @@ type Event struct {
 ```go
 socketID := "1234.12"
 attributes := "user_count"
-channels, err := pusherClient.TriggerBatch([]pusher.Event{
-  { Channel: "a-channel", Name: "event", Data: "hello world", nil },
+batch := []pusher.Event{
+  { Channel: "a-channel", Name: "event", Data: "hello world" },
   { Channel: "presence-b-channel", Name: "event", Data: "hi my name is bob", SocketID: &socketID, Info: &attributes },
-})
+}
+response, err := pusherClient.TriggerBatch(batch)
 
-// channels => &{Channels:map[presence-b-channel:{UserCount:4} a-channel:{}]}
+for i, attributes := range response.Batch {
+    if attributes.UserCount != nil {
+        fmt.Printf("channel: %s, name: %s, user_count: %d\n", batch[i].Channel, batch[i].Name, *attributes.UserCount)
+    } else {
+        fmt.Printf("channel: %s, name: %s\n", batch[i].Channel, batch[i].Name)
+    }
+}
+
+// channel: a-channel, name: event
+// channel: presence-b-channel, name: event, user_count: 4
 ```
 
 ### Authenticating Channels

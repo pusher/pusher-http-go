@@ -311,14 +311,14 @@ func TestTriggerBatchSuccess(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
-	assert.Equal(t, &TriggerChannelsList{}, response)
+	assert.Equal(t, &TriggerBatchChannelsList{}, response)
 }
 
 func TestTriggerBatchInfoSuccess(t *testing.T) {
 	expectedBody := `{"batch":[{"channel":"presence-test_channel","name":"test","data":"yolo1","info":"user_count,subscription_count"},{"channel":"test_channel","name":"test","data":"yolo2","info":"subscription_count"}]}`
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
-		testJSON := "{\"channels\":{\"presence-test_channel\":{\"subscription_count\":2,\"user_count\":1},\"test_channel\":{\"subscription_count\":3}}}"
+		testJSON := "{\"batch\":[{\"subscription_count\":2,\"user_count\":1},{\"subscription_count\":3}]}"
 		fmt.Fprintf(res, testJSON)
 		assert.Equal(t, "POST", req.Method)
 
@@ -344,10 +344,10 @@ func TestTriggerBatchInfoSuccess(t *testing.T) {
 	presenceExpectedUserCount := 1
 	presenceExpectedSubscriptionCount := 2
 	expectedSubscriptionCount := 3
-	expected := &TriggerChannelsList{
-		Channels: map[string]TriggerChannelListItem{
-			"presence-test_channel": {UserCount: &presenceExpectedUserCount, SubscriptionCount: &presenceExpectedSubscriptionCount},
-			"test_channel":          {SubscriptionCount: &expectedSubscriptionCount},
+	expected := &TriggerBatchChannelsList{
+		Batch: []TriggerBatchChannelListItem{
+			{UserCount: &presenceExpectedUserCount, SubscriptionCount: &presenceExpectedSubscriptionCount},
+			{SubscriptionCount: &expectedSubscriptionCount},
 		},
 	}
 	assert.Equal(t, expected, channels)
@@ -375,7 +375,7 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 	})
 
 	assert.NoError(t, err)
-	assert.Equal(t, &TriggerChannelsList{}, response)
+	assert.Equal(t, &TriggerBatchChannelsList{}, response)
 }
 
 func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T) {
@@ -436,7 +436,7 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 		{Channel: "private-encrypted-test_channel", Name: "test", Data: "yolo2"},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, &TriggerChannelsList{}, response)
+	assert.Equal(t, &TriggerBatchChannelsList{}, response)
 }
 
 func TestTriggerInvalidMasterKey(t *testing.T) {

@@ -313,7 +313,7 @@ TriggerBatch triggers multiple events on multiple channels in a single call:
 		{ Channel: "private-encrypted-secretdonut", Name: "ev2", Data: "d2", SocketID: socketID, Info: &info },
 	})
 */
-func (c *Client) TriggerBatch(batch []Event) (*TriggerChannelsList, error) {
+func (c *Client) TriggerBatch(batch []Event) (*TriggerBatchChannelsList, error) {
 	hasEncryptedChannel := false
 	// validate every channel name and every sockedID (if present) in batch
 	for _, event := range batch {
@@ -346,7 +346,7 @@ func (c *Client) TriggerBatch(batch []Event) (*TriggerChannelsList, error) {
 		return nil, err
 	}
 
-	return unmarshalledTriggerChannelsList(response)
+	return unmarshalledTriggerBatchChannelsList(response)
 }
 
 /*

@@ -31,6 +31,15 @@ type TriggerChannelListItem struct {
 	SubscriptionCount *int `json:"subscription_count,omitempty"`
 }
 
+type TriggerBatchChannelsList struct {
+	Batch []TriggerBatchChannelListItem `json:"batch"`
+}
+
+type TriggerBatchChannelListItem struct {
+	UserCount         *int `json:"user_count,omitempty"`
+	SubscriptionCount *int `json:"subscription_count,omitempty"`
+}
+
 // Users represents a list of users in a presence-channel
 type Users struct {
 	List []User `json:"users"`
@@ -52,6 +61,17 @@ type MemberData struct {
 
 func unmarshalledTriggerChannelsList(response []byte) (*TriggerChannelsList, error) {
 	channels := &TriggerChannelsList{}
+	err := json.Unmarshal(response, channels)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return channels, nil
+}
+
+func unmarshalledTriggerBatchChannelsList(response []byte) (*TriggerBatchChannelsList, error) {
+	channels := &TriggerBatchChannelsList{}
 	err := json.Unmarshal(response, channels)
 
 	if err != nil {
