@@ -160,6 +160,7 @@ type TriggerParams struct {
 	// Note that the subscription count is not allowed by default. Please
 	// contact us at http://support.pusher.com if you wish to enable this.
 	// Pass in `nil` if you do not wish to specify any query attributes.
+	// This is part of an [experimental feature](https://pusher.com/docs/lab#experimental-program).
 	Info *string
 }
 
@@ -300,7 +301,8 @@ type Event struct {
 	Name     string
 	Data     interface{}
 	SocketID *string
-	Info     *string
+	// Info is part of an [experimental feature](https://pusher.com/docs/lab#experimental-program).
+	Info *string
 }
 
 /*

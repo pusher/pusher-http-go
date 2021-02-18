@@ -229,6 +229,8 @@ type TriggerParams struct {
 }
 ```
 
+Note: `Info` is part of an [experimental feature](https://pusher.com/docs/lab#experimental-program).
+
 #### Single channel
 
 ##### `func (c *Client) Trigger`
@@ -343,6 +345,8 @@ type Event struct {
     Info     *string
 }
 ```
+
+Note: `Info` is part of an [experimental feature](https://pusher.com/docs/lab#experimental-program).
 
 ###### Example
 
