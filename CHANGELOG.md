@@ -1,6 +1,6 @@
 5.0.0 / 2021-02-19
 ==================
-* Breaking change: `TriggerBatch now returns `(*TriggerBatchChannelsList, error)` instead of `error`
+* Breaking change: `TriggerBatch` now returns `(*TriggerBatchChannelsList, error)` instead of `error`
 * Breaking change: `Channels` takes `ChannelsParams` as a parameter instead of `map[string]string`
 * Breaking change: `Channel` takes `ChannelParams` as a parameter instead of `map[string]string`
 * Breaking change: switches to go modules using option 1. described in https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher - this will cause problems for legacy package managers like `dep`
