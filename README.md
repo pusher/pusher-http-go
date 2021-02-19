@@ -1,6 +1,6 @@
 # Pusher Channels HTTP Go Library
 
-[![Build Status](https://github.com/pusher/pusher-http-go/workflows/Tests/badge.svg)](https://github.com/pusher/pusher-http-go/actions?query=workflow%3ATests+branch%3Amaster) [![Coverage Status](https://coveralls.io/repos/github/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/github/pusher/pusher-http-go?branch=master) [![Go Reference](https://pkg.go.dev/badge/github.com/pusher/pusher-http-go.svg)](https://pkg.go.dev/github.com/pusher/pusher-http-go)
+[![Build Status](https://github.com/pusher/pusher-http-go/workflows/Tests/badge.svg)](https://github.com/pusher/pusher-http-go/actions?query=workflow%3ATests+branch%3Amaster) [![Coverage Status](https://coveralls.io/repos/github/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/github/pusher/pusher-http-go?branch=master) [![Go Reference](https://pkg.go.dev/badge/github.com/pusher/pusher-http-go/v5.svg)](https://pkg.go.dev/github.com/pusher/pusher-http-go/v5)
 
 The Golang library for interacting with the Pusher Channels HTTP API.
 
