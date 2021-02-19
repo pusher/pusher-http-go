@@ -32,7 +32,7 @@ Register for free at <https://pusher.com/channels> and use the application crede
 ## Installation
 
 ```sh
-$ go get github.com/pusher/pusher-http-go
+$ go get github.com/pusher/pusher-http-go/v5
 ```
 
 ## Getting Started
@@ -41,7 +41,7 @@ $ go get github.com/pusher/pusher-http-go
 package main
 
 import (
-  "github.com/pusher/pusher-http-go"
+  "github.com/pusher/pusher-http-go/v5"
 )
 
 func main(){
@@ -187,7 +187,7 @@ import (
     "appengine"
     "appengine/urlfetch"
     "fmt"
-    "github.com/pusher/pusher-http-go"
+    "github.com/pusher/pusher-http-go/v5"
     "net/http"
 )
 

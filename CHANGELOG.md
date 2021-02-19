@@ -1,3 +1,13 @@
+5.0.0 / 2021-02-19
+==================
+* Breaking change: `TriggerBatch now returns `(*TriggerBatchChannelsList, error)` instead of `error`
+* Breaking change: `Channels` takes `ChannelsParams` as a parameter instead of `map[string]string`
+* Breaking change: `Channel` takes `ChannelParams` as a parameter instead of `map[string]string`
+* Breaking change: switches to go modules using option 1. described in https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher - this will cause problems for legacy package managers like `dep`
+* Added `TriggerWithParams` and `TriggerMultiWithParams` - they provide support for requesting channel attributes by specifying an `Info` field
+* Added a `Info` field to the `Event` type passed to `TriggerBatch`
+* Deprecated `TriggerExclusive` and `TriggerMultiExclusive` (use `TriggerWithParams` and `TriggerMultiWithParams` instead)
+
 4.0.4 / 2020-09-02
 ==================
 * Allow message size to be overridden for dedicate cluster customers (PR [#63](https://github.com/pusher/pusher-http-go/pull/71))

@@ -1,4 +1,4 @@
-module github.com/pusher/pusher-http-go
+module github.com/pusher/pusher-http-go/v5
 
 go 1.14
 
