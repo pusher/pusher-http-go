@@ -15,23 +15,17 @@ type batchEvent struct {
 	Name     string  `json:"name"`
 	Data     string  `json:"data"`
 	SocketID *string `json:"socket_id,omitempty"`
+	Info     *string `json:"info,omitempty"`
 }
 type batchPayload struct {
 	Batch []batchEvent `json:"batch"`
-}
-
-type eventPayload struct {
-	Name     string   `json:"name"`
-	Channels []string `json:"channels"`
-	Data     string   `json:"data"`
-	SocketID *string  `json:"socket_id,omitempty"`
 }
 
 func encodeTriggerBody(
 	channels []string,
 	event string,
 	data interface{},
-	socketID *string,
+	params map[string]string,
 	encryptionKey []byte,
 	overrideMaxMessagePayloadKB int,
 ) ([]byte, error) {
@@ -55,12 +49,18 @@ func encodeTriggerBody(
 	if eventExceedsMaximumSize {
 		return nil, errors.New(fmt.Sprintf("Event payload exceeded maximum size (%d bytes is too much)", len(payloadData)))
 	}
-	return json.Marshal(&eventPayload{
-		Name:     event,
-		Channels: channels,
-		Data:     payloadData,
-		SocketID: socketID,
-	})
+	eventPayload := map[string]interface{}{
+		"name":     event,
+		"channels": channels,
+		"data":     payloadData,
+	}
+	for k, v := range params {
+		if _, ok := eventPayload[k]; ok {
+			return nil, errors.New(fmt.Sprintf("Paramater %s specified multiple times", k))
+		}
+		eventPayload[k] = v
+	}
+	return json.Marshal(eventPayload)
 }
 
 func encodeTriggerBatchBody(
@@ -94,6 +94,7 @@ func encodeTriggerBatchBody(
 			Name:     e.Name,
 			Data:     stringifyedDataBytes,
 			SocketID: e.SocketID,
+			Info:     e.Info,
 		}
 		batchEvents[idx] = newBatchEvent
 	}

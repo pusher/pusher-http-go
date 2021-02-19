@@ -1,6 +1,7 @@
 package pusher
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -20,9 +21,12 @@ func TestTriggerSuccessCase(t *testing.T) {
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"yolo\"}"
-		actualBody, err := ioutil.ReadAll(req.Body)
-		assert.Equal(t, expectedBody, string(actualBody))
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
 
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
@@ -37,15 +41,114 @@ func TestTriggerSuccessCase(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestTriggerWithStructSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		fmt.Fprintf(res, "{}")
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "{\"Key\":\"value\"}"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	err := client.Trigger("test_channel", "test", struct{ Key string }{Key: "value"})
+	assert.NoError(t, err)
+}
+
+// Tests that when the "info" param is not specified, we get a nil Channels map in the returned TriggerChannelsList
+func TestTriggerWithParamsSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{}"
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	// Empty parameters
+	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", TriggerParams{})
+	assert.NoError(t, err)
+
+	expected := &TriggerChannelsList{
+		Channels: nil,
+	}
+	assert.Equal(t, expected, channels)
+}
+
+func TestTriggerWithParamsInfoSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"channels\":{\"test_channel\":{\"subscription_count\":1}}}"
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo", "info": "subscription_count"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	attributes := "subscription_count"
+	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", TriggerParams{Info: &attributes})
+	assert.NoError(t, err)
+
+	expectedSubscriptionCount := 1
+	expected := &TriggerChannelsList{
+		Channels: map[string]TriggerChannelListItem{
+			"test_channel": {SubscriptionCount: &expectedSubscriptionCount},
+		},
+	}
+	assert.Equal(t, expected, channels)
+}
+
 func TestTriggerMultiSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\",\"other_channel\"],\"data\":\"yolo\"}"
-		actualBody, err := ioutil.ReadAll(req.Body)
-		assert.Equal(t, expectedBody, string(actualBody))
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel", "other_channel"}, "data": "yolo"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
 
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.NoError(t, err)
@@ -78,6 +181,45 @@ func TestTriggerMultiEncryptedRejected(t *testing.T) {
 	assert.Contains(t, err.Error(), "encrypted channels")
 }
 
+func TestTriggerMultiWithParamsInfoSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"channels\":{\"presence-test_channel\":{\"subscription_count\":2,\"user_count\":1},\"test_channel\":{\"subscription_count\":3}}}"
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"presence-test_channel", "test_channel"}, "data": "yolo", "info": "user_count,subscription_count"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	attributes := "user_count,subscription_count"
+	channels, err := client.TriggerMultiWithParams([]string{"presence-test_channel", "test_channel"}, "test", "yolo", TriggerParams{Info: &attributes})
+	assert.NoError(t, err)
+
+	presenceExpectedUserCount := 1
+	presenceExpectedSubscriptionCount := 2
+	expectedSubscriptionCount := 3
+	expected := &TriggerChannelsList{
+		Channels: map[string]TriggerChannelListItem{
+			"presence-test_channel": {UserCount: &presenceExpectedUserCount, SubscriptionCount: &presenceExpectedSubscriptionCount},
+			"test_channel":          {SubscriptionCount: &expectedSubscriptionCount},
+		},
+	}
+	assert.Equal(t, expected, channels)
+}
+
 func TestGetChannelsSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
@@ -91,7 +233,7 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channels, err := client.Channels(nil)
+	channels, err := client.Channels(ChannelsParams{})
 	assert.NoError(t, err)
 
 	expected := &ChannelsList{
@@ -101,7 +243,7 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 			"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG": ChannelListItem{UserCount: 1},
 		},
 	}
-	assert.Equal(t, channels, expected)
+	assert.Equal(t, expected, channels)
 }
 
 func TestGetChannelSuccess(t *testing.T) {
@@ -116,7 +258,7 @@ func TestGetChannelSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channel, err := client.Channel("test_channel", nil)
+	channel, err := client.Channel("test_channel", ChannelParams{})
 	assert.NoError(t, err)
 
 	expected := &Channel{
@@ -125,7 +267,7 @@ func TestGetChannelSuccess(t *testing.T) {
 		UserCount:         1,
 		SubscriptionCount: 1,
 	}
-	assert.Equal(t, channel, expected)
+	assert.Equal(t, expected, channel)
 }
 
 func TestGetChannelUserSuccess(t *testing.T) {
@@ -146,16 +288,18 @@ func TestGetChannelUserSuccess(t *testing.T) {
 	expected := &Users{
 		List: []User{User{ID: "red"}, User{ID: "blue"}},
 	}
-	assert.Equal(t, users, expected)
+	assert.Equal(t, expected, users)
 }
 
 func TestTriggerWithSocketID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
-		expectedBody := "{\"name\":\"test\",\"channels\":[\"test_channel\"],\"data\":\"yolo\",\"socket_id\":\"1234.12\"}"
-		actualBody, err := ioutil.ReadAll(req.Body)
-		assert.Equal(t, expectedBody, string(actualBody))
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo", "socket_id": "1234.12"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
 		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
 	}))
 	defer server.Close()
 
@@ -187,12 +331,52 @@ func TestTriggerBatchSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.TriggerBatch([]Event{
-		{"test_channel", "test", "yolo1", nil},
-		{"test_channel", "test", "yolo2", nil},
+	response, err := client.TriggerBatch([]Event{
+		{Channel: "test_channel", Name: "test", Data: "yolo1"},
+		{Channel: "test_channel", Name: "test", Data: "yolo2"},
 	})
 
 	assert.NoError(t, err)
+	assert.Equal(t, &TriggerBatchChannelsList{}, response)
+}
+
+func TestTriggerBatchInfoSuccess(t *testing.T) {
+	expectedBody := `{"batch":[{"channel":"presence-test_channel","name":"test","data":"yolo1","info":"user_count,subscription_count"},{"channel":"test_channel","name":"test","data":"yolo2","info":"subscription_count"}]}`
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		testJSON := "{\"batch\":[{\"subscription_count\":2,\"user_count\":1},{\"subscription_count\":3}]}"
+		fmt.Fprintf(res, testJSON)
+		assert.Equal(t, "POST", req.Method)
+
+		actualBody, err := ioutil.ReadAll(req.Body)
+		assert.Equal(t, expectedBody, string(actualBody))
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
+	presenceChannelInfo := "user_count,subscription_count"
+	channelInfo := "subscription_count"
+	channels, err := client.TriggerBatch([]Event{
+		{Channel: "presence-test_channel", Name: "test", Data: "yolo1", Info: &presenceChannelInfo},
+		{Channel: "test_channel", Name: "test", Data: "yolo2", Info: &channelInfo},
+	})
+
+	assert.NoError(t, err)
+
+	presenceExpectedUserCount := 1
+	presenceExpectedSubscriptionCount := 2
+	expectedSubscriptionCount := 3
+	expected := &TriggerBatchChannelsList{
+		Batch: []TriggerBatchChannelListItem{
+			{UserCount: &presenceExpectedUserCount, SubscriptionCount: &presenceExpectedSubscriptionCount},
+			{SubscriptionCount: &expectedSubscriptionCount},
+		},
+	}
+	assert.Equal(t, expected, channels)
 }
 
 func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T) {
@@ -211,12 +395,13 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
-	err := client.TriggerBatch([]Event{
-		{"test_channel", "test", "yolo1", nil},
-		{"test_channel", "test", "yolo2", nil},
+	response, err := client.TriggerBatch([]Event{
+		{Channel: "test_channel", Name: "test", Data: "yolo1"},
+		{Channel: "test_channel", Name: "test", Data: "yolo2"},
 	})
 
 	assert.NoError(t, err)
+	assert.Equal(t, &TriggerBatchChannelsList{}, response)
 }
 
 func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T) {
@@ -227,9 +412,9 @@ func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T)
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.TriggerBatch([]Event{
-		{"test_channel", "test", "yolo1", nil},
-		{"private-encrypted-test_channel", "test", "yolo2", nil},
+	_, err := client.TriggerBatch([]Event{
+		{Channel: "test_channel", Name: "test", Data: "yolo1"},
+		{Channel: "private-encrypted-test_channel", Name: "test", Data: "yolo2"},
 	})
 
 	assert.Error(t, err)
@@ -272,11 +457,12 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
-	err := client.TriggerBatch([]Event{
-		{"test_channel", "test", "yolo1", nil},
-		{"private-encrypted-test_channel", "test", "yolo2", nil},
+	response, err := client.TriggerBatch([]Event{
+		{Channel: "test_channel", Name: "test", Data: "yolo1"},
+		{Channel: "private-encrypted-test_channel", Name: "test", Data: "yolo2"},
 	})
 	assert.NoError(t, err)
+	assert.Equal(t, &TriggerBatchChannelsList{}, response)
 }
 
 func TestTriggerInvalidMasterKey(t *testing.T) {
@@ -453,8 +639,8 @@ func TestErrorResponseHandler(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channelParams := map[string]string{"info": "user_count,subscription_count"}
-	channel, err := client.Channel("this_is_not_a_presence_channel", channelParams)
+	attributes := "user_count,subscription_count"
+	channel, err := client.Channel("this_is_not_a_presence_channel", ChannelParams{Info: &attributes})
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, "Status Code: 400 - Cannot retrieve the user count unless the channel is a presence channel")
@@ -520,8 +706,8 @@ func TestDataSizeValidation(t *testing.T) {
 
 	assert.EqualError(t, err, "Event payload exceeded maximum size (20481 bytes is too much)")
 
-	err = client.TriggerBatch([]Event{
-		{"channel", "event", data, nil},
+	_, err = client.TriggerBatch([]Event{
+		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.EqualError(t, err, "Data of the event #0 in batch, exceeded maximum size (20481 bytes is too much)")
 }
@@ -531,8 +717,8 @@ func TestDataSizeOverridenValidation(t *testing.T) {
 	data := strings.Repeat("a", 81920)
 	err := client.Trigger("channel", "event", data)
 	assert.NotContains(t, err.Error(), "\"Event payload exceeded maximum size (81920 bytes is too much)")
-	err = client.TriggerBatch([]Event{
-		{"channel", "event", data, nil},
+	_, err = client.TriggerBatch([]Event{
+		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.NotContains(t, err.Error(), "Data of the event #0 in batch, exceeded maximum size (81920 bytes is too much)")
 
@@ -540,8 +726,8 @@ func TestDataSizeOverridenValidation(t *testing.T) {
 	err = client.Trigger("channel", "event", data)
 	assert.EqualError(t, err, "Event payload exceeded maximum size (81921 bytes is too much)")
 
-	err = client.TriggerBatch([]Event{
-		{"channel", "event", data, nil},
+	_, err = client.TriggerBatch([]Event{
+		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.EqualError(t, err, "Data of the event #0 in batch, exceeded maximum size (81921 bytes is too much)")
 }

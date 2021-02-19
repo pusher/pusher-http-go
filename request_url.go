@@ -7,7 +7,7 @@ import (
 
 const authVersion = "1.0"
 
-func unsignedParams(key, timestamp string, body []byte, additionalQueries map[string]string) url.Values {
+func unsignedParams(key, timestamp string, body []byte, parameters map[string]string) url.Values {
 	params := url.Values{
 		"auth_key":       {key},
 		"auth_timestamp": {timestamp},
@@ -18,8 +18,8 @@ func unsignedParams(key, timestamp string, body []byte, additionalQueries map[st
 		params.Add("body_md5", md5Signature(body))
 	}
 
-	if additionalQueries != nil {
-		for key, values := range additionalQueries {
+	if parameters != nil {
+		for key, values := range parameters {
 			params.Add(key, values)
 		}
 	}
@@ -33,8 +33,8 @@ func unescapeURL(_url url.Values) string {
 	return unesc
 }
 
-func createRequestURL(method, host, path, key, secret, timestamp string, secure bool, body []byte, additionalQueries map[string]string, cluster string) (string, error) {
-	params := unsignedParams(key, timestamp, body, additionalQueries)
+func createRequestURL(method, host, path, key, secret, timestamp string, secure bool, body []byte, parameters map[string]string, cluster string) (string, error) {
+	params := unsignedParams(key, timestamp, body, parameters)
 
 	stringToSign := strings.Join([]string{method, path, unescapeURL(params)}, "\n")
 
