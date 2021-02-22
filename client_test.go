@@ -47,7 +47,7 @@ func TestTriggerWithStructSuccessCase(t *testing.T) {
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "{\"Key\":\"value\"}"}
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": `{"Key":"value"}`}
 		bodyDecoder := json.NewDecoder(req.Body)
 		var actualBody map[string]interface{}
 		err := bodyDecoder.Decode(&actualBody)

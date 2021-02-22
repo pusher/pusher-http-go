@@ -8,28 +8,28 @@ import (
 
 func TestTriggerRequestUrl(t *testing.T) {
 	expected := "http://api.pusherapp.com/apps/3/events?auth_key=278d425bdf160c739803&auth_signature=da454824c97ba181a32ccc17a72625ba02771f50b50e1e7430e47a1f3f457e6c&auth_timestamp=1353088179&auth_version=1.0&body_md5=ec365a775a4cd0599faeb73354201b6f"
-	payload := []byte("{\"name\":\"foo\",\"channels\":[\"project-3\"],\"data\":\"{\\\"some\\\":\\\"data\\\"}\"}")
+	payload := []byte(`{"name":"foo","channels":["project-3"],"data":"{\"some\":\"data\"}"}`)
 	result, _ := createRequestURL("POST", "", "/apps/3/events", "278d425bdf160c739803", "7ad3773142a6692b25b8", "1353088179", false, payload, nil, "")
 	assert.Equal(t, expected, result)
 }
 
 func TestBuildClusterTriggerUrl(t *testing.T) {
 	expected := "http://api-eu.pusher.com/apps/3/events?auth_key=278d425bdf160c739803&auth_signature=da454824c97ba181a32ccc17a72625ba02771f50b50e1e7430e47a1f3f457e6c&auth_timestamp=1353088179&auth_version=1.0&body_md5=ec365a775a4cd0599faeb73354201b6f"
-	payload := []byte("{\"name\":\"foo\",\"channels\":[\"project-3\"],\"data\":\"{\\\"some\\\":\\\"data\\\"}\"}")
+	payload := []byte(`{"name":"foo","channels":["project-3"],"data":"{\"some\":\"data\"}"}`)
 	result, _ := createRequestURL("POST", "", "/apps/3/events", "278d425bdf160c739803", "7ad3773142a6692b25b8", "1353088179", false, payload, nil, "eu")
 	assert.Equal(t, expected, result)
 }
 
 func TestBuildCustomHostTriggerUrl(t *testing.T) {
 	expected := "http://my.server.com/apps/3/events?auth_key=278d425bdf160c739803&auth_signature=da454824c97ba181a32ccc17a72625ba02771f50b50e1e7430e47a1f3f457e6c&auth_timestamp=1353088179&auth_version=1.0&body_md5=ec365a775a4cd0599faeb73354201b6f"
-	payload := []byte("{\"name\":\"foo\",\"channels\":[\"project-3\"],\"data\":\"{\\\"some\\\":\\\"data\\\"}\"}")
+	payload := []byte(`{"name":"foo","channels":["project-3"],"data":"{\"some\":\"data\"}"}`)
 	result, _ := createRequestURL("POST", "my.server.com", "/apps/3/events", "278d425bdf160c739803", "7ad3773142a6692b25b8", "1353088179", false, payload, nil, "")
 	assert.Equal(t, expected, result)
 }
 
 func TestTriggerSecureRequestUrl(t *testing.T) {
 	expected := "https://api.pusherapp.com/apps/3/events?auth_key=278d425bdf160c739803&auth_signature=da454824c97ba181a32ccc17a72625ba02771f50b50e1e7430e47a1f3f457e6c&auth_timestamp=1353088179&auth_version=1.0&body_md5=ec365a775a4cd0599faeb73354201b6f"
-	payload := []byte("{\"name\":\"foo\",\"channels\":[\"project-3\"],\"data\":\"{\\\"some\\\":\\\"data\\\"}\"}")
+	payload := []byte(`{"name":"foo","channels":["project-3"],"data":"{\"some\":\"data\"}"}`)
 	result, _ := createRequestURL("POST", "", "/apps/3/events", "278d425bdf160c739803", "7ad3773142a6692b25b8", "1353088179", true, payload, nil, "")
 	assert.Equal(t, expected, result)
 }
