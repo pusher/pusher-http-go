@@ -83,7 +83,7 @@ func TestFormatMessage(t *testing.T) {
 	nonce := "a"
 	cipherText := "b"
 	formatted := formatMessage(nonce, cipherText)
-	assert.Equal(t, "{\"nonce\":\"a\",\"ciphertext\":\"b\"}", formatted)
+	assert.Equal(t, `{"nonce":"a","ciphertext":"b"}`, formatted)
 }
 
 func TestGenerateSharedSecret(t *testing.T) {
@@ -98,7 +98,7 @@ func TestGenerateSharedSecret(t *testing.T) {
 func TestDecryptValidKey(t *testing.T) {
 	channel := "private-encrypted-bla"
 	plaintext := "Hello!"
-	cipherText := "{\"nonce\":\"sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T\",\"ciphertext\":\"zoDEe8dA3nDXKsybAWce/hXGW4szJw==\"}"
+	cipherText := `{"nonce":"sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T","ciphertext":"zoDEe8dA3nDXKsybAWce/hXGW4szJw=="}`
 	encryptionKey := []byte("This is a string that is 32 chars")
 
 	encryptedWebhookData := &Webhook{
@@ -132,7 +132,7 @@ func TestDecryptValidKey(t *testing.T) {
 
 func TestDecryptInvalidKey(t *testing.T) {
 	channel := "private-encrypted-bla"
-	cipherText := "{\"nonce\":\"sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T\",\"ciphertext\":\"zoDEe8dA3nDXKsybAWce/hXGW4szJw==\"}"
+	cipherText := `{"nonce":"sjklahvpWWQgAjTx5FfYHCCxd2AmaL9T","ciphertext":"zoDEe8dA3nDXKsybAWce/hXGW4szJw=="}`
 	encryptionKey := []byte("This is an invalid key 32 chars!!")
 
 	encryptedWebhookData := &Webhook{
