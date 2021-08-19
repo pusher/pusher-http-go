@@ -20,11 +20,15 @@ var headers = map[string]string{
 }
 
 // change timeout to time.Duration
-func request(client *http.Client, method, url string, body []byte) ([]byte, error) {
+func request(client *http.Client, method, url string, hostHeader string, body []byte) ([]byte, error) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 
 	for key, val := range headers {
 		req.Header.Set(http.CanonicalHeaderKey(key), val)
+	}
+
+	if hostHeader != "" {
+		req.Host = hostHeader
 	}
 
 	resp, err := client.Do(req)

@@ -52,7 +52,8 @@ type Client struct {
 	Key                          string
 	Secret                       string
 	Host                         string // host or host:port pair
-	Secure                       bool   // true for HTTPS
+	HostHeader                   string
+	Secure                       bool // true for HTTPS
 	Cluster                      string
 	HTTPClient                   *http.Client
 	EncryptionMasterKey          string  // deprecated
@@ -124,8 +125,8 @@ func (c *Client) requestClient() *http.Client {
 	return c.HTTPClient
 }
 
-func (c *Client) request(method, url string, body []byte) ([]byte, error) {
-	return request(c.requestClient(), method, url, body)
+func (c *Client) request(method, url string, hostHeader string, body []byte) ([]byte, error) {
+	return request(c.requestClient(), method, url, hostHeader, body)
 }
 
 /*
@@ -285,7 +286,7 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("POST", triggerURL, payload)
+	response, err := c.request("POST", triggerURL, c.HostHeader, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +344,7 @@ func (c *Client) TriggerBatch(batch []Event) (*TriggerBatchChannelsList, error) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("POST", triggerURL, payload)
+	response, err := c.request("POST", triggerURL, c.HostHeader, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -390,7 +391,7 @@ func (c *Client) Channels(params ChannelsParams) (*ChannelsList, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("GET", u, nil)
+	response, err := c.request("GET", u, c.HostHeader, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +433,7 @@ func (c *Client) Channel(name string, params ChannelParams) (*Channel, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("GET", u, nil)
+	response, err := c.request("GET", u, c.HostHeader, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +455,7 @@ func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("GET", u, nil)
+	response, err := c.request("GET", u, c.HostHeader, nil)
 	if err != nil {
 		return nil, err
 	}
