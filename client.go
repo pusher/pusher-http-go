@@ -21,6 +21,42 @@ const (
 	libraryName    = "pusher-http-go"
 )
 
+type Connector interface {
+	Trigger(channel string, eventName string, data interface{}) error
+	TriggerWithParams(
+		channel string,
+		eventName string,
+		data interface{},
+		params TriggerParams,
+	) (*TriggerChannelsList, error)
+	TriggerMulti(channels []string, eventName string, data interface{}) error
+	TriggerMultiWithParams(
+		channels []string,
+		eventName string,
+		data interface{},
+		params TriggerParams,
+	) (*TriggerChannelsList, error)
+	TriggerExclusive(channel string, eventName string, data interface{}, socketID string) error
+	TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) error
+	TriggerBatch(batch []Event) (*TriggerBatchChannelsList, error)
+	Channels(params ChannelsParams) (*ChannelsList, error)
+	Channel(name string, params ChannelParams) (*Channel, error)
+	GetChannelUsers(name string) (*Users, error)
+	AuthenticatePrivateChannel(params []byte) (response []byte, err error)
+	AuthenticatePresenceChannel(params []byte, member MemberData) (response []byte, err error)
+	Webhook(header http.Header, body []byte) (*Webhook, error)
+}
+
+func NewClient(host, appID, key, secret string, useHttps bool) Connector {
+	return &Client{
+		AppID:  appID,
+		Key:    key,
+		Secret: secret,
+		Secure: useHttps,
+		Host:   host,
+	}
+}
+
 /*
 Client to the HTTP API of Pusher.
 
