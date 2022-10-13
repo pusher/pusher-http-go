@@ -15,6 +15,45 @@ import (
 	"gopkg.in/stretchr/testify.v1/assert"
 )
 
+func TestSendToUserSuccessCase(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		fmt.Fprintf(res, "{}")
+		assert.Equal(t, "POST", req.Method)
+
+		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"#server-to-user-123456"}, "data": "yolo"}
+		bodyDecoder := json.NewDecoder(req.Body)
+		var actualBody map[string]interface{}
+		err := bodyDecoder.Decode(&actualBody)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedBody, actualBody)
+
+		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
+		lib := fmt.Sprintf("%s %s", libraryName, libraryVersion)
+		assert.Equal(t, lib, req.Header["X-Pusher-Library"][0])
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	err := client.SendToUser("123456", "test", "yolo")
+	assert.NoError(t, err)
+}
+
+func TestSendToUserRejected(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		t.Fatal("No request should reach the API")
+	}))
+	defer server.Close()
+
+	u, _ := url.Parse(server.URL)
+	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
+	err := client.SendToUser("", "test", "yolo")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "User id '' is invalid")
+}
+
 func TestTriggerSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
