@@ -28,7 +28,7 @@ jobs:
       - name: Push
         shell: bash
         run: |
-          sed -i '' 's/${{env.CURRENT_VERSION}}/${{steps.bump.outputs.new_version}}' client.go
+          sed -i'' -e 's/${{env.CURRENT_VERSION}}/${{steps.bump.outputs.new_version}}/' client.go
 
           git add client.go CHANGELOG.md
           git commit -m "Bump to version ${{ steps.bump.outputs.new_version }}"
