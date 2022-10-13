@@ -142,7 +142,7 @@ be marshallable into JSON.
 
 */
 func (c *Client) Trigger(channel string, eventName string, data interface{}) error {
-	_, err := c.trigger([]string{channel}, eventName, data, TriggerParams{})
+	_, err := c.validateChannelsAndTrigger([]string{channel}, eventName, data, TriggerParams{})
 	return err
 }
 
@@ -195,7 +195,7 @@ func (c *Client) TriggerWithParams(
 	data interface{},
 	params TriggerParams,
 ) (*TriggerChannelsList, error) {
-	return c.trigger([]string{channel}, eventName, data, params)
+	return c.validateChannelsAndTrigger([]string{channel}, eventName, data, params)
 }
 
 /*
@@ -204,7 +204,7 @@ TriggerMulti is the same as `client.Trigger`, except one passes in a slice of
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
 func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) error {
-	_, err := c.trigger(channels, eventName, data, TriggerParams{})
+	_, err := c.validateChannelsAndTrigger(channels, eventName, data, TriggerParams{})
 	return err
 }
 
@@ -219,7 +219,7 @@ func (c *Client) TriggerMultiWithParams(
 	data interface{},
 	params TriggerParams,
 ) (*TriggerChannelsList, error) {
-	return c.trigger(channels, eventName, data, params)
+	return c.validateChannelsAndTrigger(channels, eventName, data, params)
 }
 
 /*
@@ -232,7 +232,7 @@ Deprecated: use TriggerWithParams instead.
 */
 func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) error {
 	params := TriggerParams{SocketID: &socketID}
-	_, err := c.trigger([]string{channel}, eventName, data, params)
+	_, err := c.validateChannelsAndTrigger([]string{channel}, eventName, data, params)
 	return err
 }
 
@@ -246,18 +246,29 @@ Deprecated: use TriggerMultiWithParams instead.
 */
 func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) error {
 	params := TriggerParams{SocketID: &socketID}
-	_, err := c.trigger(channels, eventName, data, params)
+	_, err := c.validateChannelsAndTrigger(channels, eventName, data, params)
 	return err
 }
 
-func (c *Client) trigger(channels []string, eventName string, data interface{}, params TriggerParams) (*TriggerChannelsList, error) {
+func (c *Client) SendToUser(userId string, eventName string, data interface{}) error {
+	if !validUserId(userId) {
+		return fmt.Errorf("User id '%s' is invalid", userId)
+	}
+	_, err := c.trigger([]string{"#server-to-user-" + userId}, eventName, data, TriggerParams{})
+	return err
+}
+
+func (c *Client) validateChannelsAndTrigger(channels []string, eventName string, data interface{}, params TriggerParams) (*TriggerChannelsList, error) {
 	if len(channels) > maxTriggerableChannels {
 		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
 	if !channelsAreValid(channels) {
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
+	return c.trigger(channels, eventName, data, params)
+}
 
+func (c *Client) trigger(channels []string, eventName string, data interface{}, params TriggerParams) (*TriggerChannelsList, error) {
 	hasEncryptedChannel := false
 	for _, channel := range channels {
 		if isEncryptedChannel(channel) {
@@ -272,6 +283,7 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if hasEncryptedChannel && keyErr != nil {
 		return nil, keyErr
 	}
+
 	if err := validateSocketID(params.SocketID); err != nil {
 		return nil, err
 	}

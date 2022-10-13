@@ -31,6 +31,11 @@ func parseAuthRequestParams(_params []byte) (channelName string, socketID string
 	return params["channel_name"][0], params["socket_id"][0], nil
 }
 
+func validUserId(userId string) bool {
+	length := len(userId)
+	return length > 0 && length < maxChannelNameSize
+}
+
 func validChannel(channel string) bool {
 	if len(channel) > maxChannelNameSize || !channelValidationRegex.MatchString(channel) {
 		return false
