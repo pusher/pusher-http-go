@@ -585,7 +585,44 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	assert.Contains(t, err.Error(), "valid base64")
 }
 
-func TestAuthenticateInvalidMasterKey(t *testing.T) {
+func TestAuthenticateUser(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		t.Fatal("No HTTP request should have been made")
+	}))
+	defer server.Close()
+	u, _ := url.Parse(server.URL)
+
+	client := Client{
+		AppID:               "appid",
+		Key:                 "key",
+		Secret:              "secret",
+		Host:                u.Host,
+	}
+
+	var params []byte
+	var userData map[string]interface{}
+
+	params = []byte("socket_id=12345.12345")
+	userData = map[string]interface{} {}
+	_, err := client.AuthenticateUser(params, userData)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Missing id in user data")
+
+	params = []byte("not_socket_id=12345.12345")
+	userData = map[string]interface{} { "id": "1234" }
+	_, err = client.AuthenticateUser(params, userData)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "socket_id not found")
+
+	params = []byte("socket_id=12345.12345")
+	userData = map[string]interface{} { "id": "1234" }
+	var response []byte
+	response, err = client.AuthenticateUser(params, userData)
+	assert.NoError(t, err)
+	assert.Equal(t, string(response), "{\"auth\":\"key:e4c63b82c1e1d0955901f6a29ca51b244155bafda93968bc5664010f5ba54a41\",\"user_data\":\"{\\\"id\\\":\\\"1234\\\"}\"}")
+}
+
+func TestAuthorizeInvalidMasterKey(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		t.Fatal("No HTTP request should have been made")
 	}))
@@ -602,7 +639,7 @@ func TestAuthenticateInvalidMasterKey(t *testing.T) {
 		Host:                u.Host,
 		EncryptionMasterKey: "this is 31 bytes 12345678901234",
 	}
-	_, err := client.AuthenticatePrivateChannel(params)
+	_, err := client.AuthorizePrivateChannel(params)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "32 bytes")
 
@@ -614,7 +651,7 @@ func TestAuthenticateInvalidMasterKey(t *testing.T) {
 		Host:                u.Host,
 		EncryptionMasterKey: "this is 33 bytes 1234567890123456",
 	}
-	_, err = client.AuthenticatePrivateChannel(params)
+	_, err = client.AuthorizePrivateChannel(params)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "32 bytes")
 
@@ -627,7 +664,7 @@ func TestAuthenticateInvalidMasterKey(t *testing.T) {
 		EncryptionMasterKey:       "this is 32 bytes 123456789012345",
 		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU=",
 	}
-	_, err = client.AuthenticatePrivateChannel(params)
+	_, err = client.AuthorizePrivateChannel(params)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "both")
 
@@ -639,7 +676,7 @@ func TestAuthenticateInvalidMasterKey(t *testing.T) {
 		Host:                      u.Host,
 		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMSBieXRlcyAxMjM0NTY3ODkwMTIzNA==",
 	}
-	_, err = client.AuthenticatePrivateChannel(params)
+	_, err = client.AuthorizePrivateChannel(params)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "32 bytes")
 
@@ -651,7 +688,7 @@ func TestAuthenticateInvalidMasterKey(t *testing.T) {
 		Host:                      u.Host,
 		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU2",
 	}
-	_, err = client.AuthenticatePrivateChannel(params)
+	_, err = client.AuthorizePrivateChannel(params)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "32 bytes")
 
@@ -663,7 +700,7 @@ func TestAuthenticateInvalidMasterKey(t *testing.T) {
 		Host:                      u.Host,
 		EncryptionMasterKeyBase64: "dGhp!yBpcyAzMiBieXRlcy#xMjM0NTY3ODkwMTIzNDU=",
 	}
-	_, err = client.AuthenticatePrivateChannel(params)
+	_, err = client.AuthorizePrivateChannel(params)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "valid base64")
 }

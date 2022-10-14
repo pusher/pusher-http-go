@@ -250,6 +250,14 @@ func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data
 	return err
 }
 
+/*
+SendToUser triggers an event to a specific user.
+Pass in the user id, the event's name, and a data payload. The data payload must
+be marshallable into JSON.
+
+	data := map[string]string{"hello": "world"}
+	client.SendToUser("user123", "say_hello", data)
+*/
 func (c *Client) SendToUser(userId string, eventName string, data interface{}) error {
 	if !validUserId(userId) {
 		return fmt.Errorf("User id '%s' is invalid", userId)
@@ -474,13 +482,74 @@ func (c *Client) GetChannelUsers(name string) (*Users, error) {
 }
 
 /*
-AuthenticatePrivateChannel allows you to authenticate a users subscription to a
-private channel. It returns authentication signature to send back to the client
-and authorize them.
+AuthenticateUser allows you to authenticate a user s subscription to a
+private channel. It returns an authentication signature to send back to the client
+and authenticate them. In order to identify a user, this method acceps a map containing
+arbitrary user data. It must contain at least and id field with the user's id as a string.
 
 For more information see our docs: http://pusher.com/docs/authenticating_users.
 
-This is an example of authenticating a private-channel, using the built-in
+This is an example of authenticating a user, using the built-in
+Golang HTTP library to start a server.
+
+In order to authenticate a client, one must read the response into type `[]byte`
+and pass it in. This will return a signature in the form of a `[]byte` for you
+to send back to the client.
+
+	func pusherUserAuth(res http.ResponseWriter, req *http.Request) {
+
+		params, _ := ioutil.ReadAll(req.Body)
+		response, err := client.AuthenticateUser(params)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Fprintf(res, string(response))
+	}
+
+	func main() {
+		http.HandleFunc("/pusher/user-auth", pusherUserAuth)
+		http.ListenAndServe(":5000", nil)
+	}
+*/
+func (c *Client) AuthenticateUser(params []byte, userData map[string]interface{}) (response []byte, err error) {
+	socketID, err := parseUserAuthenticationRequestParams(params)
+	if err != nil {
+		return
+	}
+
+	if err = validateSocketID(&socketID); err != nil {
+		return
+	}
+
+	if err = validateUserData(userData); err != nil {
+		return
+	}
+
+	var _jsonUserData []byte
+	_jsonUserData, err = json.Marshal(userData)
+	if err != nil {
+		return
+	}
+
+	jsonUserData := string(_jsonUserData)
+	stringToSign := strings.Join([]string{socketID, "user", jsonUserData}, "::")
+
+	_response := createAuthMap(c.Key, c.Secret, stringToSign, "")
+	_response["user_data"] = jsonUserData
+
+	response, err = json.Marshal(_response)
+	return
+}
+
+/*
+AuthorizePrivateChannel allows you to authorize a users subscription to a
+private channel. It returns an authorization signature to send back to the client
+and authorize them.
+
+For more information see our docs: http://pusher.com/docs/authorizing_users.
+
+This is an example of authorizing a private-channel, using the built-in
 Golang HTTP library to start a server.
 
 In order to authorize a client, one must read the response into type `[]byte`
@@ -490,7 +559,7 @@ to send back to the client.
 	func pusherAuth(res http.ResponseWriter, req *http.Request) {
 
 		params, _ := ioutil.ReadAll(req.Body)
-		response, err := client.AuthenticatePrivateChannel(params)
+		response, err := client.AuthorizePrivateChannel(params)
 		if err != nil {
 			panic(err)
 		}
@@ -503,13 +572,24 @@ to send back to the client.
 		http.ListenAndServe(":5000", nil)
 	}
 */
-func (c *Client) AuthenticatePrivateChannel(params []byte) (response []byte, err error) {
-	return c.authenticateChannel(params, nil)
+func (c *Client) AuthorizePrivateChannel(params []byte) (response []byte, err error) {
+	return c.authorizeChannel(params, nil)
 }
 
 /*
-AuthenticatePresenceChannel allows you to authenticate a users subscription to a
-presence channel. It returns authentication signature to send back to the client
+AuthenticatePrivateChannel allows you to authorize a users subscription to a
+private channel. It returns an authorization signature to send back to the client
+and authorize them.
+
+Deprecated: use AuthorizePrivateChannel instead.
+*/
+func (c *Client) AuthenticatePrivateChannel(params []byte) (response []byte, err error) {
+	return c.AuthorizePrivateChannel(params)
+}
+
+/*
+AuthorizePresenceChannel allows you to authorize a users subscription to a
+presence channel. It returns an authorization signature to send back to the client
 and authorize them. In order to identify a user, clients are sent a user_id and,
 optionally, custom data.
 
@@ -524,19 +604,31 @@ In this library, one does this by passing a `pusher.MemberData` instance.
 		},
 	}
 
-	response, err := client.AuthenticatePresenceChannel(params, presenceData)
+	response, err := client.AuthorizePresenceChannel(params, presenceData)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Fprintf(res, response)
 */
-func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (response []byte, err error) {
-	return c.authenticateChannel(params, &member)
+func (c *Client) AuthorizePresenceChannel(params []byte, member MemberData) (response []byte, err error) {
+	return c.authorizeChannel(params, &member)
 }
 
-func (c *Client) authenticateChannel(params []byte, member *MemberData) (response []byte, err error) {
-	channelName, socketID, err := parseAuthRequestParams(params)
+/*
+AuthorizePresenceChannel allows you to authorize a users subscription to a
+presence channel. It returns an authorization signature to send back to the client
+and authorize them. In order to identify a user, clients are sent a user_id and,
+optionally, custom data.
+
+Deprecated: use AuthorizePresenceChannel instead.
+*/
+func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (response []byte, err error) {
+	return c.authorizeChannel(params, &member)
+}
+
+func (c *Client) authorizeChannel(params []byte, member *MemberData) (response []byte, err error) {
+	channelName, socketID, err := parseChannelAuthorizationRequestParams(params)
 	if err != nil {
 		return
 	}
