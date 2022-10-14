@@ -616,7 +616,7 @@ func (c *Client) AuthorizePresenceChannel(params []byte, member MemberData) (res
 }
 
 /*
-AuthorizePresenceChannel allows you to authorize a users subscription to a
+AuthenticatePresenceChannel allows you to authorize a users subscription to a
 presence channel. It returns an authorization signature to send back to the client
 and authorize them. In order to identify a user, clients are sent a user_id and,
 optionally, custom data.
