@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Prepare tag
         run: |
-          export TAG=v$(jq -r '.version' package.json)
+          export TAG=v$(awk '/libraryVersion =/ { gsub("\"",""); print $3 }' client.go)
           echo "TAG=$TAG" >> $GITHUB_ENV
       - name: Setup git
         run: |
