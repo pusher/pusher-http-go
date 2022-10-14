@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.1.0
+
+* [ADDED] SendToUser method
+* [ADDED] AuthenticateUser method
+* [ADDED] AuthorizePrivateChannel method
+* [ADDED] AuthorizePresenceChannel method
+* [CHANGED] AuthenticatePrivateChannel method deprecated
+* [CHANGED] AuthenticatePresenceChannel method deprecated
+
 ## 5.0.0 / 2021-02-19
 
 * Breaking change: `TriggerBatch` now returns `(*TriggerBatchChannelsList, error)` instead of `error`

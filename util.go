@@ -2,6 +2,8 @@ package pusher
 
 import (
 	"errors"
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -13,22 +15,47 @@ var channelValidationRegex = regexp.MustCompile("^[-a-zA-Z0-9_=@,.;]+$")
 var socketIDValidationRegex = regexp.MustCompile(`\A\d+\.\d+\z`)
 var maxChannelNameSize = 200
 
+func jsonMarshalToString(data interface{}) (result string, err error) {
+	var _result []byte
+	_result, err = json.Marshal(data)
+	if err != nil {
+		return
+	}
+	return string(_result), err
+}
+
 func authTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
-func parseAuthRequestParams(_params []byte) (channelName string, socketID string, err error) {
+func parseUserAuthenticationRequestParams(_params []byte) (socketID string, err error) {
+	params, err := url.ParseQuery(string(_params))
+	if err != nil {
+		return
+	}
+	if _, ok := params["socket_id"]; !ok {
+		return "", errors.New("socket_id not found")
+	}
+	return params["socket_id"][0], nil
+}
+
+func parseChannelAuthorizationRequestParams(_params []byte) (channelName string, socketID string, err error) {
 	params, err := url.ParseQuery(string(_params))
 	if err != nil {
 		return
 	}
 	if _, ok := params["channel_name"]; !ok {
-		return "", "", errors.New("Channel param not found")
+		return "", "", errors.New("channel_name not found")
 	}
 	if _, ok := params["socket_id"]; !ok {
-		return "", "", errors.New("Socket_id not found")
+		return "", "", errors.New("socket_id not found")
 	}
 	return params["channel_name"][0], params["socket_id"][0], nil
+}
+
+func validUserId(userId string) bool {
+	length := len(userId)
+	return length > 0 && length < maxChannelNameSize
 }
 
 func validChannel(channel string) bool {
@@ -52,6 +79,22 @@ func isEncryptedChannel(channel string) bool {
 		return true
 	}
 	return false
+}
+
+func validateUserData(userData map[string]interface{}) (err error) {
+	_id, ok := userData["id"]
+	if !ok || _id == nil {
+		return errors.New("Missing id in user data")
+	}
+	var id string
+	id, ok = _id.(string)
+	if !ok {
+		return errors.New("id field in user data is not a string")
+	}
+	if !validUserId(id) {
+		return fmt.Errorf("Invalid id in user data: '%s'", id)
+	}
+	return
 }
 
 func validateSocketID(socketID *string) (err error) {

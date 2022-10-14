@@ -4,7 +4,7 @@
 
 The Golang library for interacting with the Pusher Channels HTTP API.
 
-This package lets you trigger events to your client and query the state of your Pusher channels. When used with a server, you can validate Pusher Channels webhooks and authenticate `private-` or `presence-` channels.
+This package lets you trigger events to your client and query the state of your Pusher channels. When used with a server, you can validate Pusher Channels webhooks and authorize `private-` or `presence-` channels.
 
 Register for free at <https://pusher.com/channels> and use the application credentials within your app as shown below.
 
@@ -21,7 +21,8 @@ Register for free at <https://pusher.com/channels> and use the application crede
   - [Google App Engine](#google-app-engine)
 - [Usage](#usage)
   - [Triggering events](#triggering-events)
-  - [Authenticating Channels](#authenticating-channels)
+  - [Authenticating Users](#authenticating-users)
+  - [Authorizing Channels](#authorizing-channels)
   - [Application state](#application-state)
   - [Webhook validation](#webhook-validation)
 - [Feature Support](#feature-support)
@@ -146,7 +147,7 @@ pusherClient.Cluster = "eu" // in this case requests will be made to api-eu.push
 
 This library supports end to end encryption of your private channels. This means that only you and your connected clients will be able to read your messages. Pusher cannot decrypt them. You can enable this feature by following these steps:
 
-1. You should first set up Private channels. This involves [creating an authentication endpoint on your server](https://pusher.com/docs/authenticating_users).
+1. You should first set up Private channels. This involves [creating an authorization endpoint on your server](https://pusher.com/docs/authorizing_users).
 
 2. Next, generate a 32 byte master encryption key, base64 encode it and store
    it securely.
@@ -371,19 +372,30 @@ for i, attributes := range response.Batch {
 // channel: presence-b-channel, name: event, user_count: 4
 ```
 
-### Authenticating Channels
+#### Send to user
 
-Application security is very important so Pusher Channels provides a mechanism for authenticating a user’s access to a channel at the point of subscription.
+##### `func (c *Client) SendToUser`
 
-This can be used both to restrict access to private channels, and in the case of presence channels notify subscribers of who else is also subscribed via presence events.
+| Argument |Description   |
+| :-: | :-: |
+| userId `string` | The id of the user who should receive the event. |
+| event `string` | The name of the event you wish to trigger. |
+| data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
 
-This library provides a mechanism for generating an authentication signature to send back to the client and authorize them.
+###### Example
+
+```go
+data := map[string]string{"hello": "world"}
+pusherClient.SendToUser("user123", "say_hello", data)
+```
+
+### Authenticating Users
+
+Pusher Channels provides a mechanism for authenticating users. This can be used to send messages to specific users based on user id and to terminate misbehaving user connections, for example.
 
 For more information see our [docs](http://pusher.com/docs/authenticating_users).
 
-#### Private channels
-
-##### `func (c *Client) AuthenticatePrivateChannel`
+#### `func (c *Client) AuthenticateUser`
 
 | Argument | Description |
 | :-: | :-: |
@@ -397,9 +409,51 @@ For more information see our [docs](http://pusher.com/docs/authenticating_users)
 ###### Example
 
 ```go
+func pusherUserAuth(res http.ResponseWriter, req *http.Request) {
+    params, _ := ioutil.ReadAll(req.Body)
+    response, err := pusherClient.AuthenticateUser(params)
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Fprintf(res, string(response))
+}
+
+func main() {
+    http.HandleFunc("/pusher/user-auth", pusherUserAuth)
+    http.ListenAndServe(":5000", nil)
+}
+```
+
+### Authorizing Channels
+
+Application security is very important so Pusher Channels provides a mechanism for authorizing a user’s access to a channel at the point of subscription.
+
+This can be used both to restrict access to private channels, and in the case of presence channels notify subscribers of who else is also subscribed via presence events.
+
+This library provides a mechanism for generating an authorization signature to send back to the client and authorize them.
+
+For more information see our [docs](http://pusher.com/docs/authorizing_users).
+
+#### Private channels
+
+##### `func (c *Client) AuthorizePrivateChannel`
+
+| Argument | Description |
+| :-: | :-: |
+| params `[]byte` | The request body sent by the client |
+
+| Return Value | Description |
+| :-: | :-: |
+| response `[]byte` | The response to send back to the client, carrying an authorization signature |
+| err `error` | Any errors generated |
+
+###### Example
+
+```go
 func pusherAuth(res http.ResponseWriter, req *http.Request) {
     params, _ := ioutil.ReadAll(req.Body)
-    response, err := pusherClient.AuthenticatePrivateChannel(params)
+    response, err := pusherClient.AuthorizePrivateChannel(params)
     if err != nil {
         panic(err)
     }
@@ -431,7 +485,7 @@ func pusherJsonpAuth(res http.ResponseWriter, req *http.Request) {
         params = []byte(q.Encode())
     }
 
-    response, err := pusherClient.AuthenticatePrivateChannel(params)
+    response, err := pusherClient.AuthorizePrivateChannel(params)
     if err != nil {
         panic(err)
     }
@@ -446,11 +500,11 @@ func main() {
 }
 ```
 
-#### Authenticating presence channels
+#### Authorizing presence channels
 
 Using presence channels is similar to private channels, but in order to identify a user, clients are sent a user_id and, optionally, custom data.
 
-##### `func (c *Client) AuthenticatePresenceChannel`
+##### `func (c *Client) AuthorizePresenceChannel`
 
 | Argument | Description |
 | :-: | :-: |
@@ -480,7 +534,7 @@ presenceData := pusher.MemberData{
     },
 }
 
-response, err := pusherClient.AuthenticatePresenceChannel(params, presenceData)
+response, err := pusherClient.AuthorizePresenceChannel(params, presenceData)
 
 if err != nil {
     panic(err)
@@ -692,8 +746,10 @@ Trigger event on multiple channels         | *&#10004;*
 Trigger events in batches                  | *&#10004;*
 Excluding recipients from events           | *&#10004;*
 Fetching info on trigger                   | *&#10004;*
-Authenticating private channels            | *&#10004;*
-Authenticating presence channels           | *&#10004;*
+Send to user                               | *&#10004;*
+Authenticating users                       | *&#10004;*
+Authorizing private channels               | *&#10004;*
+Authorizing presence channels              | *&#10004;*
 Get the list of channels in an application | *&#10004;*
 Get the state of a single channel          | *&#10004;*
 Get a list of users in a presence channel  | *&#10004;*
