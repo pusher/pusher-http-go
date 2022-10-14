@@ -526,13 +526,10 @@ func (c *Client) AuthenticateUser(params []byte, userData map[string]interface{}
 		return
 	}
 
-	var _jsonUserData []byte
-	_jsonUserData, err = json.Marshal(userData)
-	if err != nil {
+	var jsonUserData string
+	if jsonUserData, err = jsonMarshalToString(userData); err != nil {
 		return
 	}
-
-	jsonUserData := string(_jsonUserData)
 	stringToSign := strings.Join([]string{socketID, "user", jsonUserData}, "::")
 
 	_response := createAuthMap(c.Key, c.Secret, stringToSign, "")
@@ -584,7 +581,7 @@ and authorize them.
 Deprecated: use AuthorizePrivateChannel instead.
 */
 func (c *Client) AuthenticatePrivateChannel(params []byte) (response []byte, err error) {
-	return c.AuthorizePrivateChannel(params)
+	return c.authorizeChannel(params, nil)
 }
 
 /*

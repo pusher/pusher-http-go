@@ -2,6 +2,7 @@ package pusher
 
 import (
 	"errors"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -13,6 +14,15 @@ import (
 var channelValidationRegex = regexp.MustCompile("^[-a-zA-Z0-9_=@,.;]+$")
 var socketIDValidationRegex = regexp.MustCompile(`\A\d+\.\d+\z`)
 var maxChannelNameSize = 200
+
+func jsonMarshalToString(data interface{}) (result string, err error) {
+	var _result []byte
+	_result, err = json.Marshal(data)
+	if err != nil {
+		return
+	}
+	return string(_result), err
+}
 
 func authTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
