@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.1.1
+
+- [CHANGED] readme example for user authentication
+
 ## 5.1.0
 
 * [ADDED] SendToUser method

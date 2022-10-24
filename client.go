@@ -17,7 +17,7 @@ var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 var maxTriggerableChannels = 100
 
 const (
-	libraryVersion = "5.1.0"
+	libraryVersion = "5.1.1"
 	libraryName    = "pusher-http-go"
 )
 
