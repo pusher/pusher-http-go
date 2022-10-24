@@ -17,7 +17,7 @@ var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 var maxTriggerableChannels = 100
 
 const (
-	libraryVersion = "5.1.0"
+	libraryVersion = "5.1.1"
 	libraryName    = "pusher-http-go"
 )
 
@@ -65,7 +65,6 @@ type Client struct {
 ClientFromURL allows client instantiation from a specially-crafted Pusher URL.
 
 	c := pusher.ClientFromURL("http://key:secret@api.pusherapp.com/apps/app_id")
-
 */
 func ClientFromURL(serverURL string) (*Client, error) {
 	url2, err := url.Parse(serverURL)
@@ -104,8 +103,8 @@ func ClientFromURL(serverURL string) (*Client, error) {
 ClientFromEnv allows instantiation of a client from an environment variable.
 This is particularly relevant if you are using Pusher as a Heroku add-on,
 which stores credentials in a `"PUSHER_URL"` environment variable. For example:
-	client := pusher.ClientFromEnv("PUSHER_URL")
 
+	client := pusher.ClientFromEnv("PUSHER_URL")
 */
 func ClientFromEnv(key string) (*Client, error) {
 	url := os.Getenv(key)
@@ -139,7 +138,6 @@ be marshallable into JSON.
 
 	data := map[string]string{"hello": "world"}
 	client.Trigger("greeting_channel", "say_hello", data)
-
 */
 func (c *Client) Trigger(channel string, eventName string, data interface{}) error {
 	_, err := c.validateChannelsAndTrigger([]string{channel}, eventName, data, TriggerParams{})
@@ -201,6 +199,7 @@ func (c *Client) TriggerWithParams(
 /*
 TriggerMulti is the same as `client.Trigger`, except one passes in a slice of
 `channels` as the first parameter. The maximum length of channels is 100.
+
 	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
 */
 func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) error {
@@ -226,6 +225,7 @@ func (c *Client) TriggerMultiWithParams(
 TriggerExclusive triggers an event excluding a recipient whose connection has
 the `socket_id` you specify here from receiving the event.
 You can read more here: http://pusher.com/docs/duplicates.
+
 	client.TriggerExclusive("a_channel", "event", data, "123.12")
 
 Deprecated: use TriggerWithParams instead.
@@ -240,6 +240,7 @@ func (c *Client) TriggerExclusive(channel string, eventName string, data interfa
 TriggerMultiExclusive triggers an event to multiple channels excluding a
 recipient whose connection has the `socket_id` you specify here from receiving
 the event on any of the channels.
+
 	client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
 
 Deprecated: use TriggerMultiWithParams instead.
@@ -466,7 +467,6 @@ method the channel name.
 	users, err := client.GetChannelUsers("presence-chatroom")
 
 	//users=> &{List:[{ID:13} {ID:90}]}
-
 */
 func (c *Client) GetChannelUsers(name string) (*Users, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppID, name)
@@ -482,10 +482,10 @@ func (c *Client) GetChannelUsers(name string) (*Users, error) {
 }
 
 /*
-AuthenticateUser allows you to authenticate a user s subscription to a
-private channel. It returns an authentication signature to send back to the client
+AuthenticateUser allows you to authenticate a user's connection.
+It returns an authentication signature to send back to the client
 and authenticate them. In order to identify a user, this method acceps a map containing
-arbitrary user data. It must contain at least and id field with the user's id as a string.
+arbitrary user data. It must contain at least an id field with the user's id as a string.
 
 For more information see our docs: http://pusher.com/docs/authenticating_users.
 
@@ -499,7 +499,8 @@ to send back to the client.
 	func pusherUserAuth(res http.ResponseWriter, req *http.Request) {
 
 		params, _ := ioutil.ReadAll(req.Body)
-		response, err := client.AuthenticateUser(params)
+		userData := map[string]interface{} { "id": "1234", "twitter": "jamiepatel" }
+		response, err := client.AuthenticateUser(params, userData)
 		if err != nil {
 			panic(err)
 		}
@@ -679,8 +680,6 @@ payload to your server after certain events. Such events include channels being
 occupied or vacated, members being added or removed in presence-channels, or
 after client-originated events. For more information see
 https://pusher.com/docs/webhooks.
-
-
 
 If the webhook is valid, a `*pusher.Webhook* will be returned, and the `err`
 value will be nil. If it is invalid, the first return value will be nil, and an

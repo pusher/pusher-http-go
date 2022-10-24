@@ -400,6 +400,13 @@ For more information see our [docs](http://pusher.com/docs/authenticating_users)
 | Argument | Description |
 | :-: | :-: |
 | params `[]byte` | The request body sent by the client |
+| userData `map[string]interface{}` | The map containing arbitrary user data. It must contain at least an `id` field with the user's id as a string. See below. |
+
+###### Arbitrary User Data
+
+```go
+userData := map[string]interface{} { "id": "1234", "twitter": "jamiepatel" }
+```
 
 | Return Value | Description |
 | :-: | :-: |
@@ -411,7 +418,8 @@ For more information see our [docs](http://pusher.com/docs/authenticating_users)
 ```go
 func pusherUserAuth(res http.ResponseWriter, req *http.Request) {
     params, _ := ioutil.ReadAll(req.Body)
-    response, err := pusherClient.AuthenticateUser(params)
+    userData := map[string]interface{} { "id": "1234", "twitter": "jamiepatel" }
+    response, err := pusherClient.AuthenticateUser(params, userData)
     if err != nil {
         panic(err)
     }
