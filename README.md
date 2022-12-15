@@ -164,11 +164,11 @@ This library supports end to end encryption of your private channels. This means
 
    ```go
    pusherClient := pusher.Client{
-       AppID:                    "APP_ID",
-       Key:                      "APP_KEY",
-       Secret:                   "APP_SECRET",
-       Cluster:                  "APP_CLUSTER",
-       EncryptionMasterKeyBase64 "<output from command above>",
+       AppID:                     "APP_ID",
+       Key:                       "APP_KEY",
+       Secret:                    "APP_SECRET",
+       Cluster:                   "APP_CLUSTER",
+       EncryptionMasterKeyBase64: "<output from command above>",
    }
    ```
 4. Channels where you wish to use end to end encryption should be prefixed with `private-encrypted-`.
