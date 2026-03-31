@@ -1,5 +1,41 @@
 # Changelog
 
+## 6.0.0
+
+### ⚠️ Breaking Changes
+
+#### Minimum Go Version
+- **BREAKING**: Now requires Go 1.26 or later (previously Go 1.11+)
+
+#### Context Support
+- **BREAKING**: All HTTP methods now require `context.Context` as the first parameter:
+  - `Trigger(ctx, channel, event, data)`
+  - `TriggerWithParams(ctx, channel, event, data, params)`
+  - `TriggerMulti(ctx, channels, event, data)`
+  - `TriggerMultiWithParams(ctx, channels, event, data, params)`
+  - `TriggerBatch(ctx, batch)`
+  - `SendToUser(ctx, userId, event, data)`
+  - `Channels(ctx, params)`
+  - `Channel(ctx, name, params)`
+  - `GetChannelUsers(ctx, name)`
+
+#### Removed Deprecated APIs
+- **BREAKING**: Removed `TriggerExclusive()` - use `TriggerWithParams()` with `SocketID` parameter
+- **BREAKING**: Removed `TriggerMultiExclusive()` - use `TriggerMultiWithParams()` with `SocketID` parameter
+- **BREAKING**: Removed `AuthenticatePrivateChannel()` - use `AuthorizePrivateChannel()`
+- **BREAKING**: Removed `AuthenticatePresenceChannel()` - use `AuthorizePresenceChannel()`
+- **BREAKING**: Removed `EncryptionMasterKey` field - use `EncryptionMasterKeyBase64`
+
+### Changed
+- Replaced deprecated `io/ioutil` with `io` package
+- Updated `golang.org/x/crypto` to v0.49.0
+- Updated `testify` to v1.11.1 with new import path `github.com/stretchr/testify`
+- Improved error handling (no more panics in library code)
+- Fixed typo: "Paramater" → "parameter" in error messages
+
+### Fixed
+- Added missing error check after `http.NewRequest` in request handling
+
 ## 5.1.1
 
 - [CHANGED] readme example for user authentication

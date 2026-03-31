@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -51,39 +52,40 @@ func createAuthMap(key, secret, stringToSign string, sharedSecret string) map[st
 
 func md5Signature(body []byte) string {
 	_bodyMD5 := md5.New()
-	_bodyMD5.Write([]byte(body))
+	_bodyMD5.Write(body)
 	return hex.EncodeToString(_bodyMD5.Sum(nil))
 }
 
-func encrypt(channel string, data []byte, encryptionKey []byte) string {
+func encrypt(channel string, data []byte, encryptionKey []byte) (string, error) {
 	sharedSecret := generateSharedSecret(channel, encryptionKey)
-	nonce := generateNonce()
+	nonce, err := generateNonce()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate nonce: %w", err)
+	}
 	nonceB64 := base64.StdEncoding.EncodeToString(nonce[:])
-	cipherText := secretbox.Seal([]byte{}, data, &nonce, &sharedSecret)
+	cipherText := secretbox.Seal(nil, data, &nonce, &sharedSecret)
 	cipherTextB64 := base64.StdEncoding.EncodeToString(cipherText)
 	return formatMessage(nonceB64, cipherTextB64)
 }
 
-func formatMessage(nonce string, cipherText string) string {
+func formatMessage(nonce string, cipherText string) (string, error) {
 	encryptedMessage := &EncryptedMessage{
 		Nonce:      nonce,
 		Ciphertext: cipherText,
 	}
-	json, err := json.Marshal(encryptedMessage)
+	jsonBytes, err := json.Marshal(encryptedMessage)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("failed to marshal encrypted message: %w", err)
 	}
-
-	return string(json)
+	return string(jsonBytes), nil
 }
 
-func generateNonce() [24]byte {
+func generateNonce() ([24]byte, error) {
 	var nonce [24]byte
-	//Trick ReadFull into thinking nonce is a slice
 	if _, err := io.ReadFull(rand.Reader, nonce[:]); err != nil {
-		panic(err)
+		return nonce, fmt.Errorf("failed to read random bytes: %w", err)
 	}
-	return nonce
+	return nonce, nil
 }
 
 func generateSharedSecret(channel string, encryptionKey []byte) [32]byte {
@@ -110,8 +112,7 @@ func decryptEvents(webhookData Webhook, encryptionKey []byte) (*Webhook, error) 
 			copy(nonce[:], []byte(nonceBytes[:]))
 
 			sharedSecret := generateSharedSecret(event.Channel, encryptionKey)
-			box := []byte(cipherTextBytes)
-			decryptedBox, ok := secretbox.Open([]byte{}, box, &nonce, &sharedSecret)
+			decryptedBox, ok := secretbox.Open(nil, cipherTextBytes, &nonce, &sharedSecret)
 			if !ok {
 				return decryptedWebhooks, errors.New("Failed to decrypt event, possibly wrong key?")
 			}

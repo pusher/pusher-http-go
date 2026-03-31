@@ -2,7 +2,6 @@ package pusher
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -35,7 +34,10 @@ func encodeTriggerBody(
 	}
 	var payloadData string
 	if isEncryptedChannel(channels[0]) {
-		payloadData = encrypt(channels[0], dataBytes, encryptionKey)
+		payloadData, err = encrypt(channels[0], dataBytes, encryptionKey)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		payloadData = string(dataBytes)
 	}
@@ -47,7 +49,7 @@ func encodeTriggerBody(
 		eventExceedsMaximumSize = len(payloadData) > overrideMaxMessagePayloadKB*1024
 	}
 	if eventExceedsMaximumSize {
-		return nil, errors.New(fmt.Sprintf("Event payload exceeded maximum size (%d bytes is too much)", len(payloadData)))
+		return nil, fmt.Errorf("event payload exceeded maximum size (%d bytes is too much)", len(payloadData))
 	}
 	eventPayload := map[string]interface{}{
 		"name":     event,
@@ -56,7 +58,7 @@ func encodeTriggerBody(
 	}
 	for k, v := range params {
 		if _, ok := eventPayload[k]; ok {
-			return nil, errors.New(fmt.Sprintf("Paramater %s specified multiple times", k))
+			return nil, fmt.Errorf("parameter %s specified multiple times", k)
 		}
 		eventPayload[k] = v
 	}
@@ -76,7 +78,10 @@ func encodeTriggerBatchBody(
 			return nil, err
 		}
 		if isEncryptedChannel(e.Channel) {
-			stringifyedDataBytes = encrypt(e.Channel, dataBytes, encryptionKey)
+			stringifyedDataBytes, err = encrypt(e.Channel, dataBytes, encryptionKey)
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			stringifyedDataBytes = string(dataBytes)
 		}
