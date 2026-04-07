@@ -1,9 +1,10 @@
 package pusher
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/stretchr/testify.v1/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSendToUserSuccessCase(t *testing.T) {
@@ -37,7 +38,7 @@ func TestSendToUserSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.SendToUser("123456", "test", "yolo")
+	err := client.SendToUser(context.Background(), "123456", "test", "yolo")
 	assert.NoError(t, err)
 }
 
@@ -49,7 +50,7 @@ func TestSendToUserRejected(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.SendToUser("", "test", "yolo")
+	err := client.SendToUser(context.Background(), "", "test", "yolo")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "User id '' is invalid")
 }
@@ -76,7 +77,7 @@ func TestTriggerSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.Trigger("test_channel", "test", "yolo")
+	err := client.Trigger(context.Background(), "test_channel", "test", "yolo")
 	assert.NoError(t, err)
 }
 
@@ -102,7 +103,7 @@ func TestTriggerWithStructSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.Trigger("test_channel", "test", struct{ Key string }{Key: "value"})
+	err := client.Trigger(context.Background(), "test_channel", "test", struct{ Key string }{Key: "value"})
 	assert.NoError(t, err)
 }
 
@@ -111,7 +112,7 @@ func TestTriggerWithParamsSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		testJSON := "{}"
-		fmt.Fprintf(res, testJSON)
+		fmt.Fprint(res, testJSON)
 		assert.Equal(t, "POST", req.Method)
 
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo"}
@@ -131,7 +132,7 @@ func TestTriggerWithParamsSuccessCase(t *testing.T) {
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	// Empty parameters
-	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", TriggerParams{})
+	channels, err := client.TriggerWithParams(context.Background(), "test_channel", "test", "yolo", TriggerParams{})
 	assert.NoError(t, err)
 
 	expected := &TriggerChannelsList{
@@ -144,7 +145,7 @@ func TestTriggerWithParamsInfoSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		testJSON := "{\"channels\":{\"test_channel\":{\"subscription_count\":1}}}"
-		fmt.Fprintf(res, testJSON)
+		fmt.Fprint(res, testJSON)
 		assert.Equal(t, "POST", req.Method)
 
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"test_channel"}, "data": "yolo", "info": "subscription_count"}
@@ -164,7 +165,7 @@ func TestTriggerWithParamsInfoSuccessCase(t *testing.T) {
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	attributes := "subscription_count"
-	channels, err := client.TriggerWithParams("test_channel", "test", "yolo", TriggerParams{Info: &attributes})
+	channels, err := client.TriggerWithParams(context.Background(), "test_channel", "test", "yolo", TriggerParams{Info: &attributes})
 	assert.NoError(t, err)
 
 	expectedSubscriptionCount := 1
@@ -196,7 +197,7 @@ func TestTriggerMultiSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	err := client.TriggerMulti([]string{"test_channel", "other_channel"}, "test", "yolo")
+	err := client.TriggerMulti(context.Background(), []string{"test_channel", "other_channel"}, "test", "yolo")
 	assert.NoError(t, err)
 }
 
@@ -214,7 +215,7 @@ func TestTriggerMultiEncryptedRejected(t *testing.T) {
 		Host:                      u.Host,
 		EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=",
 	}
-	err := client.TriggerMulti([]string{"test_channel", "private-encrypted-other_channel"}, "test", "yolo")
+	err := client.TriggerMulti(context.Background(), []string{"test_channel", "private-encrypted-other_channel"}, "test", "yolo")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "multiple channels")
 	assert.Contains(t, err.Error(), "encrypted channels")
@@ -224,7 +225,7 @@ func TestTriggerMultiWithParamsInfoSuccessCase(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		testJSON := "{\"channels\":{\"presence-test_channel\":{\"subscription_count\":2,\"user_count\":1},\"test_channel\":{\"subscription_count\":3}}}"
-		fmt.Fprintf(res, testJSON)
+		fmt.Fprint(res, testJSON)
 		assert.Equal(t, "POST", req.Method)
 
 		expectedBody := map[string]interface{}{"name": "test", "channels": []interface{}{"presence-test_channel", "test_channel"}, "data": "yolo", "info": "user_count,subscription_count"}
@@ -244,7 +245,7 @@ func TestTriggerMultiWithParamsInfoSuccessCase(t *testing.T) {
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	attributes := "user_count,subscription_count"
-	channels, err := client.TriggerMultiWithParams([]string{"presence-test_channel", "test_channel"}, "test", "yolo", TriggerParams{Info: &attributes})
+	channels, err := client.TriggerMultiWithParams(context.Background(), []string{"presence-test_channel", "test_channel"}, "test", "yolo", TriggerParams{Info: &attributes})
 	assert.NoError(t, err)
 
 	presenceExpectedUserCount := 1
@@ -264,7 +265,7 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 		res.WriteHeader(200)
 		testJSON := "{\"channels\":{\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-5cbTiUiPNGI\":{\"user_count\":1},\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-PbZ5E1pP8uF\":{\"user_count\":1},\"presence-session-d41a439c438a100756f5-4bf35003e819bb138249-oz6iqpSxMwG\":{\"user_count\":1}}}"
 
-		fmt.Fprintf(res, testJSON)
+		fmt.Fprint(res, testJSON)
 		assert.Equal(t, "GET", req.Method)
 
 	}))
@@ -272,7 +273,7 @@ func TestGetChannelsSuccessCase(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channels, err := client.Channels(ChannelsParams{})
+	channels, err := client.Channels(context.Background(), ChannelsParams{})
 	assert.NoError(t, err)
 
 	expected := &ChannelsList{
@@ -289,7 +290,7 @@ func TestGetChannelSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		testJSON := "{\"user_count\":1,\"occupied\":true,\"subscription_count\":1}"
-		fmt.Fprintf(res, testJSON)
+		fmt.Fprint(res, testJSON)
 
 		assert.Equal(t, "GET", req.Method)
 	}))
@@ -297,7 +298,7 @@ func TestGetChannelSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	channel, err := client.Channel("test_channel", ChannelParams{})
+	channel, err := client.Channel(context.Background(), "test_channel", ChannelParams{})
 	assert.NoError(t, err)
 
 	expected := &Channel{
@@ -313,7 +314,7 @@ func TestGetChannelUserSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		testJSON := "{\"users\":[{\"id\":\"red\"},{\"id\":\"blue\"}]}"
-		fmt.Fprintf(res, testJSON)
+		fmt.Fprint(res, testJSON)
 
 		assert.Equal(t, "GET", req.Method)
 	}))
@@ -321,7 +322,7 @@ func TestGetChannelUserSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	users, err := client.GetChannelUsers("test_channel")
+	users, err := client.GetChannelUsers(context.Background(), "test_channel")
 	assert.NoError(t, err)
 
 	expected := &Users{
@@ -344,12 +345,14 @@ func TestTriggerWithSocketID(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
-	client.TriggerExclusive("test_channel", "test", "yolo", "1234.12")
+	socketID := "1234.12"
+	client.TriggerWithParams(context.Background(), "test_channel", "test", "yolo", TriggerParams{SocketID: &socketID})
 }
 
 func TestTriggerSocketIDValidation(t *testing.T) {
 	client := Client{AppID: "id", Key: "key", Secret: "secret"}
-	err := client.TriggerExclusive("test_channel", "test", "yolo", "1234.12:lalala")
+	socketID := "1234.12:lalala"
+	_, err := client.TriggerWithParams(context.Background(), "test_channel", "test", "yolo", TriggerParams{SocketID: &socketID})
 	assert.Error(t, err)
 }
 
@@ -360,7 +363,7 @@ func TestTriggerBatchSuccess(t *testing.T) {
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		actualBody, err := ioutil.ReadAll(req.Body)
+		actualBody, err := io.ReadAll(req.Body)
 		assert.Equal(t, expectedBody, string(actualBody))
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
@@ -370,7 +373,7 @@ func TestTriggerBatchSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
-	response, err := client.TriggerBatch([]Event{
+	response, err := client.TriggerBatch(context.Background(), []Event{
 		{Channel: "test_channel", Name: "test", Data: "yolo1"},
 		{Channel: "test_channel", Name: "test", Data: "yolo2"},
 	})
@@ -384,10 +387,10 @@ func TestTriggerBatchInfoSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		testJSON := "{\"batch\":[{\"subscription_count\":2,\"user_count\":1},{\"subscription_count\":3}]}"
-		fmt.Fprintf(res, testJSON)
+		fmt.Fprint(res, testJSON)
 		assert.Equal(t, "POST", req.Method)
 
-		actualBody, err := ioutil.ReadAll(req.Body)
+		actualBody, err := io.ReadAll(req.Body)
 		assert.Equal(t, expectedBody, string(actualBody))
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
@@ -399,7 +402,7 @@ func TestTriggerBatchInfoSuccess(t *testing.T) {
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
 	presenceChannelInfo := "user_count,subscription_count"
 	channelInfo := "subscription_count"
-	channels, err := client.TriggerBatch([]Event{
+	channels, err := client.TriggerBatch(context.Background(), []Event{
 		{Channel: "presence-test_channel", Name: "test", Data: "yolo1", Info: &presenceChannelInfo},
 		{Channel: "test_channel", Name: "test", Data: "yolo2", Info: &channelInfo},
 	})
@@ -425,7 +428,7 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		actualBody, err := ioutil.ReadAll(req.Body)
+		actualBody, err := io.ReadAll(req.Body)
 		assert.Equal(t, expectedBody, string(actualBody))
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
@@ -434,7 +437,7 @@ func TestTriggerBatchWithEncryptionMasterKeyNoEncryptedChanSuccess(t *testing.T)
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
-	response, err := client.TriggerBatch([]Event{
+	response, err := client.TriggerBatch(context.Background(), []Event{
 		{Channel: "test_channel", Name: "test", Data: "yolo1"},
 		{Channel: "test_channel", Name: "test", Data: "yolo2"},
 	})
@@ -451,7 +454,7 @@ func TestTriggerBatchNoEncryptionMasterKeyWithEncryptedChanFailure(t *testing.T)
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", Host: u.Host}
-	_, err := client.TriggerBatch([]Event{
+	_, err := client.TriggerBatch(context.Background(), []Event{
 		{Channel: "test_channel", Name: "test", Data: "yolo1"},
 		{Channel: "private-encrypted-test_channel", Name: "test", Data: "yolo2"},
 	})
@@ -466,7 +469,7 @@ func TestTriggerWithEncryptedChanSuccess(t *testing.T) {
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		actualBody, err := ioutil.ReadAll(req.Body)
+		actualBody, err := io.ReadAll(req.Body)
 		assert.Contains(t, string(actualBody), "ciphertext")
 		assert.Contains(t, string(actualBody), "nonce")
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
@@ -477,7 +480,7 @@ func TestTriggerWithEncryptedChanSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
-	err := client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	err := client.Trigger(context.Background(), "private-encrypted-test_channel", "test", "yolo1")
 	assert.NoError(t, err)
 }
 
@@ -487,7 +490,7 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 		fmt.Fprintf(res, "{}")
 		assert.Equal(t, "POST", req.Method)
 
-		_, err := ioutil.ReadAll(req.Body)
+		_, err := io.ReadAll(req.Body)
 		assert.Equal(t, "application/json", req.Header["Content-Type"][0])
 		assert.Equal(t, "/apps/appid/batch_events", req.URL.Path)
 		assert.NoError(t, err)
@@ -496,7 +499,7 @@ func TestTriggerBatchWithEncryptedChanSuccess(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "appid", Key: "key", Secret: "secret", EncryptionMasterKeyBase64: "ZUhQVldIZzduRkdZVkJzS2pPRkRYV1JyaWJJUjJiMGI=", Host: u.Host}
-	response, err := client.TriggerBatch([]Event{
+	response, err := client.TriggerBatch(context.Background(), []Event{
 		{Channel: "test_channel", Name: "test", Data: "yolo1"},
 		{Channel: "private-encrypted-test_channel", Name: "test", Data: "yolo2"},
 	})
@@ -511,52 +514,15 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 	defer server.Close()
 	u, _ := url.Parse(server.URL)
 
-	// too short (deprecated)
-	client := Client{
-		AppID:               "appid",
-		Key:                 "key",
-		Secret:              "secret",
-		Host:                u.Host,
-		EncryptionMasterKey: "this is 31 bytes 12345678901234",
-	}
-	err := client.Trigger("private-encrypted-test_channel", "test", "yolo1")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "32 bytes")
-
-	// too long (deprecated)
-	client = Client{
-		AppID:               "appid",
-		Key:                 "key",
-		Secret:              "secret",
-		Host:                u.Host,
-		EncryptionMasterKey: "this is 33 bytes 1234567890123456",
-	}
-	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "32 bytes")
-
-	// both provided
-	client = Client{
-		AppID:                     "appid",
-		Key:                       "key",
-		Secret:                    "secret",
-		Host:                      u.Host,
-		EncryptionMasterKey:       "this is 32 bytes 123456789012345",
-		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU=",
-	}
-	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "both")
-
 	// too short
-	client = Client{
+	client := Client{
 		AppID:                     "appid",
 		Key:                       "key",
 		Secret:                    "secret",
 		Host:                      u.Host,
 		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMSBieXRlcyAxMjM0NTY3ODkwMTIzNA==",
 	}
-	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	err := client.Trigger(context.Background(), "private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "32 bytes")
 
@@ -568,7 +534,7 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 		Host:                      u.Host,
 		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU2",
 	}
-	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	err = client.Trigger(context.Background(), "private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "32 bytes")
 
@@ -580,7 +546,7 @@ func TestTriggerInvalidMasterKey(t *testing.T) {
 		Host:                      u.Host,
 		EncryptionMasterKeyBase64: "dGhp!yBpcyAzMiBieXRlcy#xMjM0NTY3ODkwMTIzNDU=",
 	}
-	err = client.Trigger("private-encrypted-test_channel", "test", "yolo1")
+	err = client.Trigger(context.Background(), "private-encrypted-test_channel", "test", "yolo1")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "valid base64")
 }
@@ -593,29 +559,29 @@ func TestAuthenticateUser(t *testing.T) {
 	u, _ := url.Parse(server.URL)
 
 	client := Client{
-		AppID:               "appid",
-		Key:                 "key",
-		Secret:              "secret",
-		Host:                u.Host,
+		AppID:  "appid",
+		Key:    "key",
+		Secret: "secret",
+		Host:   u.Host,
 	}
 
 	var params []byte
 	var userData map[string]interface{}
 
 	params = []byte("socket_id=12345.12345")
-	userData = map[string]interface{} {}
+	userData = map[string]interface{}{}
 	_, err := client.AuthenticateUser(params, userData)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Missing id in user data")
 
 	params = []byte("not_socket_id=12345.12345")
-	userData = map[string]interface{} { "id": "1234" }
+	userData = map[string]interface{}{"id": "1234"}
 	_, err = client.AuthenticateUser(params, userData)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "socket_id not found")
 
 	params = []byte("socket_id=12345.12345")
-	userData = map[string]interface{} { "id": "1234" }
+	userData = map[string]interface{}{"id": "1234"}
 	var response []byte
 	response, err = client.AuthenticateUser(params, userData)
 	assert.NoError(t, err)
@@ -631,52 +597,15 @@ func TestAuthorizeInvalidMasterKey(t *testing.T) {
 
 	params := []byte("channel_name=private-encrypted-test_channel&socket_id=12345.12345")
 
-	// too short (deprecated)
-	client := Client{
-		AppID:               "appid",
-		Key:                 "key",
-		Secret:              "secret",
-		Host:                u.Host,
-		EncryptionMasterKey: "this is 31 bytes 12345678901234",
-	}
-	_, err := client.AuthorizePrivateChannel(params)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "32 bytes")
-
-	// too long (deprecated)
-	client = Client{
-		AppID:               "appid",
-		Key:                 "key",
-		Secret:              "secret",
-		Host:                u.Host,
-		EncryptionMasterKey: "this is 33 bytes 1234567890123456",
-	}
-	_, err = client.AuthorizePrivateChannel(params)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "32 bytes")
-
-	// both provided
-	client = Client{
-		AppID:                     "appid",
-		Key:                       "key",
-		Secret:                    "secret",
-		Host:                      u.Host,
-		EncryptionMasterKey:       "this is 32 bytes 123456789012345",
-		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMiBieXRlcyAxMjM0NTY3ODkwMTIzNDU=",
-	}
-	_, err = client.AuthorizePrivateChannel(params)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "both")
-
 	// too short
-	client = Client{
+	client := Client{
 		AppID:                     "appid",
 		Key:                       "key",
 		Secret:                    "secret",
 		Host:                      u.Host,
 		EncryptionMasterKeyBase64: "dGhpcyBpcyAzMSBieXRlcyAxMjM0NTY3ODkwMTIzNA==",
 	}
-	_, err = client.AuthorizePrivateChannel(params)
+	_, err := client.AuthorizePrivateChannel(params)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "32 bytes")
 
@@ -716,7 +645,7 @@ func TestErrorResponseHandler(t *testing.T) {
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host}
 	attributes := "user_count,subscription_count"
-	channel, err := client.Channel("this_is_not_a_presence_channel", ChannelParams{Info: &attributes})
+	channel, err := client.Channel(context.Background(), "this_is_not_a_presence_channel", ChannelParams{Info: &attributes})
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, "Status Code: 400 - Cannot retrieve the user count unless the channel is a presence channel")
@@ -733,7 +662,7 @@ func TestRequestTimeouts(t *testing.T) {
 
 	u, _ := url.Parse(server.URL)
 	client := Client{AppID: "id", Key: "key", Secret: "secret", Host: u.Host, HTTPClient: &http.Client{Timeout: time.Millisecond * 100}}
-	err := client.Trigger("test_channel", "test", "yolo")
+	err := client.Trigger(context.Background(), "test_channel", "test", "yolo")
 
 	assert.Error(t, err)
 }
@@ -753,7 +682,7 @@ func TestChannelLengthValidation(t *testing.T) {
 	}
 
 	client := Client{AppID: "id", Key: "key", Secret: "secret"}
-	err := client.TriggerMulti(channels, "yolo", "woot")
+	err := client.TriggerMulti(context.Background(), channels, "yolo", "woot")
 
 	assert.EqualError(t, err, "You cannot trigger on more than 100 channels at once")
 }
@@ -765,9 +694,9 @@ func TestChannelFormatValidation(t *testing.T) {
 		channel2 += "a"
 	}
 	client := Client{AppID: "id", Key: "key", Secret: "secret"}
-	err1 := client.Trigger(channel1, "yolo", "w00t")
+	err1 := client.Trigger(context.Background(), channel1, "yolo", "w00t")
 
-	err2 := client.Trigger(channel2, "yolo", "not 19 forever")
+	err2 := client.Trigger(context.Background(), channel2, "yolo", "not 19 forever")
 
 	assert.EqualError(t, err1, "At least one of your channels' names are invalid")
 
@@ -778,11 +707,11 @@ func TestChannelFormatValidation(t *testing.T) {
 func TestDataSizeValidation(t *testing.T) {
 	client := Client{AppID: "id", Key: "key", Secret: "secret"}
 	data := strings.Repeat("a", 20481)
-	err := client.Trigger("channel", "event", data)
+	err := client.Trigger(context.Background(), "channel", "event", data)
 
-	assert.EqualError(t, err, "Event payload exceeded maximum size (20481 bytes is too much)")
+	assert.EqualError(t, err, "event payload exceeded maximum size (20481 bytes is too much)")
 
-	_, err = client.TriggerBatch([]Event{
+	_, err = client.TriggerBatch(context.Background(), []Event{
 		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.EqualError(t, err, "Data of the event #0 in batch, exceeded maximum size (20481 bytes is too much)")
@@ -791,18 +720,18 @@ func TestDataSizeValidation(t *testing.T) {
 func TestDataSizeOverridenValidation(t *testing.T) {
 	client := Client{AppID: "id", Key: "key", Secret: "secret", OverrideMaxMessagePayloadKB: 80}
 	data := strings.Repeat("a", 81920)
-	err := client.Trigger("channel", "event", data)
+	err := client.Trigger(context.Background(), "channel", "event", data)
 	assert.NotContains(t, err.Error(), "\"Event payload exceeded maximum size (81920 bytes is too much)")
-	_, err = client.TriggerBatch([]Event{
+	_, err = client.TriggerBatch(context.Background(), []Event{
 		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.NotContains(t, err.Error(), "Data of the event #0 in batch, exceeded maximum size (81920 bytes is too much)")
 
 	data = strings.Repeat("a", 81921)
-	err = client.Trigger("channel", "event", data)
-	assert.EqualError(t, err, "Event payload exceeded maximum size (81921 bytes is too much)")
+	err = client.Trigger(context.Background(), "channel", "event", data)
+	assert.EqualError(t, err, "event payload exceeded maximum size (81921 bytes is too much)")
 
-	_, err = client.TriggerBatch([]Event{
+	_, err = client.TriggerBatch(context.Background(), []Event{
 		{Channel: "channel", Name: "event", Data: data},
 	})
 	assert.EqualError(t, err, "Data of the event #0 in batch, exceeded maximum size (81921 bytes is too much)")

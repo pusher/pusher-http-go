@@ -1,8 +1,8 @@
 package pusher
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -59,10 +59,7 @@ func validUserId(userId string) bool {
 }
 
 func validChannel(channel string) bool {
-	if len(channel) > maxChannelNameSize || !channelValidationRegex.MatchString(channel) {
-		return false
-	}
-	return true
+	return len(channel) <= maxChannelNameSize && channelValidationRegex.MatchString(channel)
 }
 
 func channelsAreValid(channels []string) bool {
@@ -75,10 +72,7 @@ func channelsAreValid(channels []string) bool {
 }
 
 func isEncryptedChannel(channel string) bool {
-	if strings.HasPrefix(channel, "private-encrypted-") {
-		return true
-	}
-	return false
+	return strings.HasPrefix(channel, "private-encrypted-")
 }
 
 func validateUserData(userData map[string]interface{}) (err error) {

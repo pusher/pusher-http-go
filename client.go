@@ -1,6 +1,7 @@
 package pusher
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -17,7 +18,7 @@ var pusherPathRegex = regexp.MustCompile("^/apps/([0-9]+)$")
 var maxTriggerableChannels = 100
 
 const (
-	libraryVersion = "5.1.1"
+	libraryVersion = "6.0.0"
 	libraryName    = "pusher-http-go"
 )
 
@@ -55,7 +56,6 @@ type Client struct {
 	Secure                       bool   // true for HTTPS
 	Cluster                      string
 	HTTPClient                   *http.Client
-	EncryptionMasterKey          string  // deprecated
 	EncryptionMasterKeyBase64    string  // for E2E
 	OverrideMaxMessagePayloadKB  int     // set the agreed Pusher message limit increase
 	validatedEncryptionMasterKey *[]byte // parsed key for use
@@ -123,24 +123,25 @@ func (c *Client) requestClient() *http.Client {
 	return c.HTTPClient
 }
 
-func (c *Client) request(method, url string, body []byte) ([]byte, error) {
-	return request(c.requestClient(), method, url, body)
+func (c *Client) request(ctx context.Context, method, url string, body []byte) ([]byte, error) {
+	return request(ctx, c.requestClient(), method, url, body)
 }
 
 /*
 Trigger triggers an event to the Pusher API.
 It is possible to trigger an event on one or more channels. Channel names can
-contain only characters which are alphanumeric, `_` or `-`` and have
+contain only characters which are alphanumeric, `_` or `-“ and have
 to be at most 200 characters long. Event name can be at most 200 characters long too.
 
-Pass in the channel's name, the event's name, and a data payload. The data payload must
-be marshallable into JSON.
+Pass in a context, the channel's name, the event's name, and a data payload.
+The data payload must be marshallable into JSON.
 
+	ctx := context.Background()
 	data := map[string]string{"hello": "world"}
-	client.Trigger("greeting_channel", "say_hello", data)
+	client.Trigger(ctx, "greeting_channel", "say_hello", data)
 */
-func (c *Client) Trigger(channel string, eventName string, data interface{}) error {
-	_, err := c.validateChannelsAndTrigger([]string{channel}, eventName, data, TriggerParams{})
+func (c *Client) Trigger(ctx context.Context, channel string, eventName string, data interface{}) error {
+	_, err := c.validateChannelsAndTrigger(ctx, []string{channel}, eventName, data, TriggerParams{})
 	return err
 }
 
@@ -179,31 +180,34 @@ parameters to be passed in. See:
 https://pusher.com/docs/channels/library_auth_reference/rest-api#request
 for a complete list.
 
+	ctx := context.Background()
 	data := map[string]string{"hello": "world"}
 	socketID := "1234.12"
 	attributes := "user_count"
 	params := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
-	channels, err := client.Trigger("greeting_channel", "say_hello", data, params)
+	channels, err := client.TriggerWithParams(ctx, "greeting_channel", "say_hello", data, params)
 
 	//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 */
 func (c *Client) TriggerWithParams(
+	ctx context.Context,
 	channel string,
 	eventName string,
 	data interface{},
 	params TriggerParams,
 ) (*TriggerChannelsList, error) {
-	return c.validateChannelsAndTrigger([]string{channel}, eventName, data, params)
+	return c.validateChannelsAndTrigger(ctx, []string{channel}, eventName, data, params)
 }
 
 /*
 TriggerMulti is the same as `client.Trigger`, except one passes in a slice of
 `channels` as the first parameter. The maximum length of channels is 100.
 
-	client.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
+	ctx := context.Background()
+	client.TriggerMulti(ctx, []string{"a_channel", "another_channel"}, "event", data)
 */
-func (c *Client) TriggerMulti(channels []string, eventName string, data interface{}) error {
-	_, err := c.validateChannelsAndTrigger(channels, eventName, data, TriggerParams{})
+func (c *Client) TriggerMulti(ctx context.Context, channels []string, eventName string, data interface{}) error {
+	_, err := c.validateChannelsAndTrigger(ctx, channels, eventName, data, TriggerParams{})
 	return err
 }
 
@@ -213,71 +217,43 @@ allows additional parameters to be specified in the same way as
 `client.TriggerWithParams`.
 */
 func (c *Client) TriggerMultiWithParams(
+	ctx context.Context,
 	channels []string,
 	eventName string,
 	data interface{},
 	params TriggerParams,
 ) (*TriggerChannelsList, error) {
-	return c.validateChannelsAndTrigger(channels, eventName, data, params)
-}
-
-/*
-TriggerExclusive triggers an event excluding a recipient whose connection has
-the `socket_id` you specify here from receiving the event.
-You can read more here: http://pusher.com/docs/duplicates.
-
-	client.TriggerExclusive("a_channel", "event", data, "123.12")
-
-Deprecated: use TriggerWithParams instead.
-*/
-func (c *Client) TriggerExclusive(channel string, eventName string, data interface{}, socketID string) error {
-	params := TriggerParams{SocketID: &socketID}
-	_, err := c.validateChannelsAndTrigger([]string{channel}, eventName, data, params)
-	return err
-}
-
-/*
-TriggerMultiExclusive triggers an event to multiple channels excluding a
-recipient whose connection has the `socket_id` you specify here from receiving
-the event on any of the channels.
-
-	client.TriggerMultiExclusive([]string{"a_channel", "another_channel"}, "event", data, "123.12")
-
-Deprecated: use TriggerMultiWithParams instead.
-*/
-func (c *Client) TriggerMultiExclusive(channels []string, eventName string, data interface{}, socketID string) error {
-	params := TriggerParams{SocketID: &socketID}
-	_, err := c.validateChannelsAndTrigger(channels, eventName, data, params)
-	return err
+	return c.validateChannelsAndTrigger(ctx, channels, eventName, data, params)
 }
 
 /*
 SendToUser triggers an event to a specific user.
-Pass in the user id, the event's name, and a data payload. The data payload must
-be marshallable into JSON.
+Pass in a context, the user id, the event's name, and a data payload.
+The data payload must be marshallable into JSON.
 
+	ctx := context.Background()
 	data := map[string]string{"hello": "world"}
-	client.SendToUser("user123", "say_hello", data)
+	client.SendToUser(ctx, "user123", "say_hello", data)
 */
-func (c *Client) SendToUser(userId string, eventName string, data interface{}) error {
+func (c *Client) SendToUser(ctx context.Context, userId string, eventName string, data interface{}) error {
 	if !validUserId(userId) {
 		return fmt.Errorf("User id '%s' is invalid", userId)
 	}
-	_, err := c.trigger([]string{"#server-to-user-" + userId}, eventName, data, TriggerParams{})
+	_, err := c.trigger(ctx, []string{"#server-to-user-" + userId}, eventName, data, TriggerParams{})
 	return err
 }
 
-func (c *Client) validateChannelsAndTrigger(channels []string, eventName string, data interface{}, params TriggerParams) (*TriggerChannelsList, error) {
+func (c *Client) validateChannelsAndTrigger(ctx context.Context, channels []string, eventName string, data interface{}, params TriggerParams) (*TriggerChannelsList, error) {
 	if len(channels) > maxTriggerableChannels {
 		return nil, fmt.Errorf("You cannot trigger on more than %d channels at once", maxTriggerableChannels)
 	}
 	if !channelsAreValid(channels) {
 		return nil, errors.New("At least one of your channels' names are invalid")
 	}
-	return c.trigger(channels, eventName, data, params)
+	return c.trigger(ctx, channels, eventName, data, params)
 }
 
-func (c *Client) trigger(channels []string, eventName string, data interface{}, params TriggerParams) (*TriggerChannelsList, error) {
+func (c *Client) trigger(ctx context.Context, channels []string, eventName string, data interface{}, params TriggerParams) (*TriggerChannelsList, error) {
 	hasEncryptedChannel := false
 	for _, channel := range channels {
 		if isEncryptedChannel(channel) {
@@ -306,7 +282,7 @@ func (c *Client) trigger(channels []string, eventName string, data interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("POST", triggerURL, payload)
+	response, err := c.request(ctx, "POST", triggerURL, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -329,14 +305,15 @@ type Event struct {
 /*
 TriggerBatch triggers multiple events on multiple channels in a single call:
 
+	ctx := context.Background()
 	info := "subscription_count"
 	socketID := "1234.12"
-	client.TriggerBatch([]pusher.Event{
+	client.TriggerBatch(ctx, []pusher.Event{
 		{ Channel: "donut-1", Name: "ev1", Data: "d1", SocketID: socketID, Info: &info },
 		{ Channel: "private-encrypted-secretdonut", Name: "ev2", Data: "d2", SocketID: socketID, Info: &info },
 	})
 */
-func (c *Client) TriggerBatch(batch []Event) (*TriggerBatchChannelsList, error) {
+func (c *Client) TriggerBatch(ctx context.Context, batch []Event) (*TriggerBatchChannelsList, error) {
 	hasEncryptedChannel := false
 	// validate every channel name and every sockedID (if present) in batch
 	for _, event := range batch {
@@ -364,7 +341,7 @@ func (c *Client) TriggerBatch(batch []Event) (*TriggerBatchChannelsList, error) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("POST", triggerURL, payload)
+	response, err := c.request(ctx, "POST", triggerURL, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -398,20 +375,21 @@ func (params ChannelsParams) toMap() map[string]string {
 /*
 Channels returns a list of all the channels in an application.
 
+	ctx := context.Background()
 	prefixFilter := "presence-"
 	attributes := "user_count"
 	params := pusher.ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
-	channels, err := client.Channels(params)
+	channels, err := client.Channels(ctx, params)
 
 	//channels=> &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}  ]}
 */
-func (c *Client) Channels(params ChannelsParams) (*ChannelsList, error) {
+func (c *Client) Channels(ctx context.Context, params ChannelsParams) (*ChannelsList, error) {
 	path := fmt.Sprintf("/apps/%s/channels", c.AppID)
 	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, params.toMap(), c.Cluster)
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("GET", u, nil)
+	response, err := c.request(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -441,19 +419,20 @@ func (params ChannelParams) toMap() map[string]string {
 /*
 Channel allows you to get the state of a single channel.
 
+	ctx := context.Background()
 	attributes := "user_count,subscription_count"
 	params := pusher.ChannelParams{Info: &attributes}
-	channel, err := client.Channel("presence-chatroom", params)
+	channel, err := client.Channel(ctx, "presence-chatroom", params)
 
 	//channel=> &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 */
-func (c *Client) Channel(name string, params ChannelParams) (*Channel, error) {
+func (c *Client) Channel(ctx context.Context, name string, params ChannelParams) (*Channel, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s", c.AppID, name)
 	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, params.toMap(), c.Cluster)
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("GET", u, nil)
+	response, err := c.request(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -464,17 +443,18 @@ func (c *Client) Channel(name string, params ChannelParams) (*Channel, error) {
 GetChannelUsers returns a list of users in a presence-channel by passing to this
 method the channel name.
 
-	users, err := client.GetChannelUsers("presence-chatroom")
+	ctx := context.Background()
+	users, err := client.GetChannelUsers(ctx, "presence-chatroom")
 
 	//users=> &{List:[{ID:13} {ID:90}]}
 */
-func (c *Client) GetChannelUsers(name string) (*Users, error) {
+func (c *Client) GetChannelUsers(ctx context.Context, name string) (*Users, error) {
 	path := fmt.Sprintf("/apps/%s/channels/%s/users", c.AppID, name)
 	u, err := createRequestURL("GET", c.Host, path, c.Key, c.Secret, authTimestamp(), c.Secure, nil, nil, c.Cluster)
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.request("GET", u, nil)
+	response, err := c.request(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +478,7 @@ to send back to the client.
 
 	func pusherUserAuth(res http.ResponseWriter, req *http.Request) {
 
-		params, _ := ioutil.ReadAll(req.Body)
+		params, _ := io.ReadAll(req.Body)
 		userData := map[string]interface{} { "id": "1234", "twitter": "jamiepatel" }
 		response, err := client.AuthenticateUser(params, userData)
 		if err != nil {
@@ -556,7 +536,7 @@ to send back to the client.
 
 	func pusherAuth(res http.ResponseWriter, req *http.Request) {
 
-		params, _ := ioutil.ReadAll(req.Body)
+		params, _ := io.ReadAll(req.Body)
 		response, err := client.AuthorizePrivateChannel(params)
 		if err != nil {
 			panic(err)
@@ -575,17 +555,6 @@ func (c *Client) AuthorizePrivateChannel(params []byte) (response []byte, err er
 }
 
 /*
-AuthenticatePrivateChannel allows you to authorize a users subscription to a
-private channel. It returns an authorization signature to send back to the client
-and authorize them.
-
-Deprecated: use AuthorizePrivateChannel instead.
-*/
-func (c *Client) AuthenticatePrivateChannel(params []byte) (response []byte, err error) {
-	return c.authorizeChannel(params, nil)
-}
-
-/*
 AuthorizePresenceChannel allows you to authorize a users subscription to a
 presence channel. It returns an authorization signature to send back to the client
 and authorize them. In order to identify a user, clients are sent a user_id and,
@@ -593,7 +562,7 @@ optionally, custom data.
 
 In this library, one does this by passing a `pusher.MemberData` instance.
 
-	params, _ := ioutil.ReadAll(req.Body)
+	params, _ := io.ReadAll(req.Body)
 
 	presenceData := pusher.MemberData{
 		UserID: "1",
@@ -610,18 +579,6 @@ In this library, one does this by passing a `pusher.MemberData` instance.
 	fmt.Fprintf(res, response)
 */
 func (c *Client) AuthorizePresenceChannel(params []byte, member MemberData) (response []byte, err error) {
-	return c.authorizeChannel(params, &member)
-}
-
-/*
-AuthenticatePresenceChannel allows you to authorize a users subscription to a
-presence channel. It returns an authorization signature to send back to the client
-and authorize them. In order to identify a user, clients are sent a user_id and,
-optionally, custom data.
-
-Deprecated: use AuthorizePresenceChannel instead.
-*/
-func (c *Client) AuthenticatePresenceChannel(params []byte, member MemberData) (response []byte, err error) {
 	return c.authorizeChannel(params, &member)
 }
 
@@ -687,7 +644,7 @@ error will be passed.
 
 	func pusherWebhook(res http.ResponseWriter, req *http.Request) {
 
-		body, _ := ioutil.ReadAll(req.Body)
+		body, _ := io.ReadAll(req.Body)
 		webhook, err := client.Webhook(req.Header, body)
 		if err != nil {
 			fmt.Println("Webhook is invalid :(")
@@ -725,20 +682,6 @@ func (c *Client) Webhook(header http.Header, body []byte) (*Webhook, error) {
 func (c *Client) encryptionMasterKey() ([]byte, error) {
 	if c.validatedEncryptionMasterKey != nil {
 		return *(c.validatedEncryptionMasterKey), nil
-	}
-
-	if c.EncryptionMasterKey != "" && c.EncryptionMasterKeyBase64 != "" {
-		return nil, errors.New("Do not specify both EncryptionMasterKey and EncryptionMasterKeyBase64. EncryptionMasterKey is deprecated, specify only EncryptionMasterKeyBase64")
-	}
-
-	if c.EncryptionMasterKey != "" {
-		if len(c.EncryptionMasterKey) != 32 {
-			return nil, errors.New("EncryptionMasterKey must be 32 bytes. It is also deprecated, use EncryptionMasterKeyBase64")
-		}
-
-		keyBytes := []byte(c.EncryptionMasterKey)
-		c.validatedEncryptionMasterKey = &keyBytes
-		return keyBytes, nil
 	}
 
 	if c.EncryptionMasterKeyBase64 != "" {

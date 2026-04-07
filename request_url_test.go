@@ -3,7 +3,7 @@ package pusher
 import (
 	"testing"
 
-	"gopkg.in/stretchr/testify.v1/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTriggerRequestUrl(t *testing.T) {

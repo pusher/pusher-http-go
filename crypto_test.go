@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"gopkg.in/stretchr/testify.v1/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHmacSignature(t *testing.T) {
@@ -74,7 +74,8 @@ func TestEncrypt(t *testing.T) {
 	channel := "private-encrypted-bla"
 	body := []byte("Hello!")
 	encryptionKey := []byte("This is a string that is 32 chars")
-	cipherText := encrypt(channel, body, encryptionKey)
+	cipherText, err := encrypt(channel, body, encryptionKey)
+	assert.NoError(t, err)
 	assert.NotNil(t, cipherText)
 	assert.NotEqual(t, body, cipherText)
 }
@@ -82,7 +83,8 @@ func TestEncrypt(t *testing.T) {
 func TestFormatMessage(t *testing.T) {
 	nonce := "a"
 	cipherText := "b"
-	formatted := formatMessage(nonce, cipherText)
+	formatted, err := formatMessage(nonce, cipherText)
+	assert.NoError(t, err)
 	assert.Equal(t, `{"nonce":"a","ciphertext":"b"}`, formatted)
 }
 

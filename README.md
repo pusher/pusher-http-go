@@ -1,6 +1,6 @@
 # Pusher Channels HTTP Go Library
 
-[![Build Status](https://github.com/pusher/pusher-http-go/workflows/Tests/badge.svg)](https://github.com/pusher/pusher-http-go/actions?query=workflow%3ATests+branch%3Amaster) [![Coverage Status](https://coveralls.io/repos/github/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/github/pusher/pusher-http-go?branch=master) [![Go Reference](https://pkg.go.dev/badge/github.com/pusher/pusher-http-go/v5.svg)](https://pkg.go.dev/github.com/pusher/pusher-http-go/v5)
+[![Build Status](https://github.com/pusher/pusher-http-go/workflows/Tests/badge.svg)](https://github.com/pusher/pusher-http-go/actions?query=workflow%3ATests+branch%3Amaster) [![Coverage Status](https://coveralls.io/repos/github/pusher/pusher-http-go/badge.svg?branch=master)](https://coveralls.io/github/pusher/pusher-http-go?branch=master) [![Go Reference](https://pkg.go.dev/badge/github.com/pusher/pusher-http-go/v6.svg)](https://pkg.go.dev/github.com/pusher/pusher-http-go/v6)
 
 The Golang library for interacting with the Pusher Channels HTTP API.
 
@@ -10,7 +10,7 @@ Register for free at <https://pusher.com/channels> and use the application crede
 
 ## Supported Platforms
 
-* Go - supports **Go 1.11 or greater**.
+* Go - supports **Go 1.26 or greater**.
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@ Register for free at <https://pusher.com/channels> and use the application crede
 ## Installation
 
 ```sh
-$ go get github.com/pusher/pusher-http-go/v5
+$ go get github.com/pusher/pusher-http-go/v6
 ```
 
 ## Getting Started
@@ -42,7 +42,9 @@ $ go get github.com/pusher/pusher-http-go/v5
 package main
 
 import (
-  "github.com/pusher/pusher-http-go/v5"
+  "context"
+
+  "github.com/pusher/pusher-http-go/v6"
 )
 
 func main(){
@@ -57,7 +59,8 @@ func main(){
     data := map[string]string{"message": "hello world"}
 
     // trigger an event on a channel, along with a data payload
-    err := pusherClient.Trigger("my-channel", "my_event", data)
+    ctx := context.Background()
+    err := pusherClient.Trigger(ctx, "my-channel", "my_event", data)
 
     // All trigger methods return an error object, it's worth at least logging this!
     if err != nil {
@@ -188,7 +191,7 @@ import (
     "appengine"
     "appengine/urlfetch"
     "fmt"
-    "github.com/pusher/pusher-http-go/v5"
+    "github.com/pusher/pusher-http-go/v6"
     "net/http"
 )
 
@@ -207,7 +210,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
         HTTPClient: urlfetchClient,
     }
 
-    pusherClient.Trigger("my-channel", "my_event", map[string]string{"message": "hello world"})
+    pusherClient.Trigger(r.Context(), "my-channel", "my_event", map[string]string{"message": "hello world"})
 
     fmt.Fprint(w, "Hello, world!")
 }
@@ -238,6 +241,7 @@ Note: `Info` is part of an [experimental feature](https://pusher.com/docs/lab#ex
 
 | Argument |Description   |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | channel `string` | The name of the channel you wish to trigger on. |
 | event `string` | The name of the event you wish to trigger. |
 | data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
@@ -245,8 +249,9 @@ Note: `Info` is part of an [experimental feature](https://pusher.com/docs/lab#ex
 ###### Example
 
 ```go
+ctx := context.Background()
 data := map[string]string{"hello": "world"}
-pusherClient.Trigger("greeting_channel", "say_hello", data)
+pusherClient.Trigger(ctx, "greeting_channel", "say_hello", data)
 ```
 
 ##### `func (c *Client) TriggerWithParams`
@@ -256,6 +261,7 @@ The complete list of parameters are documented [here](https://pusher.com/docs/ch
 
 | Argument |Description   |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | channel `string` | The name of the channel you wish to trigger on. |
 | event `string` | The name of the event you wish to trigger. |
 | data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
@@ -269,11 +275,12 @@ The complete list of parameters are documented [here](https://pusher.com/docs/ch
 ###### Example
 
 ```go
+ctx := context.Background()
 data := map[string]string{"hello": "world"}
 socketID := "1234.12"
 attributes := "user_count"
 params := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
-channels, err := pusherClient.TriggerWithParams("presence-chatroom", "say_hello", data, params)
+channels, err := pusherClient.TriggerWithParams(ctx, "presence-chatroom", "say_hello", data, params)
 
 // channels => &{Channels:map[presence-chatroom:{UserCount:4}]}
 ```
@@ -284,6 +291,7 @@ channels, err := pusherClient.TriggerWithParams("presence-chatroom", "say_hello"
 
 | Argument | Description |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | channels `[]string` | A slice of channel names you wish to send an event on. The maximum length is 10. |
 | event `string` | As above. |
 | data `interface{}` | As above. |
@@ -291,13 +299,15 @@ channels, err := pusherClient.TriggerWithParams("presence-chatroom", "say_hello"
 ###### Example
 
 ```go
-pusherClient.TriggerMulti([]string{"a_channel", "another_channel"}, "event", data)
+ctx := context.Background()
+pusherClient.TriggerMulti(ctx, []string{"a_channel", "another_channel"}, "event", data)
 ```
 
 ##### `func (c. *Client) TriggerMultiWithParams`
 
 | Argument | Description |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | channels `[]string` | A slice of channel names you wish to send an event on. The maximum length is 10. |
 | event `string` | As above. |
 | data `interface{}` | As above. |
@@ -311,11 +321,12 @@ pusherClient.TriggerMulti([]string{"a_channel", "another_channel"}, "event", dat
 ###### Example
 
 ```go
+ctx := context.Background()
 data := map[string]string{"hello": "world"}
 socketID := "1234.12"
 attributes := "user_count"
 params := pusher.TriggerParams{SocketID: &socketID, Info: &attributes}
-channels, err := pusherClient.TriggerMultiWithParams([]string{"presence-chatroom", "presence-notifications"}, "event", data, params)
+channels, err := pusherClient.TriggerMultiWithParams(ctx, []string{"presence-chatroom", "presence-notifications"}, "event", data, params)
 
 // channels => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 ```
@@ -326,6 +337,7 @@ channels, err := pusherClient.TriggerMultiWithParams([]string{"presence-chatroom
 
 | Argument | Description |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | batch `[]Event` | A list of events to publish |
 
 | Return Value | Description |
@@ -352,13 +364,14 @@ Note: `Info` is part of an [experimental feature](https://pusher.com/docs/lab#ex
 ###### Example
 
 ```go
+ctx := context.Background()
 socketID := "1234.12"
 attributes := "user_count"
 batch := []pusher.Event{
   { Channel: "a-channel", Name: "event", Data: "hello world" },
   { Channel: "presence-b-channel", Name: "event", Data: "hi my name is bob", SocketID: &socketID, Info: &attributes },
 }
-response, err := pusherClient.TriggerBatch(batch)
+response, err := pusherClient.TriggerBatch(ctx, batch)
 
 for i, attributes := range response.Batch {
     if attributes.UserCount != nil {
@@ -378,6 +391,7 @@ for i, attributes := range response.Batch {
 
 | Argument |Description   |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | userId `string` | The id of the user who should receive the event. |
 | event `string` | The name of the event you wish to trigger. |
 | data `interface{}` | The payload you wish to send. Must be marshallable into JSON. |
@@ -385,8 +399,9 @@ for i, attributes := range response.Batch {
 ###### Example
 
 ```go
+ctx := context.Background()
 data := map[string]string{"hello": "world"}
-pusherClient.SendToUser("user123", "say_hello", data)
+pusherClient.SendToUser(ctx, "user123", "say_hello", data)
 ```
 
 ### Authenticating Users
@@ -417,7 +432,7 @@ userData := map[string]interface{} { "id": "1234", "twitter": "jamiepatel" }
 
 ```go
 func pusherUserAuth(res http.ResponseWriter, req *http.Request) {
-    params, _ := ioutil.ReadAll(req.Body)
+    params, _ := io.ReadAll(req.Body)
     userData := map[string]interface{} { "id": "1234", "twitter": "jamiepatel" }
     response, err := pusherClient.AuthenticateUser(params, userData)
     if err != nil {
@@ -460,7 +475,7 @@ For more information see our [docs](http://pusher.com/docs/authorizing_users).
 
 ```go
 func pusherAuth(res http.ResponseWriter, req *http.Request) {
-    params, _ := ioutil.ReadAll(req.Body)
+    params, _ := io.ReadAll(req.Body)
     response, err := pusherClient.AuthorizePrivateChannel(params)
     if err != nil {
         panic(err)
@@ -533,7 +548,7 @@ type MemberData struct {
 ###### Example
 
 ```go
-params, _ := ioutil.ReadAll(req.Body)
+params, _ := io.ReadAll(req.Body)
 
 presenceData := pusher.MemberData{
     UserID: "1",
@@ -561,6 +576,7 @@ This library allows you to query our API to retrieve information about your appl
 
 | Argument | Description |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | params `ChannelsParams` | The query options. The field `FilterByPrefix` will filter the returned channels. To get the number of users subscribed to a presence-channel, specify an the `Info` field with value `"user_count"`. Pass in `nil` if you do not wish to specify any query attributes. |
 
 | Return Value | Description |
@@ -598,10 +614,11 @@ type ChannelListItem struct {
 ###### Example
 
 ```go
+ctx := context.Background()
 prefixFilter := "presence-"
 attributes := "user_count"
 params := pusher.ChannelsParams{FilterByPrefix: &prefixFilter, Info: &attributes}
-channels, err := pusherClient.Channels(params)
+channels, err := pusherClient.Channels(ctx, params)
 
 // channels => &{Channels:map[presence-chatroom:{UserCount:4} presence-notifications:{UserCount:31}]}
 ```
@@ -612,6 +629,7 @@ channels, err := pusherClient.Channels(params)
 
 | Argument | Description |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | name `string` | The name of the channel |
 | params `ChannelParams` | The query options. The field `Info` can have comma-separated values of `"user_count"`, for presence-channels, and `"subscription_count"`, for all-channels. To use the `"subscription_count"` value, first check the "Enable subscription counting" checkbox in your App Settings on [your Pusher Channels dashboard](https://dashboard.pusher.com). Pass in `nil` if you do not wish to specify any query attributes. |
 
@@ -644,9 +662,10 @@ type Channel struct {
 ###### Example
 
 ```go
+ctx := context.Background()
 attributes := "user_count,subscription_count"
 params := pusher.ChannelParams{Info: &attributes}
-channel, err := client.Channel("presence-chatroom", params)
+channel, err := client.Channel(ctx, "presence-chatroom", params)
 
 // channel => &{Name:presence-chatroom Occupied:true UserCount:42 SubscriptionCount:42}
 ```
@@ -657,6 +676,7 @@ channel, err := client.Channel("presence-chatroom", params)
 
 | Argument | Description |
 | :-: | :-: |
+| ctx `context.Context` | A context for the request. |
 | name `string` | The channel name |
 
 | Return Value | Description |
@@ -685,7 +705,8 @@ type User struct {
 ###### Example
 
 ```go
-users, err := pusherClient.GetChannelUsers("presence-chatroom")
+ctx := context.Background()
+users, err := pusherClient.GetChannelUsers(ctx, "presence-chatroom")
 
 // users => &{List:[{ID:13} {ID:90}]}
 ```
@@ -735,7 +756,7 @@ type WebhookEvent struct {
 
 ```go
 func pusherWebhook(res http.ResponseWriter, req *http.Request) {
-    body, _ := ioutil.ReadAll(req.Body)
+    body, _ := io.ReadAll(req.Body)
     webhook, err := pusherClient.Webhook(req.Header, body)
     if err != nil {
         fmt.Println("Webhook is invalid :(")
